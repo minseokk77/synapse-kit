@@ -2,6 +2,7 @@
 import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
+import pkg from '../package.json';
 import { loadSynapseConfig } from './core/config';
 import { executeChecks, executeBuild, executePackage, executeSign } from './core/engine';
 import type { SynapseOptions } from './types';
@@ -125,7 +126,7 @@ async function main(): Promise<void> {
   }
 
   if (args.includes('--version') || args.includes('-v') || args[0] === 'version') {
-    process.stdout.write(`synapse-kit v0.1.0\n`);
+    process.stdout.write(`synapse-kit v${pkg.version}\n`);
     process.exit(0);
   }
 
