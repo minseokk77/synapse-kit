@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { loadSynapseConfig } from './core/config';
-import { executeChecks, executeBuild } from './core/engine';
+import { executeChecks, executeBuild, executePackage, executeSign } from './core/engine';
 import type { SynapseOptions } from './types';
 
 const RESET = '\x1b[0m';
@@ -48,9 +48,34 @@ export default defineConfig({
     }),
   ],
   buildTracks: [
-    { name: 'APO DLL 빌드', command: ['bun', 'tooling/build-apo.mjs'] },
-    { name: 'Svelte UI 빌드', command: ['bun', 'run', 'build'] },
+    {
+      name: 'APO DLL 빌드',
+      command: ['bun', 'tooling/build-apo.mjs'],
+      sources: ['vesper-apo/'],
+      artifacts: ['src-tauri/resources/vesper_apo.dll'],
+    },
+    {
+      name: 'Taskbar 위젯 빌드',
+      command: ['bun', 'tooling/build-taskbar.mjs'],
+      sources: ['windhawk/', 'standalone/'],
+      artifacts: ['src-tauri/resources/taskbar/VesperTaskbar.dll'],
+    },
+    {
+      name: 'Svelte UI 빌드',
+      command: ['bun', 'run', 'build'],
+      sources: ['src/', 'static/'],
+      artifacts: ['build/index.html'],
+    },
   ],
+  package: {
+    framework: 'tauri',
+    targets: ['nsis'],
+    compression: 'zlib',
+  },
+  sign: {
+    privateKeyPath: 'src-tauri/keys/updater',
+    passwordEnv: 'TAURI_KEY_PASSWORD',
+  },
 });
 `;
 
@@ -64,22 +89,25 @@ export default defineConfig({
  */
 function printHelp(): void {
   process.stdout.write(`
-${BOLD}${CYAN}🧠 Synapse Kit - AI-Native Unified Compiler & Verification Framework${RESET}
+${BOLD}${CYAN}🧠 Synapse Kit - AI-Native Unified Compiler, Build & Packaging Framework${RESET}
 
 ${BOLD}사용법:${RESET}
   synapse <command> [options]
 
-${BOLD}명령어:${RESET}
-  check          등록된 플러그인 무결성 검증 실행 (기본: AI 인과율 스마트 검사)
-  build          등록된 buildTracks 동시 병렬 빌드 실행
-  init           현재 디렉터리에 기본 synapse.config.ts 생성
+${BOLD}핵심 명령어:${RESET}
+  check          등록된 플러그인 무결성 검증 (기본: AI 인과율 스마트 검사)
+  build          등록된 buildTracks 초고속 인과율 병렬 증분 빌드 (0초대 캐시)
+  package        단일 NSIS + zlib 고속 인스톨러 패키징 번들러
+  sign           인과율 암호화 서명 엔진 (Minisign / Ed25519)
+  init           현재 디렉터리에 최적화된 synapse.config.ts 생성
 
 ${BOLD}옵션:${RESET}
-  --all              인과율 스킵을 끄고 모든 플러그인 전방위 강제 검사
+  --all              인과율 스킵을 끄고 전방위 강제 검사
+  -f, --force        빌드/서명 시 인과율 캐시를 무시하고 강제 재실행
   --agent            AI 에이전트(Claude Code, Antigravity 등) 연동용 구조화된 JSON 출력
   --compact          AI 토큰 극단적 최소화 모드 (성공 시 단 11 토큰)
   -i, --interactive  오류 발생 시 프로세스를 일시정지하고 실시간 코드 수정 대기 (인과 핫픽스)
-  --watch            파일 변경 감지 백그라운드 모드 (준비 중)
+  --watch            파일 변경 감지 백그라운드 모드
   --help, -h         도움말 표시
   --version, -v      버전 정보 표시
 \n`);
@@ -110,6 +138,7 @@ async function main(): Promise<void> {
   }
 
   const isInteractive = args.includes('--interactive') || args.includes('-i');
+  const isForce = args.includes('--force') || args.includes('-f');
 
   const options: SynapseOptions = {
     mode: args.includes('--all') ? 'all' : 'smart',
@@ -117,6 +146,7 @@ async function main(): Promise<void> {
     compactMode: args.includes('--compact'),
     watch: args.includes('--watch'),
     interactive: isInteractive,
+    force: isForce,
   };
 
   try {
@@ -126,7 +156,13 @@ async function main(): Promise<void> {
       const code = await executeChecks(config, options);
       process.exit(code);
     } else if (command === 'build') {
-      const code = await executeBuild(config);
+      const code = await executeBuild(config, options);
+      process.exit(code);
+    } else if (command === 'package') {
+      const code = await executePackage(config, options);
+      process.exit(code);
+    } else if (command === 'sign') {
+      const code = await executeSign(config, options);
       process.exit(code);
     } else {
       process.stderr.write(`${RED}❌ 알 수 없는 명령어: '${command}'${RESET}\n`);

@@ -37,6 +37,21 @@ export interface BuildTrack {
   readonly name: string;
   readonly command: readonly string[];
   readonly cwd?: string;
+  readonly sources?: readonly string[]; // 인과율 감지 소스 디렉터리/파일 (예: ['src/', 'static/'])
+  readonly artifacts?: readonly string[]; // 산출물 파일 경로 (예: ['build/index.html'])
+}
+
+export interface PackageConfig {
+  readonly framework?: 'tauri' | 'custom';
+  readonly targets?: readonly string[]; // 기본값: ['nsis']
+  readonly compression?: 'zlib' | 'bzip2' | 'lzma' | 'off';
+  readonly tauriConfPath?: string;
+}
+
+export interface SignConfig {
+  readonly privateKeyPath: string;
+  readonly targetInstaller?: string; // 미지정 시 최신 nsis 번들 자동 탐색
+  readonly passwordEnv?: string; // 기본값: TAURI_KEY_PASSWORD
 }
 
 export interface SynapseConfig {
@@ -47,6 +62,8 @@ export interface SynapseConfig {
   };
   readonly plugins: readonly CheckerPlugin[];
   readonly buildTracks?: readonly BuildTrack[];
+  readonly package?: PackageConfig;
+  readonly sign?: SignConfig;
 }
 
 export interface SynapseOptions {
@@ -55,6 +72,7 @@ export interface SynapseOptions {
   readonly compactMode: boolean; // 초극단적 토큰 압축 모드 (--compact)
   readonly watch: boolean;
   readonly interactive?: boolean; // 에러 발생 시 일시정지 및 실시간 수정 루프 (--interactive, -i)
+  readonly force?: boolean; // 빌드/서명 시 인과율 캐시 무시하고 강제 실행 (--force, -f)
 }
 
 export interface CausalDecision {

@@ -124,9 +124,17 @@ bunx synapse check --compact
 # - 기계 친화적 인덴트 JSON 포맷 방출
 bunx synapse check --agent
 
-# ⚡ 5. 멀티 트랙 동시 병렬 빌드
-# - 등록된 buildTracks를 동시에 멀티코어 병렬 실행
+# ⚡ 5. 초고속 인과율 병렬 증분 빌드 (0초대 캐시)
+# - 등록된 buildTracks를 동시에 멀티코어 병렬 실행 (소스 미변경 시 0.00초 스킵)
 bunx synapse build
+
+# 📦 6. 고속 인스톨러 패키징 (Tauri NSIS + zlib)
+# - 불필요한 WiX MSI 중복 빌드를 차단하고 단일 NSIS + zlib 고속 압축으로 즉시 번들링
+bunx synapse package
+
+# 🔐 7. 인과율 암호화 서명 (Minisign / Ed25519)
+# - Bun 네이티브 초고속 서명 (인스톨러 바이너리 해시 불변 시 0.00초 스킵)
+bunx synapse sign
 ```
 
 ---
