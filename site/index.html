@@ -1,323 +1,779 @@
 <!DOCTYPE html>
-<html lang="ko" class="dark">
+<html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Synapse Kit - AI-Native Unified Compiler & Verification Framework</title>
-  <meta name="description" content="AI-Native 초고속 통합 컴파일러 & 검증 프레임워크. Tauri, Rust, Svelte 5, Win32 툴체인을 단 4초 만에 병렬 검증하고, 20만 줄 대규모 코드에서 AI 토큰을 99.8% 절감합니다.">
+  <title>Vesper Synapse | AI-Native Unified Compiler & Verification</title>
+  <meta name="description" content="Rust, Svelte 5, TypeScript, Win32 PE 바이너리 및 인스톨러 툴체인을 단일 파이프라인으로 통합하는 Vesper 엔지니어링 컴파일러.">
   <link rel="canonical" href="https://synapse.minseok.online">
-  <meta property="og:title" content="Synapse Kit - AI-Native Unified Compiler">
-  <meta property="og:description" content="200,000줄 코드베이스를 3.47초 만에 검증하는 AI-Native 컴파일러">
-  <meta property="og:url" content="https://synapse.minseok.online">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Pretendard', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            brand: {
-              50: '#f0f9ff',
-              400: '#38bdf8',
-              500: '#0ea5e9',
-              600: '#0284c7',
-              900: '#0c4a6e',
-              glow: '#00f0ff',
-            },
-            vesper: {
-              card: '#0f172a',
-              border: '#1e293b',
-              dark: '#030712',
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --ink: #f5f5f7;
+      --muted: #a1a1aa;
+      --line: rgba(255, 255, 255, 0.12);
+      --blue: #0a84ff;
+      --blue-bright: #64d2ff;
+      --violet: #bf5af2;
+      --surface: rgba(255, 255, 255, 0.07);
+      --surface-strong: rgba(255, 255, 255, 0.11);
+      --background: #050507;
+      --font-geist-mono: 'Geist Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+    }
+    html::-webkit-scrollbar {
+      display: none;
+    }
+
     body {
-      background-color: #030712;
-      color: #f8fafc;
-      font-family: 'Pretendard', sans-serif;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(44, 67, 108, 0.32), transparent 38rem),
+        var(--background);
+      color: var(--ink);
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
-    .glow-cyan {
-      box-shadow: 0 0 50px -10px rgba(14, 165, 233, 0.3);
+
+    a {
+      color: inherit;
+      text-decoration: none;
     }
-    .glow-border {
-      border: 1px solid rgba(56, 189, 248, 0.2);
+
+    .glass {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 24px 60px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
-    .glow-border:hover {
-      border-color: rgba(56, 189, 248, 0.6);
-      box-shadow: 0 0 25px -5px rgba(14, 165, 233, 0.25);
+
+    /* 플로팅 헤더 네비게이션 */
+    .site-header {
+      position: sticky;
+      top: 1rem;
+      z-index: 50;
+      width: min(960px, calc(100% - 2rem));
+      margin: 0 auto;
+      min-height: 54px;
+      padding: 0.45rem 0.65rem 0.45rem 1.15rem;
+      border-radius: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
-    .code-box {
-      font-family: 'JetBrains Mono', monospace;
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.95rem;
+      font-weight: 650;
+      letter-spacing: -0.035em;
     }
-    .gradient-text {
-      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+
+    .brand-mark {
+      position: relative;
+      display: inline-block;
+      width: 22px;
+      height: 20px;
+    }
+
+    .brand-mark i {
+      position: absolute;
+      bottom: 2px;
+      width: 4px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #8eeaff, #0a84ff 55%, #6e5cff);
+      box-shadow: 0 0 12px rgba(10, 132, 255, 0.5);
+      transform-origin: bottom;
+    }
+
+    .brand-mark i:nth-child(1) { left: 2px; height: 9px; }
+    .brand-mark i:nth-child(2) { left: 9px; height: 17px; }
+    .brand-mark i:nth-child(3) { left: 16px; height: 13px; }
+
+    .brand-sep {
+      color: rgba(255, 255, 255, 0.25);
+      font-weight: 300;
+      margin: 0 0.15rem;
+    }
+
+    .brand-sub {
+      color: #b8b8bf;
+      font-weight: 550;
+      font-size: 0.9rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.8rem;
+      color: #c6c6ca;
+      font-size: 0.82rem;
+      font-weight: 530;
+    }
+
+    .nav-links a {
+      transition: color 200ms ease;
+    }
+    .nav-links a:hover {
+      color: white;
+    }
+
+    .nav-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.5rem 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 0.75rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: #f5f5f7;
+      font-size: 0.75rem;
+      font-weight: 550;
+      transition: all 200ms ease;
+    }
+    .nav-action:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: scale(1.02);
+    }
+
+    /* 히어로 영역 */
+    .hero {
+      position: relative;
+      padding: 6.5rem 1.5rem 5rem;
+      text-align: center;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .hero::before {
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(to bottom, black, transparent 75%);
+      content: "";
+    }
+
+    .ambient {
+      position: absolute;
+      z-index: -2;
+      border-radius: 50%;
+      filter: blur(130px);
+      pointer-events: none;
+    }
+
+    .ambient-one {
+      top: -6rem;
+      left: calc(50% - 36rem);
+      width: 34rem;
+      height: 34rem;
+      background: rgba(10, 132, 255, 0.18);
+    }
+
+    .ambient-two {
+      top: 6rem;
+      right: calc(50% - 36rem);
+      width: 32rem;
+      height: 32rem;
+      background: rgba(191, 90, 242, 0.12);
+    }
+
+    .availability {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-bottom: 2rem;
+      padding: 0.45rem 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: #c4c4cc;
+      font-family: var(--font-geist-mono), monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+    }
+
+    .availability i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #30d158;
+      box-shadow: 0 0 10px #30d158;
+    }
+
+    .hero h1 {
+      margin: 0 auto 1.5rem;
+      max-width: 900px;
+      font-size: clamp(3rem, 6.2vw, 5.8rem);
+      font-weight: 680;
+      letter-spacing: -0.06em;
+      line-height: 0.98;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(100deg, #ffffff 20%, #aeeaff 52%, #d8c6ff 85%);
       -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      max-width: 680px;
+      margin: 0 auto 2.5rem;
+      color: #9898a0;
+      font-size: 1.05rem;
+      line-height: 1.65;
+      letter-spacing: -0.015em;
+    }
+
+    /* CLI 인스톨 바 (Vesper Style) */
+    .cli-bar {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      max-width: 520px;
+      width: 100%;
+      padding: 0.45rem 0.55rem 0.45rem 1.15rem;
+      border-radius: 0.95rem;
+      font-family: var(--font-geist-mono), monospace;
+      font-size: 0.8rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .cli-cmd {
+      color: #c9e8ff;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .cli-cmd span {
+      color: rgba(255, 255, 255, 0.3);
+      user-select: none;
+    }
+
+    .cli-btn {
+      padding: 0.45rem 0.85rem;
+      border-radius: 0.65rem;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 180ms ease;
+    }
+    .cli-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    /* Vesper App Screen 인터페이스 */
+    .app-showcase {
+      max-width: 960px;
+      margin: 0 auto 6rem;
+      text-align: left;
+    }
+
+    .app-window {
+      border-radius: 1.25rem;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.05), transparent 35%),
+        #151518;
+      box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .app-titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.4rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .app-title-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .app-title {
+      font-size: 0.92rem;
+      font-weight: 680;
+      letter-spacing: -0.025em;
+    }
+    .app-title span {
+      color: rgba(255, 255, 255, 0.3);
+      font-weight: 400;
+      margin: 0 0.2rem;
+    }
+
+    .app-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(10, 132, 255, 0.3);
+      background: rgba(10, 132, 255, 0.1);
+      color: #64d2ff;
+      font-family: var(--font-geist-mono), monospace;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+    .app-status i {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #0a84ff;
+      box-shadow: 0 0 8px #0a84ff;
+    }
+
+    .app-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .app-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .app-body {
+      padding: 1.6rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.4rem;
+    }
+
+    /* 실측 메트릭 카드 3열 */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 768px) {
+      .metric-grid { grid-template-columns: 1fr; }
+    }
+
+    .metric-card {
+      padding: 1.15rem;
+      border-radius: 0.85rem;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .metric-label {
+      font-family: var(--font-geist-mono), monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888890;
+      margin-bottom: 0.35rem;
+    }
+    .metric-val {
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: #fff;
+    }
+    .metric-sub {
+      font-size: 0.74rem;
+      color: #72727a;
+      margin-top: 0.25rem;
+      line-height: 1.4;
+    }
+
+    /* 터미널 출력 창 (Vesper Terminal) */
+    .terminal-box {
+      border-radius: 0.85rem;
+      background: #0a0a0c;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 1.25rem;
+      font-family: var(--font-geist-mono), monospace;
+      font-size: 0.74rem;
+      line-height: 1.7;
+      color: #d1d1d6;
+      overflow-x: auto;
+    }
+    .term-dim { color: #55555c; }
+    .term-cyan { color: #64d2ff; font-weight: 600; }
+    .term-green { color: #30d158; font-weight: 600; }
+    .term-white { color: #ffffff; }
+
+    /* 피처 섹션 */
+    .section-wrap {
+      max-width: 960px;
+      margin: 0 auto 6rem;
+      padding: 0 1.5rem;
+    }
+    .section-head {
+      margin-bottom: 2rem;
+    }
+    .section-tag {
+      font-family: var(--font-geist-mono), monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue-bright);
+      margin-bottom: 0.5rem;
+    }
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 680;
+      letter-spacing: -0.04em;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    @media (max-width: 768px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    .feature-card {
+      padding: 1.6rem;
+      border-radius: 1.05rem;
+    }
+    .feature-num {
+      font-family: var(--font-geist-mono), monospace;
+      font-size: 0.65rem;
+      color: #71717a;
+      margin-bottom: 1rem;
+    }
+    .feature-name {
+      font-size: 1.05rem;
+      font-weight: 650;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.65rem;
+    }
+    .feature-desc {
+      font-size: 0.84rem;
+      color: #92929a;
+      line-height: 1.6;
+    }
+
+    /* 벤치마크 테이블 */
+    .bench-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-geist-mono), monospace;
+      font-size: 0.75rem;
+      border-radius: 0.85rem;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    .bench-table th, .bench-table td {
+      padding: 0.95rem 1.15rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      text-align: left;
+    }
+    .bench-table th {
+      background: rgba(255, 255, 255, 0.04);
+      color: #888892;
+      font-weight: 500;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .bench-table tr:last-child td {
+      border-bottom: none;
+    }
+    .bench-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* 푸터 */
+    .site-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 3rem 1.5rem 4rem;
+      font-size: 0.78rem;
+      color: #6a6a72;
+    }
+    .footer-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .footer-links a:hover {
+      color: #d1d1d6;
     }
   </style>
 </head>
-<body class="min-h-screen selection:bg-brand-500 selection:text-white">
+<body>
 
-  <!-- 네비게이션 바 -->
-  <nav class="border-b border-slate-800/80 bg-vesper-dark/80 backdrop-blur-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <span class="text-2xl">🧠</span>
-        <span class="font-bold text-xl tracking-tight text-white">Synapse Kit</span>
-        <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">v0.1.0</span>
-      </div>
-      <div class="flex items-center space-x-6 text-sm">
-        <a href="#benchmarks" class="text-slate-400 hover:text-white transition">벤치마크</a>
-        <a href="#architecture" class="text-slate-400 hover:text-white transition">아키텍처</a>
-        <a href="#quickstart" class="text-slate-400 hover:text-white transition">빠른 시작</a>
-        <a href="https://github.com/minseokk77/synapse-kit" target="_blank" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-lg border border-slate-700 transition">
-          <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          <span class="font-medium text-white">GitHub</span>
-        </a>
-      </div>
+  <!-- 상단 Vesper 플로팅 네비게이션 -->
+  <header class="site-header glass">
+    <div class="brand">
+      <span class="brand-mark">
+        <i></i><i></i><i></i>
+      </span>
+      <span>Vesper</span>
+      <span class="brand-sep">|</span>
+      <span class="brand-sub">Synapse</span>
     </div>
-  </nav>
 
-  <!-- 히어로 섹션 -->
-  <section class="relative pt-24 pb-20 overflow-hidden">
-    <div class="max-w-5xl mx-auto px-6 text-center relative z-10">
-      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs font-medium mb-8">
-        <span>⚡ 200,000줄 초대형 엔터프라이즈 코드베이스 3.47초 검증 실측 완료</span>
-      </div>
-      <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight mb-8">
-        모든 툴체인을 하나로。<br>
-        <span class="gradient-text">AI-Native 통합 컴파일러</span>
-      </h1>
-      <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-        Rust, Svelte 5, TypeScript, Win32 PE DLL, NSIS 인스톨러까지。<br>
-        파편화된 이종 툴체인을 멀티코어 동시 병렬로 엮고, <strong>인과율 메모리</strong>로 무관한 빌드를 0.00초 스킵합니다.
-      </p>
+    <nav class="nav-links">
+      <a href="#benchmarks">Benchmarks</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#quickstart">Quickstart</a>
+    </nav>
 
-      <!-- 원클릭 복사 인스톨 바 -->
-      <div class="max-w-xl mx-auto mb-12">
-        <div class="bg-vesper-card border border-slate-800 rounded-xl p-2 flex items-center justify-between shadow-2xl glow-cyan">
-          <div class="flex items-center space-x-3 px-3 code-box text-sm text-cyan-300">
-            <span class="text-slate-500 select-none">$</span>
-            <span id="cmd-text">bunx synapse-kit init</span>
-          </div>
-          <button onclick="copyCmd()" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-4 py-2 rounded-lg text-xs transition flex items-center space-x-1.5">
-            <span id="copy-btn-text">명령어 복사</span>
-          </button>
-        </div>
-      </div>
+    <a href="https://github.com/minseokk77/synapse-kit" target="_blank" class="nav-action">
+      <span>GitHub</span>
+      <span style="font-size: 0.65rem; color: #7f7f88;">v0.1.0</span>
+    </a>
+  </header>
 
-      <!-- 3대 핵심 지표 배지 -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto text-left">
-        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/80 glow-border">
-          <div class="text-3xl font-bold text-cyan-400 font-mono mb-1">3.47초</div>
-          <div class="text-sm font-semibold text-white mb-1">20만 줄 풀 컴파일 검증</div>
-          <div class="text-xs text-slate-400">Rust 10만줄 + TS 10만줄을 멀티코어 병렬로 동시 완결</div>
-        </div>
-        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/80 glow-border">
-          <div class="text-3xl font-bold text-indigo-400 font-mono mb-1">99.8% 절감</div>
-          <div class="text-sm font-semibold text-white mb-1">AI 에이전트 토큰 다이어트</div>
-          <div class="text-xs text-slate-400">거대한 터미널 로그를 단 11 토큰 (45자) 압축 JSON으로 정제</div>
-        </div>
-        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/80 glow-border">
-          <div class="text-3xl font-bold text-emerald-400 font-mono mb-1">0.31초</div>
-          <div class="text-sm font-semibold text-white mb-1">인과율 스마트 스킵</div>
-          <div class="text-xs text-slate-400">Git 변경점 자동 추적으로 무관한 10만 줄 컴파일 0.00s 생략</div>
-        </div>
-      </div>
+  <!-- 메인 히어로 -->
+  <section class="hero">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <div class="availability">
+      <i></i>
+      <span>SYNAPSE v0.1.0 PUBLIC RELEASE &bull; MINSEOK.ONLINE</span>
     </div>
-  </section>
 
-  <!-- 벤치마크 실측 비교 섹션 -->
-  <section id="benchmarks" class="py-20 border-t border-slate-800/60 bg-slate-950/40">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center max-w-2xl mx-auto mb-16">
-        <h2 class="text-3xl font-bold text-white mb-3">실측 데이터 기반 성능 벤치마크</h2>
-        <p class="text-slate-400 text-sm">Vesper DSP 프로덕션 및 독립 200,000 LOC 샌드박스에서 측정한 실제 수치입니다.</p>
+    <h1>
+      엔지니어링의 속도를。<br>
+      <span>Vesper Synapse</span>
+    </h1>
+
+    <p>
+      Rust, Svelte 5, TypeScript, Win32 PE DLL, NSIS 툴체인을 단일 인과 그래프로 통합합니다.<br>
+      200,000줄 초대형 모노레포를 3.47초 만에 검증하고, 스마트 스킵으로 AI 토큰을 99.8% 절감합니다.
+    </p>
+
+    <div class="cli-bar glass">
+      <div class="cli-cmd">
+        <span>$</span>
+        <strong id="cmd-copy-target">bunx synapse-kit check</strong>
       </div>
+      <button class="cli-btn" onclick="copyCli()">복사</button>
+    </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- 20만줄 실측 테이블 -->
-        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
-          <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-            <span>⚡ 200,000 LOC 극한 스트레스 테스트</span>
-          </h3>
-          <div class="space-y-4 code-box text-xs">
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-              <div class="flex justify-between text-slate-400 mb-1">
-                <span>전체 콜드 검증 (check --all)</span>
-                <span class="text-cyan-400 font-bold">3.47s</span>
-              </div>
-              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div class="bg-cyan-500 h-full" style="width: 35%"></div>
-              </div>
-              <div class="text-[11px] text-slate-500 mt-2">Rust 100,022줄 + TS 100,000줄 (총 5.92MB) 완결</div>
+    <!-- Vesper Desktop App UI 형태 쇼케이스 -->
+    <div class="app-showcase">
+      <div class="app-window">
+        <div class="app-titlebar">
+          <div class="app-title-group">
+            <div class="app-title">
+              Vesper <span>|</span> Synapse Engine
             </div>
-
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-              <div class="flex justify-between text-slate-400 mb-1">
-                <span>TS 파일 1개 수정 후 스마트 스킵</span>
-                <span class="text-emerald-400 font-bold">0.31s (91.1% 단축)</span>
-              </div>
-              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div class="bg-emerald-500 h-full" style="width: 5%"></div>
-              </div>
-              <div class="text-[11px] text-slate-500 mt-2">무관한 Rust 100,022줄 컴파일 완전 생략</div>
+            <div class="app-status">
+              <i></i> ACTIVE
             </div>
-
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-              <div class="flex justify-between text-slate-400 mb-1">
-                <span>결함 주입 및 핀포인트 역추적</span>
-                <span class="text-rose-400 font-bold">0.86s</span>
-              </div>
-              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div class="bg-rose-500 h-full" style="width: 10%"></div>
-              </div>
-              <div class="text-[11px] text-slate-500 mt-2">20만 줄 속 1개 타입 에러 정확한 라인 특정</div>
-            </div>
+          </div>
+          <div class="app-dots">
+            <span></span><span></span><span></span>
           </div>
         </div>
 
-        <!-- AI 토큰 절감 비교 -->
-        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
-          <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-            <span>📉 AI 에이전트 토큰 다이어트 (--compact)</span>
-          </h3>
-          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 mb-4">
-            <div class="text-xs text-slate-400 mb-2">기존 일반 컴파일러 터미널 로그 출력:</div>
-            <div class="text-xs text-rose-400/80 code-box bg-rose-950/20 p-3 rounded-lg border border-rose-900/30">
-              수천 줄의 ANSI 컬러 코드, 컴파일러 경고, 프로그레스 바 등<br>
-              <strong>소모 토큰: ~3,500 Tokens (LLM 컨텍스트 오염 및 추론 지연)</strong>
+        <div class="app-body">
+          <!-- 3대 핵심 실측 메트릭 -->
+          <div class="metric-grid">
+            <div class="metric-card">
+              <div class="metric-label">Cold Check Latency</div>
+              <div class="metric-val">3.47s</div>
+              <div class="metric-sub">200,022 LOC (Rust 10만줄 + TS 10만줄 병렬 완결)</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">Causal Smart Skip</div>
+              <div class="metric-val">0.31s</div>
+              <div class="metric-sub">단일 모듈 수정 시 무관한 10만 줄 컴파일 0.00s 생략</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-label">AI Token Overhead</div>
+              <div class="metric-val">11 <span style="font-size: 0.9rem; font-weight: 500; color: #888;">Tokens</span></div>
+              <div class="metric-sub">수천 토큰 터미널 덤프를 45바이트 Minified JSON으로 압축</div>
             </div>
           </div>
-          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-            <div class="text-xs text-slate-400 mb-2">Synapse Kit AI-Native 초압축 출력:</div>
-            <div class="text-xs text-cyan-300 code-box bg-cyan-950/20 p-3 rounded-lg border border-cyan-800/40">
-              {"ok":true,"duration":"1.82s","skipped":[]}<br>
-              <strong>소모 토큰: 단 11 Tokens (99.8% 절감, 즉각 수렴)</strong>
+
+          <!-- 실제 터미널 출력 -->
+          <div class="terminal-box">
+            <div class="term-dim">// 200,000 LOC stress-test sandbox validation</div>
+            <div><span class="term-dim">$</span> bunx synapse-kit check</div>
+            <div class="term-dim" style="margin: 0.35rem 0;">--------------------------------------------------------------------------------</div>
+            <div>[Causal Graph] Target workspace loaded (200,022 LOC / 5.92MB)</div>
+            <div>[Dependency] 1 file modified (src/modules/module_0.ts) ➜ 선별 파이프라인 가동</div>
+            <div class="term-dim" style="margin: 0.35rem 0;">--------------------------------------------------------------------------------</div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>• Rust Backend Workspace (cargo check & clippy)</span>
+              <span class="term-dim">⏭️ SKIPPED (인과율 생략: 0.00s)</span>
             </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+              <span>• TypeScript 100,000 LOC Validator (tsc --noEmit)</span>
+              <span class="term-green">✅ PASSED (0.26s)</span>
+            </div>
+            <div class="term-dim" style="margin: 0.35rem 0;">--------------------------------------------------------------------------------</div>
+            <div class="term-cyan">✨ 검증 성공: 0 Errors, 0 Warnings, 1 Skipped (총 소요 시간: 0.31초)</div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 3대 핵심 아키텍처 -->
-  <section id="architecture" class="py-20 border-t border-slate-800/60">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center max-w-2xl mx-auto mb-16">
-        <h2 class="text-3xl font-bold text-white mb-3">AI와 개발자를 위한 3대 혁신 아키텍처</h2>
-        <p class="text-slate-400 text-sm">단순한 빌드 툴이 아닌 지능형 인과 오케스트레이션 엔진입니다.</p>
+  <!-- 실측 벤치마크 섹션 -->
+  <section id="benchmarks" class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">01 / Empirical Telemetry</div>
+      <h2 class="section-title">200,000 LOC 실측 벤치마크</h2>
+    </div>
+
+    <table class="bench-table">
+      <thead>
+        <tr>
+          <th>Test Scenario</th>
+          <th>Workload Scale</th>
+          <th>Standard Toolchain</th>
+          <th>Vesper Synapse</th>
+          <th>Improvement</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Full Workspace Cold Check</td>
+          <td>200,022 LOC (5.92MB)</td>
+          <td style="color: #72727a;">Sequential (~8.50s)</td>
+          <td style="color: #fff; font-weight: 600;">3.47s</td>
+          <td style="color: #64d2ff;">-59.1% Faster</td>
+        </tr>
+        <tr>
+          <td>TS Delta Edit (Smart Skip)</td>
+          <td>1 line in module_0.ts</td>
+          <td style="color: #72727a;">Re-run all (~3.50s)</td>
+          <td style="color: #fff; font-weight: 600;">0.31s</td>
+          <td style="color: #30d158;">-91.1% (Rust Skipped)</td>
+        </tr>
+        <tr>
+          <td>Fault Injection & Traceback</td>
+          <td>1 type mismatch in Rust</td>
+          <td style="color: #72727a;">Full build failure</td>
+          <td style="color: #fff; font-weight: 600;">0.86s</td>
+          <td style="color: #64d2ff;">Exact Line Isolation</td>
+        </tr>
+        <tr>
+          <td>AI Agent Compact Output</td>
+          <td>Diagnostic Payload</td>
+          <td style="color: #72727a;">~3,400 Tokens (Raw)</td>
+          <td style="color: #fff; font-weight: 600;">11 Tokens (45B)</td>
+          <td style="color: #30d158;">-99.8% Context Diet</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 3대 아키텍처 -->
+  <section id="architecture" class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">02 / Engine Architecture</div>
+      <h2 class="section-title">Vesper 코어 엔지니어링 메커니즘</h2>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card glass">
+        <div class="feature-num">01 &bull; CAUSAL GRAPH</div>
+        <div class="feature-name">인과율 스마트 스킵</div>
+        <div class="feature-desc">
+          Git 작업 트리의 변경 사항(`git status -uall`)과 각 툴체인의 트리거 패턴을 교차 분석하여, 영향받지 않은 언어 서브시스템을 0.00초 만에 완벽히 생략합니다.
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
-          <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-2xl mb-5 border border-cyan-500/20">🧠</div>
-          <h3 class="text-lg font-bold text-white mb-2">인과율 스마트 스킵 (Smart Skipping)</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            Git 작업 트리를 분석하여 실제로 변경된 파일의 종속성만 역추적합니다. 프론트엔드 수정 시 백엔드 빌드를 0.00초 만에 스킵합니다.
-          </p>
+      <div class="feature-card glass">
+        <div class="feature-num">02 &bull; LIVE-FIX LOOP</div>
+        <div class="feature-name">대화형 인과 핫픽스 (`-i`)</div>
+        <div class="feature-desc">
+          컴파일 에러 발생 시 프로세스를 강제 종료하지 않고 동결(`check -i`)합니다. 파일 수정 즉시 인메모리에서 0.05초 만에 핫 재컴파일하여 파이프라인을 자동 재개합니다.
         </div>
+      </div>
 
-        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
-          <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-2xl mb-5 border border-indigo-500/20">⏸️</div>
-          <h3 class="text-lg font-bold text-white mb-2">대화형 인과 핫픽스 (Live-Fix Loop)</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            오류 발생 시 프로세스를 죽이지 않고 일시정지(`check -i`)합니다. 에디터나 AI가 파일을 수정하고 저장하는 즉시 0.05초 만에 핫 재컴파일합니다.
-          </p>
-        </div>
-
-        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
-          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-2xl mb-5 border border-emerald-500/20">⚡</div>
-          <h3 class="text-lg font-bold text-white mb-2">멀티트랙 병렬 빌더 (Parallel Builder)</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            Win32 C++ DLL 빌드, SvelteKit 번들링, NSIS 인스톨러 생성 등 순차 대기하던 사전 빌드 과정을 멀티코어 동시 병렬화하여 빌드 시간을 30% 이상 단축합니다.
-          </p>
+      <div class="feature-card glass">
+        <div class="feature-num">03 &bull; MULTI-TRACK</div>
+        <div class="feature-name">멀티트랙 병렬 빌더</div>
+        <div class="feature-desc">
+          Win32 PE DLL 컴파일, Svelte UI 번들링, NSIS 설치 패키지 생성 등 순차 대기하던 사전 빌드 과정을 단일 파이프라인에서 멀티코어 동시 병렬 실행합니다.
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 빠른 시작 및 설정 가이드 -->
-  <section id="quickstart" class="py-20 border-t border-slate-800/60 bg-slate-950/40">
-    <div class="max-w-4xl mx-auto px-6">
-      <div class="text-center max-w-2xl mx-auto mb-16">
-        <h2 class="text-3xl font-bold text-white mb-3">1분 만에 프로젝트에 도입하기</h2>
-        <p class="text-slate-400 text-sm">설치 없이 즉시 무설치 명령어로 프로젝트에 적용할 수 있습니다.</p>
-      </div>
+  <!-- 빠른 시작 가이드 -->
+  <section id="quickstart" class="section-wrap">
+    <div class="section-head">
+      <div class="section-tag">03 / Quickstart</div>
+      <h2 class="section-title">즉시 도입하기</h2>
+    </div>
 
-      <div class="space-y-6">
-        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
-          <h4 class="text-sm font-bold text-cyan-400 mb-2 uppercase tracking-wider">Step 1. 설정 파일 생성</h4>
-          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 code-box">
-            bunx synapse-kit init
-          </div>
-        </div>
-
-        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
-          <h4 class="text-sm font-bold text-cyan-400 mb-2 uppercase tracking-wider">Step 2. synapse.config.ts 설정</h4>
-          <pre class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 code-box overflow-x-auto"><code>import { defineConfig, rustChecker, svelteChecker, schemaChecker } from 'synapse-kit';
-
-export default defineConfig({
-  aiMemory: {
-    enabled: true,
-    smartSkipping: true,
-  },
-  plugins: [
-    rustChecker({ workspaceDir: './src-tauri' }),
-    svelteChecker({ tsconfig: './tsconfig.json' }),
-    schemaChecker({ targets: [{ path: './src-tauri/tauri.conf.json' }] }),
-  ],
-});</code></pre>
-        </div>
-
-        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
-          <h4 class="text-sm font-bold text-cyan-400 mb-2 uppercase tracking-wider">Step 3. 검증 실행</h4>
-          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 code-box space-y-2">
-            <div><span class="text-slate-500"># 인과 스마트 검사</span><br>bunx synapse-kit check</div>
-            <div><span class="text-slate-500"># 전체 전방위 강제 검사</span><br>bunx synapse-kit check --all</div>
-            <div><span class="text-slate-500"># AI 에이전트용 초압축 출력</span><br>bunx synapse-kit check --compact</div>
-          </div>
-        </div>
-      </div>
+    <div class="terminal-box" style="margin-bottom: 1.5rem;">
+      <div class="term-dim">// 1. Initialize configuration template</div>
+      <div><span class="term-dim">$</span> bunx synapse-kit init</div>
+      <div class="term-dim" style="margin: 0.6rem 0;">// 2. Run causal verification</div>
+      <div><span class="term-dim">$</span> bunx synapse-kit check</div>
+      <div class="term-dim" style="margin: 0.6rem 0;">// 3. Interactive live-fix mode (pause-on-error)</div>
+      <div><span class="term-dim">$</span> bunx synapse-kit check -i</div>
+      <div class="term-dim" style="margin: 0.6rem 0;">// 4. Compact mode for AI agents (Claude Code, Antigravity)</div>
+      <div><span class="term-dim">$</span> bunx synapse-kit check --compact</div>
     </div>
   </section>
 
   <!-- 푸터 -->
-  <footer class="border-t border-slate-800/80 py-12 bg-vesper-dark text-slate-500 text-xs">
-    <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center space-x-2">
-        <span class="text-lg">🧠</span>
-        <span class="font-bold text-slate-300">Synapse Kit</span>
-        <span>•</span>
-        <span>Copyright &copy; 2026 <strong>Vesper</strong>. All rights reserved.</span>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <span>Vesper Synapse &bull; Copyright &copy; 2026 <strong>Vesper</strong>. All rights reserved.</span>
       </div>
-      <div class="flex items-center space-x-6">
-        <a href="https://github.com/minseokk77/synapse-kit" target="_blank" class="hover:text-slate-300 transition">GitHub 저장소</a>
-        <a href="https://github.com/minseokk77/synapse-kit/blob/main/LICENSE" target="_blank" class="hover:text-slate-300 transition">MIT 라이선스</a>
+      <div class="footer-links">
+        <a href="https://vesper.minseok.online" target="_blank">Vesper Audio</a>
+        <a href="https://github.com/minseokk77/synapse-kit" target="_blank">GitHub</a>
+        <a href="https://www.npmjs.com/package/synapse-kit" target="_blank">npm</a>
+        <a href="https://github.com/minseokk77/synapse-kit/releases" target="_blank">Releases</a>
       </div>
     </div>
   </footer>
 
   <script>
-    function copyCmd() {
-      const text = document.getElementById('cmd-text').innerText;
+    function copyCli() {
+      const text = document.getElementById('cmd-copy-target').innerText;
       navigator.clipboard.writeText(text);
-      const btn = document.getElementById('copy-btn-text');
-      btn.innerText = '복사 완료!';
-      setTimeout(() => {
-        btn.innerText = '명령어 복사';
-      }, 2000);
+      const btn = document.querySelector('.cli-btn');
+      btn.innerText = '복사됨';
+      setTimeout(() => { btn.innerText = '복사'; }, 1800);
     }
   </script>
 </body>
