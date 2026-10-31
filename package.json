@@ -1,6 +1,10 @@
 {
   "name": "synapse-kit",
   "version": "0.1.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "AI-Native Unified Compiler, Linter & Verification Framework for Tauri and Full-Stack Apps",
   "type": "module",
   "main": "dist/index.js",
