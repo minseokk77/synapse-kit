@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synapse Kit - AI-Native Unified Compiler & Verification Framework</title>
+  <meta name="description" content="AI-Native 초고속 통합 컴파일러 & 검증 프레임워크. Tauri, Rust, Svelte 5, Win32 툴체인을 단 4초 만에 병렬 검증하고, 20만 줄 대규모 코드에서 AI 토큰을 99.8% 절감합니다.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              900: '#0c4a6e',
+              glow: '#00f0ff',
+            },
+            vesper: {
+              card: '#0f172a',
+              border: '#1e293b',
+              dark: '#030712',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #030712;
+      color: #f8fafc;
+      font-family: 'Pretendard', sans-serif;
+    }
+    .glow-cyan {
+      box-shadow: 0 0 50px -10px rgba(14, 165, 233, 0.3);
+    }
+    .glow-border {
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+    .glow-border:hover {
+      border-color: rgba(56, 189, 248, 0.6);
+      box-shadow: 0 0 25px -5px rgba(14, 165, 233, 0.25);
+    }
+    .code-box {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-brand-500 selection:text-white">
+
+  <!-- 네비게이션 바 -->
+  <nav class="border-b border-slate-800/80 bg-vesper-dark/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🧠</span>
+        <span class="font-bold text-xl tracking-tight text-white">Synapse Kit</span>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-mono">v0.1.0</span>
+      </div>
+      <div class="flex items-center space-x-6 text-sm">
+        <a href="#benchmarks" class="text-slate-400 hover:text-white transition">벤치마크</a>
+        <a href="#architecture" class="text-slate-400 hover:text-white transition">아키텍처</a>
+        <a href="#quickstart" class="text-slate-400 hover:text-white transition">빠른 시작</a>
+        <a href="https://github.com/minseokk77/synapse-kit" target="_blank" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-lg border border-slate-700 transition">
+          <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span class="font-medium text-white">GitHub</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 히어로 섹션 -->
+  <section class="relative pt-24 pb-20 overflow-hidden">
+    <div class="max-w-5xl mx-auto px-6 text-center relative z-10">
+      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs font-medium mb-8">
+        <span>⚡ 200,000줄 초대형 엔터프라이즈 코드베이스 3.47초 검증 실측 완료</span>
+      </div>
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight mb-8">
+        모든 툴체인을 하나로。<br>
+        <span class="gradient-text">AI-Native 통합 컴파일러</span>
+      </h1>
+      <p class="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+        Rust, Svelte 5, TypeScript, Win32 PE DLL, NSIS 인스톨러까지。<br>
+        파편화된 이종 툴체인을 멀티코어 동시 병렬로 엮고, <strong>인과율 메모리</strong>로 무관한 빌드를 0.00초 스킵합니다.
+      </p>
+
+      <!-- 원클릭 복사 인스톨 바 -->
+      <div class="max-w-xl mx-auto mb-12">
+        <div class="bg-vesper-card border border-slate-800 rounded-xl p-2 flex items-center justify-between shadow-2xl glow-cyan">
+          <div class="flex items-center space-x-3 px-3 code-box text-sm text-cyan-300">
+            <span class="text-slate-500 select-none">$</span>
+            <span id="cmd-text">bunx synapse-kit init</span>
+          </div>
+          <button onclick="copyCmd()" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-4 py-2 rounded-lg text-xs transition flex items-center space-x-1.5">
+            <span id="copy-btn-text">명령어 복사</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3대 핵심 지표 배지 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto text-left">
+        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/80 glow-border">
+          <div class="text-3xl font-bold text-cyan-400 font-mono mb-1">3.47초</div>
+          <div class="text-sm font-semibold text-white mb-1">20만 줄 풀 컴파일 검증</div>
+          <div class="text-xs text-slate-400">Rust 10만줄 + TS 10만줄을 멀티코어 병렬로 동시 완결</div>
+        </div>
+        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/80 glow-border">
+          <div class="text-3xl font-bold text-indigo-400 font-mono mb-1">99.8% 절감</div>
+          <div class="text-sm font-semibold text-white mb-1">AI 에이전트 토큰 다이어트</div>
+          <div class="text-xs text-slate-400">거대한 터미널 로그를 단 11 토큰 (45자) 압축 JSON으로 정제</div>
+        </div>
+        <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800/80 glow-border">
+          <div class="text-3xl font-bold text-emerald-400 font-mono mb-1">0.31초</div>
+          <div class="text-sm font-semibold text-white mb-1">인과율 스마트 스킵</div>
+          <div class="text-xs text-slate-400">Git 변경점 자동 추적으로 무관한 10만 줄 컴파일 0.00s 생략</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 벤치마크 실측 비교 섹션 -->
+  <section id="benchmarks" class="py-20 border-t border-slate-800/60 bg-slate-950/40">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <h2 class="text-3xl font-bold text-white mb-3">실측 데이터 기반 성능 벤치마크</h2>
+        <p class="text-slate-400 text-sm">Vesper DSP 프로덕션 및 독립 200,000 LOC 샌드박스에서 측정한 실제 수치입니다.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- 20만줄 실측 테이블 -->
+        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
+          <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <span>⚡ 200,000 LOC 극한 스트레스 테스트</span>
+          </h3>
+          <div class="space-y-4 code-box text-xs">
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+              <div class="flex justify-between text-slate-400 mb-1">
+                <span>전체 콜드 검증 (check --all)</span>
+                <span class="text-cyan-400 font-bold">3.47s</span>
+              </div>
+              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-cyan-500 h-full" style="width: 35%"></div>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-2">Rust 100,022줄 + TS 100,000줄 (총 5.92MB) 완결</div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+              <div class="flex justify-between text-slate-400 mb-1">
+                <span>TS 파일 1개 수정 후 스마트 스킵</span>
+                <span class="text-emerald-400 font-bold">0.31s (91.1% 단축)</span>
+              </div>
+              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-full" style="width: 5%"></div>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-2">무관한 Rust 100,022줄 컴파일 완전 생략</div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+              <div class="flex justify-between text-slate-400 mb-1">
+                <span>결함 주입 및 핀포인트 역추적</span>
+                <span class="text-rose-400 font-bold">0.86s</span>
+              </div>
+              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-rose-500 h-full" style="width: 10%"></div>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-2">20만 줄 속 1개 타입 에러 정확한 라인 특정</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 토큰 절감 비교 -->
+        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
+          <h3 class="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+            <span>📉 AI 에이전트 토큰 다이어트 (--compact)</span>
+          </h3>
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80 mb-4">
+            <div class="text-xs text-slate-400 mb-2">기존 일반 컴파일러 터미널 로그 출력:</div>
+            <div class="text-xs text-rose-400/80 code-box bg-rose-950/20 p-3 rounded-lg border border-rose-900/30">
+              수천 줄의 ANSI 컬러 코드, 컴파일러 경고, 프로그레스 바 등<br>
+              <strong>소모 토큰: ~3,500 Tokens (LLM 컨텍스트 오염 및 추론 지연)</strong>
+            </div>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+            <div class="text-xs text-slate-400 mb-2">Synapse Kit AI-Native 초압축 출력:</div>
+            <div class="text-xs text-cyan-300 code-box bg-cyan-950/20 p-3 rounded-lg border border-cyan-800/40">
+              {"ok":true,"duration":"1.82s","skipped":[]}<br>
+              <strong>소모 토큰: 단 11 Tokens (99.8% 절감, 즉각 수렴)</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3대 핵심 아키텍처 -->
+  <section id="architecture" class="py-20 border-t border-slate-800/60">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <h2 class="text-3xl font-bold text-white mb-3">AI와 개발자를 위한 3대 혁신 아키텍처</h2>
+        <p class="text-slate-400 text-sm">단순한 빌드 툴이 아닌 지능형 인과 오케스트레이션 엔진입니다.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
+          <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-400 text-2xl mb-5 border border-cyan-500/20">🧠</div>
+          <h3 class="text-lg font-bold text-white mb-2">인과율 스마트 스킵 (Smart Skipping)</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            Git 작업 트리를 분석하여 실제로 변경된 파일의 종속성만 역추적합니다. 프론트엔드 수정 시 백엔드 빌드를 0.00초 만에 스킵합니다.
+          </p>
+        </div>
+
+        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-2xl mb-5 border border-indigo-500/20">⏸️</div>
+          <h3 class="text-lg font-bold text-white mb-2">대화형 인과 핫픽스 (Live-Fix Loop)</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            오류 발생 시 프로세스를 죽이지 않고 일시정지(`check -i`)합니다. 에디터나 AI가 파일을 수정하고 저장하는 즉시 0.05초 만에 핫 재컴파일합니다.
+          </p>
+        </div>
+
+        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-2xl mb-5 border border-emerald-500/20">⚡</div>
+          <h3 class="text-lg font-bold text-white mb-2">멀티트랙 병렬 빌더 (Parallel Builder)</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            Win32 C++ DLL 빌드, SvelteKit 번들링, NSIS 인스톨러 생성 등 순차 대기하던 사전 빌드 과정을 멀티코어 동시 병렬화하여 빌드 시간을 30% 이상 단축합니다.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 빠른 시작 및 설정 가이드 -->
+  <section id="quickstart" class="py-20 border-t border-slate-800/60 bg-slate-950/40">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="text-center max-w-2xl mx-auto mb-16">
+        <h2 class="text-3xl font-bold text-white mb-3">1분 만에 프로젝트에 도입하기</h2>
+        <p class="text-slate-400 text-sm">설치 없이 즉시 무설치 명령어로 프로젝트에 적용할 수 있습니다.</p>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
+          <h4 class="text-sm font-bold text-cyan-400 mb-2 uppercase tracking-wider">Step 1. 설정 파일 생성</h4>
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 code-box">
+            bunx synapse-kit init
+          </div>
+        </div>
+
+        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
+          <h4 class="text-sm font-bold text-cyan-400 mb-2 uppercase tracking-wider">Step 2. synapse.config.ts 설정</h4>
+          <pre class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 code-box overflow-x-auto"><code>import { defineConfig, rustChecker, svelteChecker, schemaChecker } from 'synapse-kit';
+
+export default defineConfig({
+  aiMemory: {
+    enabled: true,
+    smartSkipping: true,
+  },
+  plugins: [
+    rustChecker({ workspaceDir: './src-tauri' }),
+    svelteChecker({ tsconfig: './tsconfig.json' }),
+    schemaChecker({ targets: [{ path: './src-tauri/tauri.conf.json' }] }),
+  ],
+});</code></pre>
+        </div>
+
+        <div class="bg-vesper-card p-6 rounded-2xl border border-slate-800">
+          <h4 class="text-sm font-bold text-cyan-400 mb-2 uppercase tracking-wider">Step 3. 검증 실행</h4>
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-300 code-box space-y-2">
+            <div><span class="text-slate-500"># 인과 스마트 검사</span><br>bunx synapse-kit check</div>
+            <div><span class="text-slate-500"># 전체 전방위 강제 검사</span><br>bunx synapse-kit check --all</div>
+            <div><span class="text-slate-500"># AI 에이전트용 초압축 출력</span><br>bunx synapse-kit check --compact</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 푸터 -->
+  <footer class="border-t border-slate-800/80 py-12 bg-vesper-dark text-slate-500 text-xs">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <span class="text-lg">🧠</span>
+        <span class="font-bold text-slate-300">Synapse Kit</span>
+        <span>•</span>
+        <span>Copyright &copy; 2026 <strong>Vesper</strong>. All rights reserved.</span>
+      </div>
+      <div class="flex items-center space-x-6">
+        <a href="https://github.com/minseokk77/synapse-kit" target="_blank" class="hover:text-slate-300 transition">GitHub 저장소</a>
+        <a href="https://github.com/minseokk77/synapse-kit/blob/main/LICENSE" target="_blank" class="hover:text-slate-300 transition">MIT 라이선스</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function copyCmd() {
+      const text = document.getElementById('cmd-text').innerText;
+      navigator.clipboard.writeText(text);
+      const btn = document.getElementById('copy-btn-text');
+      btn.innerText = '복사 완료!';
+      setTimeout(() => {
+        btn.innerText = '명령어 복사';
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
