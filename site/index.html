@@ -847,18 +847,18 @@
       </thead>
       <tbody>
         <tr>
-          <td>다중 언어 전체 검증 (Full Pipeline Cold)</td>
-          <td>C/C++ &bull; Svelte 5 &bull; Python &bull; Rust &bull; Go &bull; NSIS</td>
-          <td style="color: #72727a;">개별 순차 실행 합계 (~21.41s)</td>
-          <td style="color: #fff; font-weight: 600;">3.47s (병렬 완결)</td>
-          <td style="color: #64d2ff;">-83.8% 단축</td>
+          <td>6대 언어 전체 검증 (6-Language Monorepo)</td>
+          <td>Rust &bull; C/C++ &bull; C# &bull; Svelte 5 &bull; Go &bull; Python</td>
+          <td style="color: #72727a;">개별 순차 실행 합계 (3.80s ~ 5.68s)</td>
+          <td style="color: #fff; font-weight: 600;">1.94s (동시 병렬 완결)</td>
+          <td style="color: #64d2ff;">-48.8% ~ -62.8% 단축</td>
         </tr>
         <tr>
           <td>단일 언어 수정 재검증 (Causal Smart Skip)</td>
           <td>Svelte UI 컴포넌트 1개 수정</td>
-          <td style="color: #72727a;">타 언어 불필요 재실행 (3.46s ~ 21.41s)</td>
+          <td style="color: #72727a;">무관한 5개 언어 불필요 재실행 (~3.80s)</td>
           <td style="color: #fff; font-weight: 600;">0.31s (무관한 5개 언어 0.00s 스킵)</td>
-          <td style="color: #30d158;">-98.5% 단축</td>
+          <td style="color: #30d158;">-91.8% 단축</td>
         </tr>
         <tr>
           <td>에러 핫픽스 피드백 루프 (Interactive Live-Fix)</td>
@@ -949,49 +949,49 @@
   <script>
     const BENCHMARK_DATA = {
       cold: {
-        caption: '💡 C/C++, Svelte 5, Python, Rust, Go, NSIS 등 다중 언어 툴체인을 순차 실행하면 총 21.41초가 걸립니다. Synapse Kit는 백그라운드 멀티트랙 파이프라인으로 동시 실행하여 3.47초 기준선(파란 점선) 아래로 모든 언어 검증을 압축 완료합니다.',
-        baselineSeconds: 3.47,
-        baselineLabel: '⚡ Synapse 기준선: 3.47s (-83.8% 단축)',
-        maxSeconds: 23.0,
+        caption: '💡 6대 엔지니어링 언어(Rust, C/C++, C#, Svelte 5, Go, Python)를 순차 실행하면 총 3.80초~5.68초가 걸립니다. Synapse Kit는 멀티트랙 병렬 파이프라인으로 동시 실행하여 가장 긴 1.88초 시점인 1.94초 기준선(파란 점선) 아래로 6개 언어 전원을 완결합니다.',
+        baselineSeconds: 1.94,
+        baselineLabel: '⚡ Synapse 기준선: 1.94s (-48.8% 단축)',
+        maxSeconds: 4.5,
         items: [
-          { lang: '전체 순차', tool: 'Sequential', val: '21.41s', diff: '+17.94s', seconds: 21.41, type: 'sequential' },
-          { lang: 'C / C++', tool: 'clang-tidy', val: '5.12s', diff: '+1.65s', seconds: 5.12, type: 'standard' },
-          { lang: 'Svelte 5', tool: 'svelte-check', val: '4.28s', diff: '+0.81s', seconds: 4.28, type: 'standard' },
-          { lang: 'Python', tool: 'mypy / ruff', val: '3.90s', diff: '+0.43s', seconds: 3.90, type: 'standard' },
-          { lang: 'Rust', tool: 'cargo clippy', val: '3.46s', diff: '-0.01s', seconds: 3.46, type: 'standard' },
-          { lang: 'Go', tool: 'golangci', val: '2.80s', diff: '-0.67s', seconds: 2.80, type: 'intermediate' },
-          { lang: 'NSIS Win32', tool: 'makensis', val: '1.85s', diff: '-1.62s', seconds: 1.85, type: 'intermediate' },
-          { lang: 'Synapse', tool: 'Parallel Engine', val: '3.47s', diff: '동시 완결', seconds: 3.47, type: 'synapse' }
+          { lang: '전체 순차', tool: 'All Sequential', val: '3.80s', diff: '+1.86s', seconds: 3.80, type: 'sequential' },
+          { lang: 'Svelte 5', tool: 'svelte-check', val: '1.86s', diff: '-0.08s', seconds: 1.86, type: 'standard' },
+          { lang: 'C# .NET', tool: 'dotnet build', val: '1.04s', diff: '-0.90s', seconds: 1.04, type: 'standard' },
+          { lang: 'C / C++', tool: 'g++ kernel', val: '0.32s', diff: '-1.62s', seconds: 0.32, type: 'intermediate' },
+          { lang: 'Go', tool: 'go vet', val: '0.33s', diff: '-1.61s', seconds: 0.33, type: 'intermediate' },
+          { lang: 'Rust', tool: 'cargo check', val: '0.29s', diff: '-1.65s', seconds: 0.29, type: 'intermediate' },
+          { lang: 'Python', tool: 'py_compile', val: '0.10s', diff: '-1.84s', seconds: 0.10, type: 'intermediate' },
+          { lang: 'Synapse', tool: '6대 언어 병렬', val: '1.94s', diff: '동시 완결', seconds: 1.94, type: 'synapse' }
         ]
       },
       delta: {
-        caption: '💡 Svelte 컴포넌트 1개 수정 시, 기존에는 무관한 C/C++, Rust 10만줄, Python, Go까지 훑으며 수 초~수십 초를 낭비합니다. Synapse Kit는 인과 그래프로 무관한 5개 언어를 0.00초 스킵하고 0.31초 기준선(파란 점선) 바닥에서 즉시 검증을 끝냅니다.',
+        caption: '💡 Svelte 컴포넌트 1개 수정 시, 기존 도구들은 무관한 C/C++, C#, Rust, Go, Python까지 다시 돌며 3.80초를 낭비합니다. Synapse Kit는 인과 그래프로 무관한 5개 언어를 0.00초 스킵하고 0.31초 기준선(파란 점선) 바닥에서 즉시 검증을 끝냅니다.',
         baselineSeconds: 0.31,
-        baselineLabel: '⚡ Synapse 기준선: 0.31s (-98.5% 단축)',
-        maxSeconds: 23.0,
+        baselineLabel: '⚡ Synapse 기준선: 0.31s (-91.8% 단축)',
+        maxSeconds: 4.5,
         items: [
-          { lang: '전체 재실행', tool: 'Traditional CI', val: '21.41s', diff: '+21.10s', seconds: 21.41, type: 'sequential' },
-          { lang: 'C / C++', tool: '불필요 재스캔', val: '5.12s', diff: '+4.81s', seconds: 5.12, type: 'standard' },
-          { lang: 'Svelte 5', tool: '컴포넌트 재검사', val: '4.28s', diff: '+3.97s', seconds: 4.28, type: 'standard' },
-          { lang: 'Rust', tool: '무관한 10만줄', val: '3.46s', diff: '+3.15s', seconds: 3.46, type: 'standard' },
-          { lang: 'Python', tool: '모듈 재임포트', val: '3.90s', diff: '+3.59s', seconds: 3.90, type: 'standard' },
-          { lang: 'Go', tool: '패키지 재스캔', val: '2.80s', diff: '+2.49s', seconds: 2.80, type: 'intermediate' },
-          { lang: '감시 도구', tool: 'Dual Watchers', val: '1.80s', diff: '+1.49s', seconds: 1.80, type: 'intermediate' },
-          { lang: 'Synapse', tool: '인과율 스킵', val: '0.31s', diff: '-98.5%', seconds: 0.31, type: 'synapse' }
+          { lang: '전체 재실행', tool: 'Traditional CI', val: '3.80s', diff: '+3.49s', seconds: 3.80, type: 'sequential' },
+          { lang: 'Svelte 5', tool: '컴포넌트 재검사', val: '1.86s', diff: '+1.55s', seconds: 1.86, type: 'standard' },
+          { lang: 'C# .NET', tool: '불필요 빌드', val: '1.04s', diff: '+0.73s', seconds: 1.04, type: 'standard' },
+          { lang: 'C / C++', tool: '불필요 재스캔', val: '0.32s', diff: '+0.01s', seconds: 0.32, type: 'intermediate' },
+          { lang: 'Go', tool: '패키지 재스캔', val: '0.33s', diff: '+0.02s', seconds: 0.33, type: 'intermediate' },
+          { lang: 'Rust', tool: '무관한 10만줄', val: '0.29s', diff: '-0.02s', seconds: 0.29, type: 'intermediate' },
+          { lang: 'Python', tool: '모듈 재임포트', val: '0.10s', diff: '-0.21s', seconds: 0.10, type: 'intermediate' },
+          { lang: 'Synapse', tool: '인과율 스킵', val: '0.31s', diff: '-91.8%', seconds: 0.31, type: 'synapse' }
         ]
       },
       livefix: {
         caption: '💡 에러 수정 시 각 언어 컴파일러는 프로세스가 종료되어 재부팅 대기 시간이 발생합니다. Synapse Kit 대화형 모드(check -i)는 일시정지 상태에서 대기하다가 코드 저장 즉시 0.05초 기준선(파란 점선) 수준에서 초고속 핫 재검증합니다.',
         baselineSeconds: 0.05,
-        baselineLabel: '⚡ Synapse 기준선: 0.05s (-99.0% 즉각반응)',
-        maxSeconds: 6.0,
+        baselineLabel: '⚡ Synapse 기준선: 0.05s (-97.4% 즉각반응)',
+        maxSeconds: 4.0,
         items: [
-          { lang: 'C / C++', tool: '컴파일러 재부팅', val: '5.50s', diff: '+5.45s', seconds: 5.50, type: 'standard' },
-          { lang: 'Svelte 5', tool: 'AST 재파싱', val: '4.50s', diff: '+4.45s', seconds: 4.50, type: 'standard' },
-          { lang: 'Python', tool: '타입체커 재기동', val: '3.80s', diff: '+3.75s', seconds: 3.80, type: 'standard' },
-          { lang: 'Rust', tool: 'cargo 콜드 재기동', val: '3.50s', diff: '+3.45s', seconds: 3.50, type: 'standard' },
-          { lang: 'Go', tool: '빌드 캐시 확인', val: '2.50s', diff: '+2.45s', seconds: 2.50, type: 'intermediate' },
-          { lang: '감시 도구', tool: '파일 감시 재트리거', val: '1.80s', diff: '+1.75s', seconds: 1.80, type: 'intermediate' },
+          { lang: 'Svelte 5', tool: 'AST 재파싱', val: '1.90s', diff: '+1.85s', seconds: 1.90, type: 'standard' },
+          { lang: 'C# .NET', tool: 'dotnet 재기동', val: '1.10s', diff: '+1.05s', seconds: 1.10, type: 'standard' },
+          { lang: 'C / C++', tool: '컴파일러 재부팅', val: '0.40s', diff: '+0.35s', seconds: 0.40, type: 'intermediate' },
+          { lang: 'Go', tool: 'vet 캐시 확인', val: '0.35s', diff: '+0.30s', seconds: 0.35, type: 'intermediate' },
+          { lang: 'Rust', tool: 'cargo 콜드 재기동', val: '0.30s', diff: '+0.25s', seconds: 0.30, type: 'intermediate' },
+          { lang: 'Python', tool: '타입체커 재기동', val: '0.12s', diff: '+0.07s', seconds: 0.12, type: 'intermediate' },
           { lang: 'Synapse', tool: 'check -i 핫픽스', val: '0.05s', diff: '0.05s 즉각반응', seconds: 0.05, type: 'synapse' }
         ]
       }
