@@ -835,8 +835,8 @@
     <div class="chart-container glass">
       <div class="chart-header">
         <div>
-          <div class="chart-title">주요 언어별 검증 도구 vs Synapse Kit 소요 시간 높이 비교</div>
-          <div class="chart-subtitle">Rust, Svelte, C/C++, Python, Go, NSIS 개별 도구 대비 Synapse Kit 단축 높이 (파란 점선 기준선)</div>
+          <div class="chart-title">80만 줄 모노레포 전체 순차 vs Synapse 병렬 및 언어별 소요 시간 높이 비교</div>
+          <div class="chart-subtitle">7대 언어 총 813,931 LOC 모노레포 전체 검증 (28.13s ➜ 19.92s 단축) 및 언어별 실측 분해</div>
         </div>
         <div class="chart-tabs">
           <button class="chart-tab active" onclick="switchChartTab('cold', this)">01. 다중 언어 전체 검증</button>
@@ -969,54 +969,54 @@
   <script>
     const BENCHMARK_DATA = {
       cold: {
-        caption: '💡 7대 언어 각각 10만 줄 이상(총 813,931 LOC) 초대규모 모노레포를 순차 실행하면 총 28.13초가 걸립니다. Synapse Kit는 멀티트랙 병렬 파이프라인으로 동시 실행하여 가장 긴 Svelte 5(19.49s) 시점인 19.92초 기준선(파란 점선)에 맞춰 7개 언어 80만 줄 검증을 일괄 완결합니다.',
+        caption: '💡 <b>[80만 줄 모노레포 실측]</b> 7대 언어 각각 10만 줄 이상(총 813,931 LOC)을 순차 실행하면 총 28.13초가 걸립니다. Synapse Kit는 80만 줄 전체를 동시 병렬 파이프라인으로 실행하여, 가장 긴 Svelte 5(19.49s) 시점인 <b>19.92초 기준선(파란 점선)</b>에 맞춰 7개 언어 전원을 일괄 완결합니다. (우측 막대들은 80만 줄 모노레포를 구성하는 각 언어별 실측 분해 시간입니다)',
         baselineSeconds: 19.92,
         baselineLabel: '⚡ Synapse 기준선: 19.92s (-29.2% 단축 / 8.21s 절감)',
         maxSeconds: 32.0,
         items: [
-          { lang: '전체 순차', tool: 'All Sequential', val: '28.13s', diff: '+8.21s', seconds: 28.13, type: 'sequential' },
-          { lang: 'Synapse', tool: '7대 언어 병렬', val: '19.92s', diff: '동시 완결', seconds: 19.92, type: 'synapse' },
-          { lang: 'Svelte 5', tool: '112,506 LOC', val: '19.49s', diff: '-0.43s', seconds: 19.49, type: 'standard' },
-          { lang: 'Java', tool: '112,504 LOC', val: '4.93s', diff: '-14.99s', seconds: 4.93, type: 'standard' },
-          { lang: 'Python', tool: '114,402 LOC', val: '1.26s', diff: '-18.66s', seconds: 1.26, type: 'intermediate' },
-          { lang: 'C# .NET', tool: '100,002 LOC', val: '0.97s', diff: '-18.95s', seconds: 0.97, type: 'intermediate' },
-          { lang: 'Go', tool: '162,502 LOC', val: '0.69s', diff: '-19.23s', seconds: 0.69, type: 'intermediate' },
-          { lang: 'C / C++', tool: '112,015 LOC', val: '0.64s', diff: '-19.28s', seconds: 0.64, type: 'intermediate' },
-          { lang: 'Rust', tool: '100,000 LOC', val: '0.15s', diff: '-19.77s', seconds: 0.15, type: 'intermediate' }
+          { lang: '전체 순차', loc: '813,931 LOC', tool: '순차 총합', val: '28.13s', diff: '+8.21s', seconds: 28.13, type: 'sequential' },
+          { lang: 'Synapse', loc: '813,931 LOC', tool: '동시 병렬', val: '19.92s', diff: '동시 완결', seconds: 19.92, type: 'synapse' },
+          { lang: 'Svelte 5', loc: '112,506 LOC', tool: 'svelte-check', val: '19.49s', diff: '-0.43s', seconds: 19.49, type: 'standard' },
+          { lang: 'Java', loc: '112,504 LOC', tool: 'javac', val: '4.93s', diff: '-14.99s', seconds: 4.93, type: 'standard' },
+          { lang: 'Python', loc: '114,402 LOC', tool: 'py_compile', val: '1.26s', diff: '-18.66s', seconds: 1.26, type: 'intermediate' },
+          { lang: 'C# .NET', loc: '100,002 LOC', tool: 'dotnet build', val: '0.97s', diff: '-18.95s', seconds: 0.97, type: 'intermediate' },
+          { lang: 'Go', loc: '162,502 LOC', tool: 'go vet', val: '0.69s', diff: '-19.23s', seconds: 0.69, type: 'intermediate' },
+          { lang: 'C / C++', loc: '112,015 LOC', tool: 'g++ kernel', val: '0.64s', diff: '-19.28s', seconds: 0.64, type: 'intermediate' },
+          { lang: 'Rust', loc: '100,000 LOC', tool: 'cargo check', val: '0.15s', diff: '-19.77s', seconds: 0.15, type: 'intermediate' }
         ]
       },
       delta: {
-        caption: '💡 80만 줄 초대규모 모노레포에서 단일 파일 수정 시, 기존 순차 재검증(28.13s) 대비 Synapse Kit는 인과 스마트 스킵으로 0.31초에 끝납니다. 뒤이어 나오는 6개 언어 70만 줄 검사를 0.00초로 완전 생략한 결과입니다.',
+        caption: '💡 <b>[단일 파일 수정 스마트 스킵]</b> 80만 줄 초대규모 모노레포에서 파일 1개 수정 시, 기존 순차 검증(28.13s) 대비 Synapse Kit는 인과 스마트 스킵으로 <b>0.31초</b>에 끝납니다. 나머지 6개 언어 70만 줄 검사를 0.00초로 완전 생략한 결과입니다.',
         baselineSeconds: 0.31,
         baselineLabel: '⚡ Synapse 기준선: 0.31s (-98.9% 단축)',
         maxSeconds: 32.0,
         items: [
-          { lang: '전체 재실행', tool: 'Traditional CI', val: '28.13s', diff: '+27.82s', seconds: 28.13, type: 'sequential' },
-          { lang: 'Synapse', tool: '인과율 스킵', val: '0.31s', diff: '-98.9%', seconds: 0.31, type: 'synapse' },
-          { lang: 'Svelte 5', tool: '수정 컴포넌트', val: '19.49s', diff: '+19.18s', seconds: 19.49, type: 'standard' },
-          { lang: 'Java', tool: '불필요 바이트코드', val: '4.93s', diff: '+4.62s', seconds: 4.93, type: 'standard' },
-          { lang: 'Python', tool: '모듈 재임포트', val: '1.26s', diff: '+0.95s', seconds: 1.26, type: 'intermediate' },
-          { lang: 'C# .NET', tool: '불필요 빌드', val: '0.97s', diff: '+0.66s', seconds: 0.97, type: 'intermediate' },
-          { lang: 'Go', tool: '패키지 재스캔', val: '0.69s', diff: '+0.38s', seconds: 0.69, type: 'intermediate' },
-          { lang: 'C / C++', tool: '불필요 재스캔', val: '0.64s', diff: '+0.33s', seconds: 0.64, type: 'intermediate' },
-          { lang: 'Rust', tool: '무관한 10만줄', val: '0.15s', diff: '-0.16s', seconds: 0.15, type: 'intermediate' }
+          { lang: '전체 재실행', loc: '813,931 LOC', tool: 'Traditional CI', val: '28.13s', diff: '+27.82s', seconds: 28.13, type: 'sequential' },
+          { lang: 'Synapse', loc: '813,931 LOC', tool: '인과율 스킵', val: '0.31s', diff: '-98.9%', seconds: 0.31, type: 'synapse' },
+          { lang: 'Svelte 5', loc: '수정 컴포넌트', tool: '단일 파일 검사', val: '19.49s', diff: '+19.18s', seconds: 19.49, type: 'standard' },
+          { lang: 'Java', loc: '112,504 LOC', tool: '불필요 컴파일', val: '4.93s', diff: '+4.62s', seconds: 4.93, type: 'standard' },
+          { lang: 'Python', loc: '114,402 LOC', tool: '모듈 재임포트', val: '1.26s', diff: '+0.95s', seconds: 1.26, type: 'intermediate' },
+          { lang: 'C# .NET', loc: '100,002 LOC', tool: '불필요 빌드', val: '0.97s', diff: '+0.66s', seconds: 0.97, type: 'intermediate' },
+          { lang: 'Go', loc: '162,502 LOC', tool: '패키지 재스캔', val: '0.69s', diff: '+0.38s', seconds: 0.69, type: 'intermediate' },
+          { lang: 'C / C++', loc: '112,015 LOC', tool: '불필요 재스캔', val: '0.64s', diff: '+0.33s', seconds: 0.64, type: 'intermediate' },
+          { lang: 'Rust', loc: '100,000 LOC', tool: '무관한 10만줄', val: '0.15s', diff: '-0.16s', seconds: 0.15, type: 'intermediate' }
         ]
       },
       livefix: {
-        caption: '💡 컴파일 에러 발생 시 기존 도구들의 콜드 재부팅(28.13s) 대비, Synapse Kit 대화형 모드(check -i)는 일시정지 상태에서 파일 저장 즉시 0.05초 만에 메모리에서 핫 재검증합니다.',
+        caption: '💡 <b>[에러 핫픽스 실시간 루프]</b> 컴파일 에러 발생 시 기존 도구들의 콜드 재부팅(28.13s) 대비, Synapse Kit 대화형 모드(check -i)는 일시정지 상태에서 파일 저장 즉시 <b>0.05초</b> 만에 메모리에서 핫 재검증합니다.',
         baselineSeconds: 0.05,
         baselineLabel: '⚡ Synapse 기준선: 0.05s (-99.8% 즉각반응)',
         maxSeconds: 30.0,
         items: [
-          { lang: '전체 재기동', tool: 'Cold Restart', val: '28.13s', diff: '+28.08s', seconds: 28.13, type: 'sequential' },
-          { lang: 'Synapse', tool: 'check -i 핫픽스', val: '0.05s', diff: '0.05s 즉각반응', seconds: 0.05, type: 'synapse' },
-          { lang: 'Svelte 5', tool: 'AST 재파싱', val: '19.49s', diff: '+19.44s', seconds: 19.49, type: 'standard' },
-          { lang: 'Java', tool: 'javac 재부팅', val: '4.93s', diff: '+4.88s', seconds: 4.93, type: 'standard' },
-          { lang: 'Python', tool: '타입체커 재기동', val: '1.26s', diff: '+1.21s', seconds: 1.26, type: 'intermediate' },
-          { lang: 'C# .NET', tool: 'dotnet 재기동', val: '0.97s', diff: '+0.92s', seconds: 0.97, type: 'intermediate' },
-          { lang: 'Go', tool: 'vet 캐시 확인', val: '0.69s', diff: '+0.64s', seconds: 0.69, type: 'intermediate' },
-          { lang: 'C / C++', tool: '컴파일러 재부팅', val: '0.64s', diff: '+0.59s', seconds: 0.64, type: 'intermediate' },
-          { lang: 'Rust', tool: 'cargo 콜드 재기동', val: '0.15s', diff: '+0.10s', seconds: 0.15, type: 'intermediate' }
+          { lang: '전체 재기동', loc: '813,931 LOC', tool: 'Cold Restart', val: '28.13s', diff: '+28.08s', seconds: 28.13, type: 'sequential' },
+          { lang: 'Synapse', loc: '813,931 LOC', tool: 'check -i 핫픽스', val: '0.05s', diff: '0.05s 즉각반응', seconds: 0.05, type: 'synapse' },
+          { lang: 'Svelte 5', loc: '112,506 LOC', tool: 'AST 재파싱', val: '19.49s', diff: '+19.44s', seconds: 19.49, type: 'standard' },
+          { lang: 'Java', loc: '112,504 LOC', tool: 'javac 재부팅', val: '4.93s', diff: '+4.88s', seconds: 4.93, type: 'standard' },
+          { lang: 'Python', loc: '114,402 LOC', tool: '타입체커 재기동', val: '1.26s', diff: '+1.21s', seconds: 1.26, type: 'intermediate' },
+          { lang: 'C# .NET', loc: '100,002 LOC', tool: 'dotnet 재기동', val: '0.97s', diff: '+0.92s', seconds: 0.97, type: 'intermediate' },
+          { lang: 'Go', loc: '162,502 LOC', tool: 'vet 캐시 확인', val: '0.69s', diff: '+0.64s', seconds: 0.69, type: 'intermediate' },
+          { lang: 'C / C++', loc: '112,015 LOC', tool: '컴파일러 재부팅', val: '0.64s', diff: '+0.59s', seconds: 0.64, type: 'intermediate' },
+          { lang: 'Rust', loc: '100,000 LOC', tool: 'cargo 콜드 재기동', val: '0.15s', diff: '+0.10s', seconds: 0.15, type: 'intermediate' }
         ]
       }
     };
@@ -1034,15 +1034,15 @@
       if (!canvas) return;
 
       const width = 890;
-      const height = 265;
+      const height = 275;
       const padLeft = 36;
       const padRight = 28;
       const padTop = 38;
-      const padBottom = 48;
+      const padBottom = 56;
 
       const plotWidth = width - padLeft - padRight;
-      const plotHeight = height - padTop - padBottom; // 179
-      const yBottom = padTop + plotHeight; // 217
+      const plotHeight = height - padTop - padBottom; // 181
+      const yBottom = padTop + plotHeight; // 219
 
       const maxSec = data.maxSeconds;
       const baseSec = data.baselineSeconds;
@@ -1092,9 +1092,10 @@
           <!-- 세로 기둥 막대기 -->
           <rect x="${barX}" y="${barY}" width="${barWidth}" height="${barH.toFixed(2)}" rx="4" fill="${fill}" stroke="${stroke}" ${isSynapse ? 'filter="url(#synapse-glow)"' : ''} />
 
-          <!-- 하단 언어명 및 도구명 라벨 -->
-          <text x="${centerX}" y="${yBottom + 17}" text-anchor="middle" fill="#e1e1e6" font-size="11" font-weight="650" font-family="'Geist Mono', monospace">${item.lang}</text>
-          <text x="${centerX}" y="${yBottom + 31}" text-anchor="middle" fill="#72727a" font-size="8.5" font-family="'Geist Mono', monospace">${item.tool}</text>
+          <!-- 하단 언어명, LOC 규모, 도구명 3단 라벨 -->
+          <text x="${centerX}" y="${yBottom + 16}" text-anchor="middle" fill="#e1e1e6" font-size="11" font-weight="650" font-family="'Geist Mono', monospace">${item.lang}</text>
+          <text x="${centerX}" y="${yBottom + 29}" text-anchor="middle" fill="${isSynapse ? '#64d2ff' : '#9d9da8'}" font-size="9" font-weight="600" font-family="'Geist Mono', monospace">${item.loc || ''}</text>
+          <text x="${centerX}" y="${yBottom + 42}" text-anchor="middle" fill="#72727a" font-size="8.5" font-family="'Geist Mono', monospace">${item.tool}</text>
         `;
       }).join('');
 
@@ -1143,9 +1144,9 @@
             <text x="${width - padRight}" y="${y75 - 4}" text-anchor="end" fill="rgba(255,255,255,0.25)" font-size="8.5" font-family="'Geist Mono', monospace">${sec75}s</text>
 
             <!-- 2번(Synapse)과 3번(개별 언어) 사이의 구역 분리 세로 점선 -->
-            <line x1="${dividerX}" y1="${padTop - 12}" x2="${dividerX}" y2="${yBottom + 35}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="3,3" />
-            <text x="${padLeft + colStep}" y="${padTop - 14}" text-anchor="middle" fill="#0a84ff" font-size="8.5" font-weight="600" font-family="'Geist Mono', monospace">[ 전체 총합 파이프라인 비교 ]</text>
-            <text x="${(parseFloat(dividerX) + (width - padRight)) / 2}" y="${padTop - 14}" text-anchor="middle" fill="#72727a" font-size="8.5" font-family="'Geist Mono', monospace">[ 개별 언어 도구별 소요 시간 ]</text>
+            <line x1="${dividerX}" y1="${padTop - 12}" x2="${dividerX}" y2="${yBottom + 45}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="3,3" />
+            <text x="${padLeft + colStep}" y="${padTop - 14}" text-anchor="middle" fill="#0a84ff" font-size="8.5" font-weight="600" font-family="'Geist Mono', monospace">[ 80만 줄 모노레포 전체 검증 (합계 vs 병렬) ]</text>
+            <text x="${(parseFloat(dividerX) + (width - padRight)) / 2}" y="${padTop - 14}" text-anchor="middle" fill="#72727a" font-size="8.5" font-family="'Geist Mono', monospace">[ 80만 줄 구성 언어별 실측 분해 (각 10만줄+) ]</text>
 
             <!-- 기준선 점선 (막대기 뒤 배경 레이어에 위치) -->
             <line x1="${padLeft}" y1="${baselineY}" x2="${width - padRight}" y2="${baselineY}" stroke="#0a84ff" stroke-width="1.8" stroke-dasharray="5,4" />
