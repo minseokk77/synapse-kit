@@ -88,7 +88,7 @@ export async function executeBuild(config: SynapseConfig): Promise<number> {
 
   const taskPromises = tracks.map(async (track) => {
     const trackStart = performance.now();
-    const proc = spawn(track.command, {
+    const proc = spawn([...track.command], {
       cwd: track.cwd || rootDir,
       stdout: 'inherit',
       stderr: 'inherit',
