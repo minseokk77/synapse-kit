@@ -720,8 +720,8 @@
     </h1>
 
     <p>
-      Rust &bull; Svelte 5 &bull; TypeScript &bull; Win32 PE &bull; NSIS<br>
-      Git 인과 그래프 기반 스마트 스킵으로 200,000줄 모노레포를 3초대에 완결합니다.
+      Rust &bull; C/C++ &bull; C# &bull; Java &bull; Svelte 5 &bull; Go &bull; Python<br>
+      Git 인과 그래프 기반 스마트 스킵으로 7대 언어 80만 줄 모노레포를 동시 병렬 완결합니다.
     </p>
 
     <div class="cli-container">
@@ -765,13 +765,13 @@
           <div class="metric-grid">
             <div class="metric-card">
               <div class="metric-label">Cold Check Latency</div>
-              <div class="metric-val">3.47s</div>
-              <div class="metric-sub">200,022 LOC (Rust 10만줄 + TS 10만줄 병렬 완결)</div>
+              <div class="metric-val">19.92s</div>
+              <div class="metric-sub">813,931 LOC (7개 언어 각 10만줄+ 동시 병렬 완결)</div>
             </div>
             <div class="metric-card">
               <div class="metric-label">Causal Smart Skip</div>
               <div class="metric-val">0.31s</div>
-              <div class="metric-sub">단일 모듈 수정 시 무관한 10만 줄 컴파일 0.00s 생략</div>
+              <div class="metric-sub">단일 모듈 수정 시 무관한 70만 줄 컴파일 0.00s 생략</div>
             </div>
             <div class="metric-card">
               <div class="metric-label">AI Token Overhead</div>
@@ -782,22 +782,42 @@
 
           <!-- 실제 터미널 출력 -->
           <div class="terminal-box">
-            <div class="term-dim">// 200,000 LOC stress-test sandbox validation</div>
+            <div class="term-dim">// 813,931 LOC (7-Language Monorepo) stress-test sandbox validation</div>
             <div><span class="term-dim">$</span> bunx synapse-kit check</div>
             <div class="term-dim" style="margin: 0.35rem 0;">--------------------------------------------------------------------------------</div>
-            <div>[Causal Graph] Target workspace loaded (200,022 LOC / 5.92MB)</div>
-            <div>[Dependency] 1 file modified (src/modules/module_0.ts) ➜ 선별 파이프라인 가동</div>
+            <div>[Causal Graph] Target workspace loaded (813,931 LOC / 7 Languages)</div>
+            <div>[Dependency] 1 file modified (src/components/Button.svelte) ➜ 선별 파이프라인 가동</div>
             <div class="term-dim" style="margin: 0.35rem 0;">--------------------------------------------------------------------------------</div>
             <div style="display: flex; justify-content: space-between;">
-              <span>• Rust Backend Workspace (cargo check & clippy)</span>
+              <span>• Rust Backend (100,000 LOC cargo check)</span>
               <span class="term-dim">⏭️ SKIPPED (인과율 생략: 0.00s)</span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
-              <span>• TypeScript 100,000 LOC Validator (tsc --noEmit)</span>
-              <span class="term-green">✅ PASSED (0.26s)</span>
+              <span>• Java Enterprise (112,504 LOC javac)</span>
+              <span class="term-dim">⏭️ SKIPPED (인과율 생략: 0.00s)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+              <span>• Go Telemetry (162,502 LOC go vet)</span>
+              <span class="term-dim">⏭️ SKIPPED (인과율 생략: 0.00s)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+              <span>• Python Analyzer (114,402 LOC py_compile)</span>
+              <span class="term-dim">⏭️ SKIPPED (인과율 생략: 0.00s)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+              <span>• C# .NET Bridge (100,002 LOC dotnet build)</span>
+              <span class="term-dim">⏭️ SKIPPED (인과율 생략: 0.00s)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+              <span>• C/C++ DSP Kernel (112,015 LOC g++)</span>
+              <span class="term-dim">⏭️ SKIPPED (인과율 생략: 0.00s)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 0.25rem;">
+              <span>• Svelte 5 UI Component (svelte-check)</span>
+              <span class="term-green">✅ PASSED (0.29s)</span>
             </div>
             <div class="term-dim" style="margin: 0.35rem 0;">--------------------------------------------------------------------------------</div>
-            <div class="term-cyan">✨ 검증 성공: 0 Errors, 0 Warnings, 1 Skipped (총 소요 시간: 0.31초)</div>
+            <div class="term-cyan">✨ 검증 성공: 0 Errors, 0 Warnings, 6 Skipped (총 소요 시간: 0.31초)</div>
           </div>
         </div>
       </div>
@@ -847,25 +867,25 @@
       </thead>
       <tbody>
         <tr>
-          <td>7대 언어 전체 검증 (7-Language Monorepo)</td>
-          <td>Rust &bull; C/C++ &bull; C# &bull; Java &bull; Svelte 5 &bull; Go &bull; Python</td>
-          <td style="color: #72727a;">개별 순차 실행 합계 (4.28s ~ 6.10s)</td>
-          <td style="color: #fff; font-weight: 600;">2.13s (동시 병렬 완결)</td>
-          <td style="color: #64d2ff;">-50.1% ~ -65.1% 단축</td>
+          <td>7대 언어 80만 줄 전체 검증 (800K LOC Monorepo)</td>
+          <td>Rust &bull; C/C++ &bull; C# &bull; Java &bull; Svelte 5 &bull; Go &bull; Python (각 10만줄+)</td>
+          <td style="color: #72727a;">개별 순차 실행 합계 (28.13s)</td>
+          <td style="color: #fff; font-weight: 600;">19.92s (동시 병렬 완결)</td>
+          <td style="color: #64d2ff;">-29.2% 단축 (8.21s 순수 절감)</td>
         </tr>
         <tr>
           <td>단일 언어 수정 재검증 (Causal Smart Skip)</td>
-          <td>Svelte UI 컴포넌트 1개 수정</td>
-          <td style="color: #72727a;">무관한 6개 언어 불필요 재실행 (~4.28s)</td>
-          <td style="color: #fff; font-weight: 600;">0.31s (무관한 6개 언어 0.00s 스킵)</td>
-          <td style="color: #30d158;">-92.8% 단축</td>
+          <td>80만 줄 중 단일 파일 1개 수정</td>
+          <td style="color: #72727a;">무관한 6개 언어 70만 줄 불필요 재실행 (~28.13s)</td>
+          <td style="color: #fff; font-weight: 600;">0.31s (무관한 70만 줄 0.00s 스킵)</td>
+          <td style="color: #30d158;">-98.9% 단축</td>
         </tr>
         <tr>
           <td>에러 핫픽스 피드백 루프 (Interactive Live-Fix)</td>
           <td>타입 &bull; 문법 오타 수정 후 재검증</td>
-          <td style="color: #72727a;">프로세스 종료 후 콜드 재기동 (2.50s ~ 5.50s)</td>
+          <td style="color: #72727a;">프로세스 종료 후 콜드 재기동 (28.13s)</td>
           <td style="color: #fff; font-weight: 600;">0.05s (인메모리 핫픽스)</td>
-          <td style="color: #30d158;">-99.0% 즉각 반응</td>
+          <td style="color: #30d158;">-99.8% 즉각 반응</td>
         </tr>
         <tr>
           <td>AI 에이전트 진단 페이로드 (Diagnostic Diet)</td>
@@ -949,54 +969,54 @@
   <script>
     const BENCHMARK_DATA = {
       cold: {
-        caption: '💡 7대 엔지니어링 언어(Rust, C/C++, C#, Java, Svelte 5, Go, Python)를 순차 실행하면 총 4.28초가 걸립니다. Synapse Kit는 멀티트랙 병렬 파이프라인으로 동시 실행하여 가장 긴 Svelte 5(1.89s) 시점인 2.13초 기준선(파란 점선)에 맞춰 7개 언어 전원을 완결합니다.',
-        baselineSeconds: 2.13,
-        baselineLabel: '⚡ Synapse 기준선: 2.13s (-50.1% 단축)',
-        maxSeconds: 5.0,
+        caption: '💡 7대 언어 각각 10만 줄 이상(총 813,931 LOC) 초대규모 모노레포를 순차 실행하면 총 28.13초가 걸립니다. Synapse Kit는 멀티트랙 병렬 파이프라인으로 동시 실행하여 가장 긴 Svelte 5(19.49s) 시점인 19.92초 기준선(파란 점선)에 맞춰 7개 언어 80만 줄 검증을 일괄 완결합니다.',
+        baselineSeconds: 19.92,
+        baselineLabel: '⚡ Synapse 기준선: 19.92s (-29.2% 단축 / 8.21s 절감)',
+        maxSeconds: 32.0,
         items: [
-          { lang: '전체 순차', tool: 'All Sequential', val: '4.28s', diff: '+2.15s', seconds: 4.28, type: 'sequential' },
-          { lang: 'Synapse', tool: '7대 언어 병렬', val: '2.13s', diff: '동시 완결', seconds: 2.13, type: 'synapse' },
-          { lang: 'Svelte 5', tool: 'svelte-check', val: '1.89s', diff: '-0.24s', seconds: 1.89, type: 'standard' },
-          { lang: 'C# .NET', tool: 'dotnet build', val: '0.98s', diff: '-1.15s', seconds: 0.98, type: 'standard' },
-          { lang: 'Java', tool: 'javac compiler', val: '0.49s', diff: '-1.64s', seconds: 0.49, type: 'intermediate' },
-          { lang: 'C / C++', tool: 'g++ kernel', val: '0.33s', diff: '-1.80s', seconds: 0.33, type: 'intermediate' },
-          { lang: 'Go', tool: 'go vet', val: '0.33s', diff: '-1.80s', seconds: 0.33, type: 'intermediate' },
-          { lang: 'Rust', tool: 'cargo check', val: '0.15s', diff: '-1.98s', seconds: 0.15, type: 'intermediate' },
-          { lang: 'Python', tool: 'py_compile', val: '0.11s', diff: '-2.02s', seconds: 0.11, type: 'intermediate' }
+          { lang: '전체 순차', tool: 'All Sequential', val: '28.13s', diff: '+8.21s', seconds: 28.13, type: 'sequential' },
+          { lang: 'Synapse', tool: '7대 언어 병렬', val: '19.92s', diff: '동시 완결', seconds: 19.92, type: 'synapse' },
+          { lang: 'Svelte 5', tool: '112,506 LOC', val: '19.49s', diff: '-0.43s', seconds: 19.49, type: 'standard' },
+          { lang: 'Java', tool: '112,504 LOC', val: '4.93s', diff: '-14.99s', seconds: 4.93, type: 'standard' },
+          { lang: 'Python', tool: '114,402 LOC', val: '1.26s', diff: '-18.66s', seconds: 1.26, type: 'intermediate' },
+          { lang: 'C# .NET', tool: '100,002 LOC', val: '0.97s', diff: '-18.95s', seconds: 0.97, type: 'intermediate' },
+          { lang: 'Go', tool: '162,502 LOC', val: '0.69s', diff: '-19.23s', seconds: 0.69, type: 'intermediate' },
+          { lang: 'C / C++', tool: '112,015 LOC', val: '0.64s', diff: '-19.28s', seconds: 0.64, type: 'intermediate' },
+          { lang: 'Rust', tool: '100,000 LOC', val: '0.15s', diff: '-19.77s', seconds: 0.15, type: 'intermediate' }
         ]
       },
       delta: {
-        caption: '💡 Svelte 컴포넌트 1개 수정 시, 기존 순차(4.28s) 대비 Synapse Kit는 인과 스마트 스킵으로 0.31초에 끝납니다. 뒤이어 나오는 6개 언어 검사를 0.00초로 완전 생략한 결과입니다.',
+        caption: '💡 80만 줄 초대규모 모노레포에서 단일 파일 수정 시, 기존 순차 재검증(28.13s) 대비 Synapse Kit는 인과 스마트 스킵으로 0.31초에 끝납니다. 뒤이어 나오는 6개 언어 70만 줄 검사를 0.00초로 완전 생략한 결과입니다.',
         baselineSeconds: 0.31,
-        baselineLabel: '⚡ Synapse 기준선: 0.31s (-92.8% 단축)',
-        maxSeconds: 5.0,
+        baselineLabel: '⚡ Synapse 기준선: 0.31s (-98.9% 단축)',
+        maxSeconds: 32.0,
         items: [
-          { lang: '전체 재실행', tool: 'Traditional CI', val: '4.28s', diff: '+3.97s', seconds: 4.28, type: 'sequential' },
-          { lang: 'Synapse', tool: '인과율 스킵', val: '0.31s', diff: '-92.8%', seconds: 0.31, type: 'synapse' },
-          { lang: 'Svelte 5', tool: '수정 컴포넌트', val: '1.89s', diff: '+1.58s', seconds: 1.89, type: 'standard' },
-          { lang: 'C# .NET', tool: '불필요 빌드', val: '0.98s', diff: '+0.67s', seconds: 0.98, type: 'standard' },
-          { lang: 'Java', tool: '불필요 바이트코드', val: '0.49s', diff: '+0.18s', seconds: 0.49, type: 'intermediate' },
-          { lang: 'C / C++', tool: '불필요 재스캔', val: '0.33s', diff: '+0.02s', seconds: 0.33, type: 'intermediate' },
-          { lang: 'Go', tool: '패키지 재스캔', val: '0.33s', diff: '+0.02s', seconds: 0.33, type: 'intermediate' },
-          { lang: 'Rust', tool: '무관한 10만줄', val: '0.15s', diff: '-0.16s', seconds: 0.15, type: 'intermediate' },
-          { lang: 'Python', tool: '모듈 재임포트', val: '0.11s', diff: '-0.20s', seconds: 0.11, type: 'intermediate' }
+          { lang: '전체 재실행', tool: 'Traditional CI', val: '28.13s', diff: '+27.82s', seconds: 28.13, type: 'sequential' },
+          { lang: 'Synapse', tool: '인과율 스킵', val: '0.31s', diff: '-98.9%', seconds: 0.31, type: 'synapse' },
+          { lang: 'Svelte 5', tool: '수정 컴포넌트', val: '19.49s', diff: '+19.18s', seconds: 19.49, type: 'standard' },
+          { lang: 'Java', tool: '불필요 바이트코드', val: '4.93s', diff: '+4.62s', seconds: 4.93, type: 'standard' },
+          { lang: 'Python', tool: '모듈 재임포트', val: '1.26s', diff: '+0.95s', seconds: 1.26, type: 'intermediate' },
+          { lang: 'C# .NET', tool: '불필요 빌드', val: '0.97s', diff: '+0.66s', seconds: 0.97, type: 'intermediate' },
+          { lang: 'Go', tool: '패키지 재스캔', val: '0.69s', diff: '+0.38s', seconds: 0.69, type: 'intermediate' },
+          { lang: 'C / C++', tool: '불필요 재스캔', val: '0.64s', diff: '+0.33s', seconds: 0.64, type: 'intermediate' },
+          { lang: 'Rust', tool: '무관한 10만줄', val: '0.15s', diff: '-0.16s', seconds: 0.15, type: 'intermediate' }
         ]
       },
       livefix: {
-        caption: '💡 컴파일 에러 발생 시 기존 도구들의 콜드 재부팅(4.28s) 대비, Synapse Kit 대화형 모드(check -i)는 일시정지 상태에서 파일 저장 즉시 0.05초 만에 메모리에서 핫 재검증합니다.',
+        caption: '💡 컴파일 에러 발생 시 기존 도구들의 콜드 재부팅(28.13s) 대비, Synapse Kit 대화형 모드(check -i)는 일시정지 상태에서 파일 저장 즉시 0.05초 만에 메모리에서 핫 재검증합니다.',
         baselineSeconds: 0.05,
-        baselineLabel: '⚡ Synapse 기준선: 0.05s (-98.8% 즉각반응)',
-        maxSeconds: 4.5,
+        baselineLabel: '⚡ Synapse 기준선: 0.05s (-99.8% 즉각반응)',
+        maxSeconds: 30.0,
         items: [
-          { lang: '전체 재기동', tool: 'Cold Restart', val: '4.28s', diff: '+4.23s', seconds: 4.28, type: 'sequential' },
+          { lang: '전체 재기동', tool: 'Cold Restart', val: '28.13s', diff: '+28.08s', seconds: 28.13, type: 'sequential' },
           { lang: 'Synapse', tool: 'check -i 핫픽스', val: '0.05s', diff: '0.05s 즉각반응', seconds: 0.05, type: 'synapse' },
-          { lang: 'Svelte 5', tool: 'AST 재파싱', val: '1.90s', diff: '+1.85s', seconds: 1.90, type: 'standard' },
-          { lang: 'C# .NET', tool: 'dotnet 재기동', val: '1.05s', diff: '+1.00s', seconds: 1.05, type: 'standard' },
-          { lang: 'Java', tool: 'javac 재부팅', val: '0.55s', diff: '+0.50s', seconds: 0.55, type: 'intermediate' },
-          { lang: 'C / C++', tool: '컴파일러 재부팅', val: '0.38s', diff: '+0.33s', seconds: 0.38, type: 'intermediate' },
-          { lang: 'Go', tool: 'vet 캐시 확인', val: '0.35s', diff: '+0.30s', seconds: 0.35, type: 'intermediate' },
-          { lang: 'Rust', tool: 'cargo 콜드 재기동', val: '0.20s', diff: '+0.15s', seconds: 0.20, type: 'intermediate' },
-          { lang: 'Python', tool: '타입체커 재기동', val: '0.12s', diff: '+0.07s', seconds: 0.12, type: 'intermediate' }
+          { lang: 'Svelte 5', tool: 'AST 재파싱', val: '19.49s', diff: '+19.44s', seconds: 19.49, type: 'standard' },
+          { lang: 'Java', tool: 'javac 재부팅', val: '4.93s', diff: '+4.88s', seconds: 4.93, type: 'standard' },
+          { lang: 'Python', tool: '타입체커 재기동', val: '1.26s', diff: '+1.21s', seconds: 1.26, type: 'intermediate' },
+          { lang: 'C# .NET', tool: 'dotnet 재기동', val: '0.97s', diff: '+0.92s', seconds: 0.97, type: 'intermediate' },
+          { lang: 'Go', tool: 'vet 캐시 확인', val: '0.69s', diff: '+0.64s', seconds: 0.69, type: 'intermediate' },
+          { lang: 'C / C++', tool: '컴파일러 재부팅', val: '0.64s', diff: '+0.59s', seconds: 0.64, type: 'intermediate' },
+          { lang: 'Rust', tool: 'cargo 콜드 재기동', val: '0.15s', diff: '+0.10s', seconds: 0.15, type: 'intermediate' }
         ]
       }
     };
