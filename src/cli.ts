@@ -75,11 +75,13 @@ ${BOLD}명령어:${RESET}
   init           현재 디렉터리에 기본 synapse.config.ts 생성
 
 ${BOLD}옵션:${RESET}
-  --all          인과율 스킵을 끄고 모든 플러그인 전방위 강제 검사
-  --agent        AI 에이전트(Claude Code, Antigravity 등) 연동용 구조화된 JSON 출력
-  --watch        파일 변경 감지 백그라운드 모드 (준비 중)
-  --help, -h     도움말 표시
-  --version, -v  버전 정보 표시
+  --all              인과율 스킵을 끄고 모든 플러그인 전방위 강제 검사
+  --agent            AI 에이전트(Claude Code, Antigravity 등) 연동용 구조화된 JSON 출력
+  --compact          AI 토큰 극단적 최소화 모드 (성공 시 단 11 토큰)
+  -i, --interactive  오류 발생 시 프로세스를 일시정지하고 실시간 코드 수정 대기 (인과 핫픽스)
+  --watch            파일 변경 감지 백그라운드 모드 (준비 중)
+  --help, -h         도움말 표시
+  --version, -v      버전 정보 표시
 \n`);
 }
 
@@ -105,11 +107,14 @@ async function main(): Promise<void> {
     process.exit(code);
   }
 
+  const isInteractive = args.includes('--interactive') || args.includes('-i');
+
   const options: SynapseOptions = {
     mode: args.includes('--all') ? 'all' : 'smart',
     agentMode: args.includes('--agent') || args.includes('--compact'),
     compactMode: args.includes('--compact'),
     watch: args.includes('--watch'),
+    interactive: isInteractive,
   };
 
   try {

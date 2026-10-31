@@ -54,6 +54,7 @@ export interface SynapseOptions {
   readonly agentMode: boolean; // AI 에이전트 연동용 구조화된 JSON 모드
   readonly compactMode: boolean; // 초극단적 토큰 압축 모드 (--compact)
   readonly watch: boolean;
+  readonly interactive?: boolean; // 에러 발생 시 일시정지 및 실시간 수정 루프 (--interactive, -i)
 }
 
 export interface CausalDecision {
