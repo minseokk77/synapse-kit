@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.version.1.6.0.schema.json
+PackageIdentifier: Vesper.SynapseKit
+PackageVersion: 0.1.0
+DefaultLocale: en-US
+Publisher: Vesper
+PackageName: Synapse Kit
+License: MIT
+ShortDescription: AI-Native Unified Compiler, Linter & Verification Framework for Tauri and Full-Stack Apps
+Moniker: synapse
+Tags:
+  - compiler
+  - tauri
+  - rust
+  - svelte
+  - bun
+  - ai-native
+ManifestType: version
+ManifestVersion: 1.6.0
