@@ -949,50 +949,51 @@
   <script>
     const BENCHMARK_DATA = {
       cold: {
-        caption: '💡 6대 엔지니어링 언어(Rust, C/C++, C#, Svelte 5, Go, Python)를 순차 실행하면 총 3.80초~5.68초가 걸립니다. Synapse Kit는 멀티트랙 병렬 파이프라인으로 동시 실행하여 가장 긴 1.88초 시점인 1.94초 기준선(파란 점선) 아래로 6개 언어 전원을 완결합니다.',
+        caption: '💡 전체 순차 실행(3.80s)과 Synapse Kit(1.94s)를 먼저 비교하고, 그 뒤로 6대 개별 언어 도구의 소요 시간을 나열합니다. Synapse Kit는 가장 긴 Svelte 5(1.86s) 완료 시점인 1.94초 기준선(파란 점선)에 맞춰 6개 언어 전원을 완결합니다.',
         baselineSeconds: 1.94,
         baselineLabel: '⚡ Synapse 기준선: 1.94s (-48.8% 단축)',
         maxSeconds: 4.5,
         items: [
           { lang: '전체 순차', tool: 'All Sequential', val: '3.80s', diff: '+1.86s', seconds: 3.80, type: 'sequential' },
+          { lang: 'Synapse', tool: '6대 언어 병렬', val: '1.94s', diff: '동시 완결', seconds: 1.94, type: 'synapse' },
           { lang: 'Svelte 5', tool: 'svelte-check', val: '1.86s', diff: '-0.08s', seconds: 1.86, type: 'standard' },
           { lang: 'C# .NET', tool: 'dotnet build', val: '1.04s', diff: '-0.90s', seconds: 1.04, type: 'standard' },
-          { lang: 'C / C++', tool: 'g++ kernel', val: '0.32s', diff: '-1.62s', seconds: 0.32, type: 'intermediate' },
           { lang: 'Go', tool: 'go vet', val: '0.33s', diff: '-1.61s', seconds: 0.33, type: 'intermediate' },
+          { lang: 'C / C++', tool: 'g++ kernel', val: '0.32s', diff: '-1.62s', seconds: 0.32, type: 'intermediate' },
           { lang: 'Rust', tool: 'cargo check', val: '0.29s', diff: '-1.65s', seconds: 0.29, type: 'intermediate' },
-          { lang: 'Python', tool: 'py_compile', val: '0.10s', diff: '-1.84s', seconds: 0.10, type: 'intermediate' },
-          { lang: 'Synapse', tool: '6대 언어 병렬', val: '1.94s', diff: '동시 완결', seconds: 1.94, type: 'synapse' }
+          { lang: 'Python', tool: 'py_compile', val: '0.10s', diff: '-1.84s', seconds: 0.10, type: 'intermediate' }
         ]
       },
       delta: {
-        caption: '💡 Svelte 컴포넌트 1개 수정 시, 기존 도구들은 무관한 C/C++, C#, Rust, Go, Python까지 다시 돌며 3.80초를 낭비합니다. Synapse Kit는 인과 그래프로 무관한 5개 언어를 0.00초 스킵하고 0.31초 기준선(파란 점선) 바닥에서 즉시 검증을 끝냅니다.',
+        caption: '💡 Svelte 컴포넌트 1개 수정 시, 기존 순차(3.80s) 대비 Synapse Kit는 인과 스마트 스킵으로 0.31초에 끝납니다. 뒤이어 나오는 5개 언어 검사를 0.00초로 완전 생략한 결과입니다.',
         baselineSeconds: 0.31,
         baselineLabel: '⚡ Synapse 기준선: 0.31s (-91.8% 단축)',
         maxSeconds: 4.5,
         items: [
           { lang: '전체 재실행', tool: 'Traditional CI', val: '3.80s', diff: '+3.49s', seconds: 3.80, type: 'sequential' },
-          { lang: 'Svelte 5', tool: '컴포넌트 재검사', val: '1.86s', diff: '+1.55s', seconds: 1.86, type: 'standard' },
+          { lang: 'Synapse', tool: '인과율 스킵', val: '0.31s', diff: '-91.8%', seconds: 0.31, type: 'synapse' },
+          { lang: 'Svelte 5', tool: '수정 컴포넌트', val: '1.86s', diff: '+1.55s', seconds: 1.86, type: 'standard' },
           { lang: 'C# .NET', tool: '불필요 빌드', val: '1.04s', diff: '+0.73s', seconds: 1.04, type: 'standard' },
-          { lang: 'C / C++', tool: '불필요 재스캔', val: '0.32s', diff: '+0.01s', seconds: 0.32, type: 'intermediate' },
           { lang: 'Go', tool: '패키지 재스캔', val: '0.33s', diff: '+0.02s', seconds: 0.33, type: 'intermediate' },
+          { lang: 'C / C++', tool: '불필요 재스캔', val: '0.32s', diff: '+0.01s', seconds: 0.32, type: 'intermediate' },
           { lang: 'Rust', tool: '무관한 10만줄', val: '0.29s', diff: '-0.02s', seconds: 0.29, type: 'intermediate' },
-          { lang: 'Python', tool: '모듈 재임포트', val: '0.10s', diff: '-0.21s', seconds: 0.10, type: 'intermediate' },
-          { lang: 'Synapse', tool: '인과율 스킵', val: '0.31s', diff: '-91.8%', seconds: 0.31, type: 'synapse' }
+          { lang: 'Python', tool: '모듈 재임포트', val: '0.10s', diff: '-0.21s', seconds: 0.10, type: 'intermediate' }
         ]
       },
       livefix: {
-        caption: '💡 에러 수정 시 각 언어 컴파일러는 프로세스가 종료되어 재부팅 대기 시간이 발생합니다. Synapse Kit 대화형 모드(check -i)는 일시정지 상태에서 대기하다가 코드 저장 즉시 0.05초 기준선(파란 점선) 수준에서 초고속 핫 재검증합니다.',
+        caption: '💡 컴파일 에러 발생 시 기존 도구들의 콜드 재부팅(3.80s) 대비, Synapse Kit 대화형 모드(check -i)는 일시정지 상태에서 파일 저장 즉시 0.05초 만에 메모리에서 핫 재검증합니다.',
         baselineSeconds: 0.05,
         baselineLabel: '⚡ Synapse 기준선: 0.05s (-97.4% 즉각반응)',
         maxSeconds: 4.0,
         items: [
+          { lang: '전체 재기동', tool: 'Cold Restart', val: '3.80s', diff: '+3.75s', seconds: 3.80, type: 'sequential' },
+          { lang: 'Synapse', tool: 'check -i 핫픽스', val: '0.05s', diff: '0.05s 즉각반응', seconds: 0.05, type: 'synapse' },
           { lang: 'Svelte 5', tool: 'AST 재파싱', val: '1.90s', diff: '+1.85s', seconds: 1.90, type: 'standard' },
           { lang: 'C# .NET', tool: 'dotnet 재기동', val: '1.10s', diff: '+1.05s', seconds: 1.10, type: 'standard' },
-          { lang: 'C / C++', tool: '컴파일러 재부팅', val: '0.40s', diff: '+0.35s', seconds: 0.40, type: 'intermediate' },
           { lang: 'Go', tool: 'vet 캐시 확인', val: '0.35s', diff: '+0.30s', seconds: 0.35, type: 'intermediate' },
+          { lang: 'C / C++', tool: '컴파일러 재부팅', val: '0.40s', diff: '+0.35s', seconds: 0.40, type: 'intermediate' },
           { lang: 'Rust', tool: 'cargo 콜드 재기동', val: '0.30s', diff: '+0.25s', seconds: 0.30, type: 'intermediate' },
-          { lang: 'Python', tool: '타입체커 재기동', val: '0.12s', diff: '+0.07s', seconds: 0.12, type: 'intermediate' },
-          { lang: 'Synapse', tool: 'check -i 핫픽스', val: '0.05s', diff: '0.05s 즉각반응', seconds: 0.05, type: 'synapse' }
+          { lang: 'Python', tool: '타입체커 재기동', val: '0.12s', diff: '+0.07s', seconds: 0.12, type: 'intermediate' }
         ]
       }
     };
@@ -1074,6 +1075,8 @@
         `;
       }).join('');
 
+      const dividerX = (padLeft + 2 * colStep).toFixed(1);
+
       canvas.innerHTML = `
         <!-- 상단 상태 바 (기둥 위를 덮지 않고 상단에 고정) -->
         <div class="chart-meta-bar">
@@ -1115,6 +1118,11 @@
 
             <line x1="${padLeft}" y1="${y75}" x2="${width - padRight}" y2="${y75}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="3,3" />
             <text x="${width - padRight}" y="${y75 - 4}" text-anchor="end" fill="rgba(255,255,255,0.25)" font-size="8.5" font-family="'Geist Mono', monospace">${sec75}s</text>
+
+            <!-- 2번(Synapse)과 3번(개별 언어) 사이의 구역 분리 세로 점선 -->
+            <line x1="${dividerX}" y1="${padTop - 12}" x2="${dividerX}" y2="${yBottom + 35}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="3,3" />
+            <text x="${padLeft + colStep}" y="${padTop - 14}" text-anchor="middle" fill="#0a84ff" font-size="8.5" font-weight="600" font-family="'Geist Mono', monospace">[ 전체 총합 파이프라인 비교 ]</text>
+            <text x="${(parseFloat(dividerX) + (width - padRight)) / 2}" y="${padTop - 14}" text-anchor="middle" fill="#72727a" font-size="8.5" font-family="'Geist Mono', monospace">[ 개별 언어 도구별 소요 시간 ]</text>
 
             <!-- 기준선 점선 (막대기 뒤 배경 레이어에 위치) -->
             <line x1="${padLeft}" y1="${baselineY}" x2="${width - padRight}" y2="${baselineY}" stroke="#0a84ff" stroke-width="1.8" stroke-dasharray="5,4" />
