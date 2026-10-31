@@ -39,8 +39,8 @@
 
     body {
       background:
-        radial-gradient(circle at 50% -10%, rgba(44, 67, 108, 0.32), transparent 38rem),
-        var(--background);
+        radial-gradient(circle at 50% -20%, rgba(28, 52, 90, 0.22), transparent 45rem),
+        #030305;
       color: var(--ink);
       font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
       text-rendering: optimizeLegibility;
@@ -56,8 +56,8 @@
 
     .glass {
       border: 1px solid var(--line);
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 24px 60px rgba(0, 0, 0, 0.35);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 24px 60px rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
     }
@@ -162,40 +162,28 @@
       isolation: isolate;
     }
 
-    .hero::before {
-      position: absolute;
-      inset: 0;
-      z-index: -3;
-      background:
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 64px 64px;
-      mask-image: linear-gradient(to bottom, black, transparent 75%);
-      content: "";
-    }
-
     .ambient {
       position: absolute;
       z-index: -2;
       border-radius: 50%;
-      filter: blur(130px);
+      filter: blur(140px);
       pointer-events: none;
     }
 
     .ambient-one {
-      top: -6rem;
-      left: calc(50% - 36rem);
-      width: 34rem;
-      height: 34rem;
-      background: rgba(10, 132, 255, 0.18);
+      top: -8rem;
+      left: calc(50% - 32rem);
+      width: 32rem;
+      height: 32rem;
+      background: rgba(14, 90, 180, 0.15);
     }
 
     .ambient-two {
-      top: 6rem;
-      right: calc(50% - 36rem);
-      width: 32rem;
-      height: 32rem;
-      background: rgba(191, 90, 242, 0.12);
+      top: 8rem;
+      right: calc(50% - 32rem);
+      width: 30rem;
+      height: 30rem;
+      background: rgba(40, 70, 130, 0.1);
     }
 
     .availability {
@@ -223,42 +211,85 @@
 
     .hero h1 {
       margin: 0 auto 1.5rem;
-      max-width: 900px;
-      font-size: clamp(3rem, 6.2vw, 5.8rem);
-      font-weight: 680;
-      letter-spacing: -0.06em;
-      line-height: 0.98;
+      max-width: 960px;
+      font-size: clamp(2.8rem, 6.2vw, 5.6rem);
+      font-weight: 700;
+      letter-spacing: -0.065em;
+      line-height: 0.94;
+      text-transform: uppercase;
     }
 
-    .hero h1 span {
-      background: linear-gradient(100deg, #ffffff 20%, #aeeaff 52%, #d8c6ff 85%);
+    .hero h1 .line-1 {
+      color: #ffffff;
+      display: block;
+    }
+
+    .hero h1 .line-2 {
+      background: linear-gradient(180deg, #ffffff 15%, #9a9aa2 100%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      display: block;
     }
 
     .hero p {
       max-width: 680px;
       margin: 0 auto 2.5rem;
-      color: #9898a0;
-      font-size: 1.05rem;
+      color: #92929a;
+      font-size: 1.02rem;
       line-height: 1.65;
       letter-spacing: -0.015em;
     }
 
     /* CLI 인스톨 바 (Vesper Style) */
+    .cli-container {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.65rem;
+      max-width: 540px;
+      width: 100%;
+      margin: 0 auto 3.5rem;
+    }
+    .cli-tabs {
+      display: inline-flex;
+      gap: 0.35rem;
+      padding: 0.25rem;
+      border-radius: 0.75rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: var(--font-geist-mono), monospace;
+      font-size: 0.68rem;
+    }
+    .cli-tab {
+      padding: 0.3rem 0.75rem;
+      border-radius: 0.55rem;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #888892;
+      cursor: pointer;
+      transition: all 160ms ease;
+    }
+    .cli-tab.active {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #fff;
+      font-weight: 600;
+    }
+    .cli-tab:hover:not(.active) {
+      color: #d1d1d6;
+    }
+
     .cli-bar {
       display: inline-flex;
       align-items: center;
       justify-content: space-between;
       gap: 1.5rem;
-      max-width: 520px;
       width: 100%;
       padding: 0.45rem 0.55rem 0.45rem 1.15rem;
       border-radius: 0.95rem;
       font-family: var(--font-geist-mono), monospace;
       font-size: 0.8rem;
-      margin-bottom: 3.5rem;
     }
 
     .cli-cmd {
@@ -571,21 +602,32 @@
     </div>
 
     <h1>
-      엔지니어링의 속도를。<br>
-      <span>Vesper Synapse</span>
+      <span class="line-1">COMPILE AT SCALE.</span>
+      <span class="line-2">VERIFY INSTANTLY.</span>
     </h1>
 
     <p>
-      Rust, Svelte 5, TypeScript, Win32 PE DLL, NSIS 툴체인을 단일 인과 그래프로 통합합니다.<br>
-      200,000줄 초대형 모노레포를 3.47초 만에 검증하고, 스마트 스킵으로 AI 토큰을 99.8% 절감합니다.
+      Rust &bull; Svelte 5 &bull; TypeScript &bull; Win32 PE &bull; NSIS<br>
+      Git 인과 그래프 기반 스마트 스킵으로 200,000줄 모노레포를 3초대에 완결합니다.
     </p>
 
-    <div class="cli-bar glass">
-      <div class="cli-cmd">
-        <span>$</span>
-        <strong id="cmd-copy-target">bunx synapse-kit check</strong>
+    <div class="cli-container">
+      <div class="cli-tabs">
+        <button class="cli-tab active" onclick="switchCliTab('init', this)">01. init (시작하기)</button>
+        <button class="cli-tab" onclick="switchCliTab('check', this)">02. check (인과 검증)</button>
+        <button class="cli-tab" onclick="switchCliTab('install', this)">install (설치)</button>
       </div>
-      <button class="cli-btn" onclick="copyCli()">복사</button>
+
+      <div class="cli-bar glass">
+        <div class="cli-cmd">
+          <span>$</span>
+          <strong id="cmd-copy-target">bunx synapse-kit init</strong>
+        </div>
+        <button class="cli-btn" onclick="copyCli()">복사</button>
+      </div>
+      <div id="cli-hint" style="font-size: 0.72rem; color: #72727a; font-family: var(--font-geist-mono), monospace;">
+        현재 프로젝트에 synapse.config.ts 설정 템플릿을 자동 생성합니다.
+      </div>
     </div>
 
     <!-- Vesper Desktop App UI 형태 쇼케이스 -->
@@ -768,6 +810,29 @@
   </footer>
 
   <script>
+    const CLI_COMMANDS = {
+      init: {
+        cmd: 'bunx synapse-kit init',
+        hint: '현재 프로젝트에 synapse.config.ts 설정 템플릿을 자동 생성합니다.'
+      },
+      check: {
+        cmd: 'bunx synapse-kit check',
+        hint: 'Git 작업 트리를 분석하여 변경된 영역만 인과 스마트 검증합니다.'
+      },
+      install: {
+        cmd: 'bun add -d synapse-kit',
+        hint: '프로젝트 devDependencies에 synapse-kit 패키지를 추가합니다.'
+      }
+    };
+
+    function switchCliTab(tabKey, btn) {
+      document.querySelectorAll('.cli-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      const item = CLI_COMMANDS[tabKey];
+      document.getElementById('cmd-copy-target').innerText = item.cmd;
+      document.getElementById('cli-hint').innerText = item.hint;
+    }
+
     function copyCli() {
       const text = document.getElementById('cmd-copy-target').innerText;
       navigator.clipboard.writeText(text);
