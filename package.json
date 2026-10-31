@@ -23,7 +23,7 @@
     "ai-native",
     "bun"
   ],
-  "author": "Minseok Kang",
+  "author": "Vesper",
   "license": "MIT",
   "devDependencies": {
     "@types/bun": "latest",
