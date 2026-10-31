@@ -182,11 +182,11 @@ export async function executeBuild(config: SynapseConfig, options: SynapseOption
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
 
   const cache = loadBuildCache(rootDir);
-  const { head: currentHead, modifiedFiles } = await getGitState(rootDir);
+  const { head: currentHead, modifiedFiles, repoRoot } = await getGitState(rootDir);
   const isForce = options.force || options.mode === 'all';
 
   const taskPromises = tracks.map(async (track) => {
-    const { skip, reason } = shouldSkipBuildTrack(track, rootDir, cache, modifiedFiles, isForce);
+    const { skip, reason } = shouldSkipBuildTrack(track, rootDir, repoRoot, cache, modifiedFiles, isForce);
 
     if (skip) {
       return {

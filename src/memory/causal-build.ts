@@ -1,5 +1,5 @@
 import { spawn } from 'bun';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import type { BuildTrack } from '../types';
@@ -58,10 +58,14 @@ export function saveBuildCache(rootDir: string, cache: BuildCacheData): void {
 }
 
 /**
- * Git 작업 트리의 변경 파일 목록과 최신 HEAD 해시 조회
+ * Git 작업 트리의 변경 파일 목록, 최신 HEAD 해시 및 Git 저장소 루트 디렉터리 조회
  */
-export async function getGitState(rootDir: string): Promise<{ head: string; modifiedFiles: string[] }> {
+export async function getGitState(rootDir: string): Promise<{ head: string; modifiedFiles: string[]; repoRoot: string }> {
   try {
+    const rootProc = spawn(['git', 'rev-parse', '--show-toplevel'], { cwd: rootDir, stdout: 'pipe' });
+    const repoRoot = (await new Response(rootProc.stdout).text()).trim().replaceAll('\\', '/');
+    await rootProc.exited;
+
     const headProc = spawn(['git', 'rev-parse', 'HEAD'], { cwd: rootDir, stdout: 'pipe' });
     const head = (await new Response(headProc.stdout).text()).trim();
     await headProc.exited;
@@ -75,9 +79,9 @@ export async function getGitState(rootDir: string): Promise<{ head: string; modi
       .map((line) => line.slice(3).trim().replaceAll('\\', '/'))
       .filter((line) => line.length > 0);
 
-    return { head, modifiedFiles };
+    return { head, modifiedFiles, repoRoot: repoRoot || rootDir };
   } catch {
-    return { head: 'unknown', modifiedFiles: [] };
+    return { head: 'unknown', modifiedFiles: [], repoRoot: rootDir };
   }
 }
 
@@ -87,6 +91,7 @@ export async function getGitState(rootDir: string): Promise<{ head: string; modi
 export function shouldSkipBuildTrack(
   track: BuildTrack,
   rootDir: string,
+  repoRoot: string,
   cache: BuildCacheData,
   modifiedFiles: string[],
   isForce: boolean
@@ -106,22 +111,36 @@ export function shouldSkipBuildTrack(
     }
   }
 
-  // 2. 소스 코드 변경 감지
-  const sources = track.sources || [];
-  if (sources.length > 0) {
-    const hasModifiedSource = modifiedFiles.some((file) =>
-      sources.some((src) => file.includes(src.replaceAll('\\', '/')))
-    );
-
-    if (hasModifiedSource) {
-      return { skip: false, reason: '소스 코드 변경 감지' };
-    }
-  }
-
-  // 3. 이전 빌드 기록 검사
+  // 2. 이전 빌드 기록 검사
   const record = cache.tracks[track.name];
   if (!record) {
     return { skip: false, reason: '초기 빌드 기록 없음' };
+  }
+
+  // 3. 소스 코드 변경 감지 (마지막 빌드 이후 수정된 파일이 있는지 mtime과 교차 검증)
+  const sources = track.sources || [];
+  if (sources.length > 0) {
+    const lastBuildEpoch = new Date(record.lastBuildTime).getTime();
+    const hasModifiedSource = modifiedFiles.some((file) => {
+      const isMatch = sources.some((src) => file.includes(src.replaceAll('\\', '/')));
+      if (!isMatch) return false;
+
+      // Git repoRoot 기준 절대 경로로 실제 mtime 조회
+      const fullPath = resolve(repoRoot, file);
+      if (existsSync(fullPath)) {
+        try {
+          const stat = statSync(fullPath);
+          return stat.mtimeMs > lastBuildEpoch;
+        } catch {
+          return true;
+        }
+      }
+      return true;
+    });
+
+    if (hasModifiedSource) {
+      return { skip: false, reason: '마지막 빌드 이후 소스 코드 변경 감지' };
+    }
   }
 
   return { skip: true, reason: '인과율 메모리 일치 (소스 변경 없음)' };
