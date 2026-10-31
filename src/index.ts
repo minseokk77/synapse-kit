@@ -14,3 +14,4 @@ export { svelteChecker, type SveltePluginOptions } from './plugins/svelte';
 export { schemaChecker, type SchemaPluginOptions, type SchemaTarget } from './plugins/schema';
 export { nativeChecker, type NativePluginOptions, type NativeBinaryTarget } from './plugins/native';
 export { nsisChecker, type NsisPluginOptions } from './plugins/nsis';
+export { javaChecker, type JavaPluginOptions } from './plugins/java';
