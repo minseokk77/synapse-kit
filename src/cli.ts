@@ -90,17 +90,19 @@ ${BOLD}옵션:${RESET}
  */
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const command = args[0] || 'check';
 
-  if (command === '--help' || command === '-h' || command === 'help') {
+  if (args.includes('--help') || args.includes('-h') || args[0] === 'help') {
     printHelp();
     process.exit(0);
   }
 
-  if (command === '--version' || command === '-v' || command === 'version') {
+  if (args.includes('--version') || args.includes('-v') || args[0] === 'version') {
     process.stdout.write(`synapse-kit v0.1.0\n`);
     process.exit(0);
   }
+
+  // 플래그가 아닌 첫 번째 비-옵션 인자를 명령어로 인식 (기본값: 'check')
+  const command = args.find((a) => !a.startsWith('-')) || 'check';
 
   if (command === 'init') {
     const code = await handleInit();
