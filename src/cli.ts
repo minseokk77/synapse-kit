@@ -5,6 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import pkg from '../package.json';
 import { loadSynapseConfig } from './core/config';
 import { executeChecks, executeBuild, executePackage, executeSign } from './core/engine';
+import { detectLocale, t } from './i18n';
 import type { SynapseOptions } from './types';
 
 const RESET = '\x1b[0m';
@@ -20,7 +21,7 @@ const GRAY = '\x1b[90m';
 async function handleInit(targetDir: string = process.cwd()): Promise<number> {
   const configPath = resolve(targetDir, 'synapse.config.ts');
   if (existsSync(configPath)) {
-    process.stderr.write(`${RED}❌ 이미 ${configPath} 파일이 존재합니다.${RESET}\n`);
+    process.stderr.write(`${RED}❌ ${t('configExists')} ${configPath}${RESET}\n`);
     return 1;
   }
 
@@ -81,7 +82,7 @@ export default defineConfig({
 `;
 
   await writeFile(configPath, template, 'utf8');
-  process.stdout.write(`${BOLD}${GREEN}✅ synapse.config.ts 파일이 성공적으로 생성되었습니다!${RESET}\n`);
+  process.stdout.write(`${BOLD}${GREEN}✅ ${t('configCreated')}${RESET}\n`);
   return 0;
 }
 
@@ -90,27 +91,28 @@ export default defineConfig({
  */
 function printHelp(): void {
   process.stdout.write(`
-${BOLD}${CYAN}🧠 Synapse Kit - AI-Native Unified Compiler, Build & Packaging Framework${RESET}
+${BOLD}${CYAN}${t('cliTitle')}${RESET}
 
-${BOLD}사용법:${RESET}
+${BOLD}${t('cliUsage')}${RESET}
   synapse <command> [options]
 
-${BOLD}핵심 명령어:${RESET}
-  check          등록된 플러그인 무결성 검증 (기본: AI 인과율 스마트 검사)
-  build          등록된 buildTracks 초고속 인과율 병렬 증분 빌드 (0초대 캐시)
-  package        단일 NSIS + zlib 고속 인스톨러 패키징 번들러
-  sign           인과율 암호화 서명 엔진 (Minisign / Ed25519)
-  init           현재 디렉터리에 최적화된 synapse.config.ts 생성
+${BOLD}${t('cliCommands')}${RESET}
+  check          ${t('cmdCheck')}
+  build          ${t('cmdBuild')}
+  package        ${t('cmdPackage')}
+  sign           ${t('cmdSign')}
+  init           ${t('cmdInit')}
 
-${BOLD}옵션:${RESET}
-  --all              인과율 스킵을 끄고 전방위 강제 검사
-  -f, --force        빌드/서명 시 인과율 캐시를 무시하고 강제 재실행
-  --agent            AI 에이전트(Claude Code, Antigravity 등) 연동용 구조화된 JSON 출력
-  --compact          AI 토큰 극단적 최소화 모드 (성공 시 단 11 토큰)
-  -i, --interactive  오류 발생 시 프로세스를 일시정지하고 실시간 코드 수정 대기 (인과 핫픽스)
-  --watch            파일 변경 감지 백그라운드 모드
-  --help, -h         도움말 표시
-  --version, -v      버전 정보 표시
+${BOLD}${t('cliOptions')}${RESET}
+  --all              ${t('optAll')}
+  -f, --force        ${t('optForce')}
+  --agent            ${t('optAgent')}
+  --compact          ${t('optCompact')}
+  -i, --interactive  ${t('optInteractive')}
+  --watch            ${t('optWatch')}
+  --lang <ko|en>     ${t('optLang')}
+  --help, -h         ${t('optHelp')}
+  --version, -v      ${t('optVersion')}
 \n`);
 }
 
@@ -119,6 +121,17 @@ ${BOLD}옵션:${RESET}
  */
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
+
+  // 로케일 파싱 (--lang=ko, --lang=en, --lang ko, --lang en)
+  let explicitLang: string | undefined;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith('--lang=')) {
+      explicitLang = args[i].split('=')[1];
+    } else if (args[i] === '--lang' && args[i + 1]) {
+      explicitLang = args[i + 1];
+    }
+  }
+  detectLocale(explicitLang);
 
   if (args.includes('--help') || args.includes('-h') || args[0] === 'help') {
     printHelp();
@@ -166,7 +179,7 @@ async function main(): Promise<void> {
       const code = await executeSign(config, options);
       process.exit(code);
     } else {
-      process.stderr.write(`${RED}❌ 알 수 없는 명령어: '${command}'${RESET}\n`);
+      process.stderr.write(`${RED}❌ ${t('unknownCmd')} '${command}'${RESET}\n`);
       printHelp();
       process.exit(1);
     }
@@ -179,7 +192,7 @@ async function main(): Promise<void> {
         }) + '\n'
       );
     } else {
-      process.stderr.write(`${RED}🚨 오류:${RESET} ${error instanceof Error ? error.message : String(error)}\n`);
+      process.stderr.write(`${RED}${t('errPrefix')}${RESET} ${error instanceof Error ? error.message : String(error)}\n`);
     }
     process.exit(1);
   }

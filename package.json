@@ -1,6 +1,6 @@
 {
   "name": "synapse-kit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -16,6 +16,7 @@
   "files": [
     "dist",
     "README.md",
+    "README.ko.md",
     "LICENSE"
   ],
   "scripts": {

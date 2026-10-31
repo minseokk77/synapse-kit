@@ -9,6 +9,9 @@ export { reportResults } from './core/reporter';
 export { analyzeCausalGraph } from './memory/causal-graph';
 export { loadBuildCache, saveBuildCache, computeFileHash } from './memory/causal-build';
 
+// i18n 국제화 엔진
+export { detectLocale, setLocale, getLocale, t, type SupportedLocale } from './i18n';
+
 // 기본 내장 플러그인 모음
 export { rustChecker, type RustPluginOptions } from './plugins/rust';
 export { svelteChecker, type SveltePluginOptions } from './plugins/svelte';

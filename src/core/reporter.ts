@@ -1,4 +1,5 @@
 import type { CausalDecision, CheckResult, SynapseOptions } from '../types';
+import { t } from '../i18n';
 
 const RESET = '\x1b[0m';
 const BOLD = '\x1b[1m';
@@ -81,9 +82,9 @@ export function reportResults(
 
   // 2. 인간 개발자용 터미널 ANSI 대시보드 모드
   const line = '━'.repeat(68);
-  process.stdout.write(`\n${BOLD}${CYAN}🧠 [Synapse Kit] AI-Native 통합 컴파일 & 검사 프레임워크${RESET}\n`);
+  process.stdout.write(`\n${BOLD}${CYAN}${t('checkHeader')}${RESET}\n`);
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
-  process.stdout.write(`${GRAY}💡 인과 메모리 분석: ${decision.reason}${RESET}\n`);
+  process.stdout.write(`${GRAY}💡 ${t('causalAnalysis')}: ${decision.reason}${RESET}\n`);
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
 
   for (const result of results) {
@@ -92,16 +93,16 @@ export function reportResults(
 
     switch (result.status) {
       case 'success':
-        statusBadge = `${GREEN}✅ 통과 (${duration}s)${RESET}`;
+        statusBadge = `${GREEN}✅ ${t('statusSuccess')} (${duration}s)${RESET}`;
         break;
       case 'skipped':
-        statusBadge = `${GRAY}⏭️  스킵 (인과율 생략)${RESET}`;
+        statusBadge = `${GRAY}⏭️  ${t('statusSkipped')}${RESET}`;
         break;
       case 'warning':
-        statusBadge = `${YELLOW}⚠️  경고 (${duration}s)${RESET}`;
+        statusBadge = `${YELLOW}⚠️  ${t('statusWarning')} (${duration}s)${RESET}`;
         break;
       case 'error':
-        statusBadge = `${RED}❌ 실패 (${duration}s)${RESET}`;
+        statusBadge = `${RED}❌ ${t('statusError')} (${duration}s)${RESET}`;
         break;
     }
 
@@ -123,11 +124,11 @@ export function reportResults(
 
   if (errorResults.length === 0) {
     process.stdout.write(
-      `${BOLD}${GREEN}✨ 시냅스 검증 성공:${RESET} 0 Errors, ${warningResults.length} Warnings, ${skippedResults.length} Skipped ${GRAY}(총 소요 시간: ${totalSeconds}초)${RESET}\n\n`
+      `${BOLD}${GREEN}${t('checkSuccessSummary', 0, warningResults.length, skippedResults.length, totalSeconds)}${RESET}\n\n`
     );
   } else {
     process.stdout.write(
-      `${BOLD}${RED}🚨 시냅스 검증 실패:${RESET} ${errorResults.length}개 플러그인에서 결함이 감지되었습니다. ${GRAY}(총 소요 시간: ${totalSeconds}초)${RESET}\n\n`
+      `${BOLD}${RED}${t('checkFailureSummary', errorResults.length, warningResults.length, totalSeconds)}${RESET}\n\n`
     );
   }
 }

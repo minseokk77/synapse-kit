@@ -12,6 +12,7 @@ import {
   computeFileHash,
 } from '../memory/causal-build';
 import { reportResults } from './reporter';
+import { t } from '../i18n';
 
 const RESET = '\x1b[0m';
 const BOLD = '\x1b[1m';
@@ -171,14 +172,14 @@ export async function executeBuild(config: SynapseConfig, options: SynapseOption
   const tracks = config.buildTracks || [];
 
   if (tracks.length === 0) {
-    process.stderr.write(`${RED}❌ 등록된 빌드 트랙(buildTracks)이 없습니다. synapse.config.ts를 확인해 주세요.${RESET}\n`);
+    process.stderr.write(`${RED}${t('noBuildTracks')}${RESET}\n`);
     return 1;
   }
 
   const startTime = performance.now();
   const line = '━'.repeat(68);
 
-  process.stdout.write(`\n${BOLD}${CYAN}⚡ [Synapse Kit] 초고속 인과율 병렬 빌더 가동 (${tracks.length}대 트랙)${RESET}\n`);
+  process.stdout.write(`\n${BOLD}${CYAN}${t('buildHeader')} (${tracks.length})${RESET}\n`);
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
 
   const cache = loadBuildCache(rootDir);
@@ -221,24 +222,24 @@ export async function executeBuild(config: SynapseConfig, options: SynapseOption
   const hasFailed = taskResults.some((t) => t.exitCode !== 0);
 
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
-  for (const t of taskResults) {
-    if (t.skipped) {
+  for (const res of taskResults) {
+    if (res.skipped) {
       process.stdout.write(
-        ` • ${BOLD}${t.name.padEnd(38, ' ')}${RESET} : ${YELLOW}⚡ 스킵 [인과율 캐시 적중]${RESET} ${GRAY}(0.00s)${RESET}\n`
+        ` • ${BOLD}${res.name.padEnd(38, ' ')}${RESET} : ${YELLOW}⚡ ${t('trackSkipped')}${RESET} ${GRAY}(0.00s)${RESET}\n`
       );
     } else {
-      const sec = (t.durationMs / 1000).toFixed(2);
-      const badge = t.exitCode === 0 ? `${GREEN}✅ 빌드 완료 (${sec}s)${RESET}` : `${RED}❌ 빌드 실패 (${sec}s)${RESET}`;
-      process.stdout.write(` • ${BOLD}${t.name.padEnd(38, ' ')}${RESET} : ${badge}\n`);
+      const sec = (res.durationMs / 1000).toFixed(2);
+      const badge = res.exitCode === 0 ? `${GREEN}✅ ${t('trackComplete')} (${sec}s)${RESET}` : `${RED}❌ ${t('trackFailed')} (${sec}s)${RESET}`;
+      process.stdout.write(` • ${BOLD}${res.name.padEnd(38, ' ')}${RESET} : ${badge}\n`);
     }
   }
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
 
   if (!hasFailed) {
     const now = new Date().toISOString();
-    for (const t of taskResults) {
-      if (!t.skipped && t.exitCode === 0) {
-        cache.tracks[t.name] = {
+    for (const res of taskResults) {
+      if (!res.skipped && res.exitCode === 0) {
+        cache.tracks[res.name] = {
           lastBuildTime: now,
           gitCommit: currentHead,
           artifactExists: true,
@@ -248,11 +249,11 @@ export async function executeBuild(config: SynapseConfig, options: SynapseOption
     saveBuildCache(rootDir, cache);
 
     process.stdout.write(
-      `${BOLD}${GREEN}✨ 인과율 병렬 빌드 성공:${RESET} 전체 ${tracks.length}개 트랙 완료 ${GRAY}(총 소요 시간: ${totalDuration}초)${RESET}\n\n`
+      `${BOLD}${GREEN}${t('buildSuccessSummary', tracks.length, totalDuration)}${RESET}\n\n`
     );
     return 0;
   } else {
-    process.stdout.write(`${BOLD}${RED}🚨 병렬 빌드 실패: 하나 이상의 트랙에서 오류가 발생했습니다.${RESET}\n\n`);
+    process.stdout.write(`${BOLD}${RED}${t('buildFailureSummary')}${RESET}\n\n`);
     return 1;
   }
 }
@@ -265,12 +266,12 @@ export async function executePackage(config: SynapseConfig, options: SynapseOpti
   const startTime = performance.now();
   const line = '━'.repeat(68);
 
-  process.stdout.write(`\n${BOLD}${CYAN}📦 [Synapse Kit] 초고속 인스톨러 패키징 파이프라인 가동${RESET}\n`);
+  process.stdout.write(`\n${BOLD}${CYAN}${t('packageHeader')}${RESET}\n`);
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
 
   // 1. 사전 인과율 빌드 자동 선행
   if (config.buildTracks && config.buildTracks.length > 0) {
-    process.stdout.write(`${CYAN}ℹ️  사전 아티팩트 인과율 빌드 확인 중...${RESET}\n`);
+    process.stdout.write(`${CYAN}${t('packagingPreBuild')}${RESET}\n`);
     const buildExit = await executeBuild(config, options);
     if (buildExit !== 0) return buildExit;
   }
@@ -287,17 +288,14 @@ export async function executePackage(config: SynapseConfig, options: SynapseOpti
       const content = await Bun.file(tauriConfPath).json();
       const targets = content?.bundle?.targets;
       if (targets === 'all') {
-        process.stdout.write(
-          `${YELLOW}⚠️  [패키징 가이드] tauri.conf.json의 targets가 "all"로 설정되어 있습니다.${RESET}\n` +
-          `   ↳ WiX MSI 중복 빌드로 시간이 소요됩니다. targets: ["nsis"] 설정을 권장합니다.\n`
-        );
+        process.stdout.write(`${YELLOW}${t('packagingGuide')}${RESET}\n`);
       }
     } catch {
       // JSON 파싱 실패 무시
     }
   }
 
-  process.stdout.write(`${BOLD}🚀 Tauri 인스톨러 번들링 시작...${RESET}\n`);
+  process.stdout.write(`${BOLD}${t('packagingStart')}${RESET}\n`);
   const pkgProc = spawn(['bun', 'x', 'tauri', 'build', '--bundles', 'nsis'], {
     cwd: rootDir,
     stdout: 'inherit',
@@ -309,12 +307,10 @@ export async function executePackage(config: SynapseConfig, options: SynapseOpti
 
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
   if (exitCode === 0) {
-    process.stdout.write(
-      `${BOLD}${GREEN}✨ 고속 인스톨러 패키징 성공!${RESET} ${GRAY}(총 소요 시간: ${duration}초)${RESET}\n\n`
-    );
+    process.stdout.write(`${BOLD}${GREEN}${t('packageSuccess', duration)}${RESET}\n\n`);
     return 0;
   } else {
-    process.stdout.write(`${BOLD}${RED}🚨 인스톨러 패키징 실패 (종료 코드: ${exitCode})${RESET}\n\n`);
+    process.stdout.write(`${BOLD}${RED}${t('packageFailed', duration)}${RESET}\n\n`);
     return exitCode;
   }
 }
@@ -327,7 +323,7 @@ export async function executeSign(config: SynapseConfig, options: SynapseOptions
   const startTime = performance.now();
   const line = '━'.repeat(68);
 
-  process.stdout.write(`\n${BOLD}${CYAN}🔐 [Synapse Kit] 인과율 암호화 서명(Minisign / Ed25519) 가동${RESET}\n`);
+  process.stdout.write(`\n${BOLD}${CYAN}${t('signHeader')}${RESET}\n`);
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
 
   const signConfig = config.sign;
