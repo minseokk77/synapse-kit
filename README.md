@@ -1,6 +1,6 @@
 # 🧠 Synapse Kit (`synapse-kit`)
 > **AI-Native Unified Compiler, Linter & Verification Framework for Tauri, Full-Stack & Polyglot Monorepos**  
-> **공식 웹사이트 & 라이브 벤치마크**: [https://synapse-kit.pages.dev](https://synapse-kit.pages.dev)
+> **공식 웹사이트 & 라이브 벤치마크**: [https://synapse.minseok.online](https://synapse.minseok.online)
 
 [![npm version](https://img.shields.io/npm/v/synapse-kit.svg?style=flat-square&color=0a84ff)](https://www.npmjs.com/package/synapse-kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
@@ -24,7 +24,7 @@
 
 ## 📊 실측 벤치마크 (80만 줄 모노레포)
 
-> **상세 인터랙티브 차트 확인**: [https://synapse-kit.pages.dev#benchmarks](https://synapse-kit.pages.dev#benchmarks)
+> **상세 인터랙티브 차트 확인**: [https://synapse.minseok.online#benchmarks](https://synapse.minseok.online#benchmarks)
 
 | 검증 시나리오 | 검증 대상 (813,931 LOC 모노레포) | 기존 개별 순차 실행 | Vesper Synapse Kit | 속도 개선율 |
 | :--- | :--- | :--- | :--- | :--- |
