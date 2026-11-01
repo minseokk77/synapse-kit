@@ -1,5 +1,5 @@
 {
-  "name": "@synapse-kit/memory",
+  "name": "synapse-kit-memory",
   "version": "0.2.2",
   "description": "AI-Native 0-Token Causal Memory Engine 2.0 with SQLite WAL atomic transactions and MCP server",
   "type": "module",

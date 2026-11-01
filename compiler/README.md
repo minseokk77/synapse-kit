@@ -1,12 +1,12 @@
-# ⚡ @synapse-kit/compiler
+# ⚡ synapse-compiler
 > **Blazing-Fast Polyglot Compiler & Incremental Verification Engine for 10 Languages & Systems**  
 > Part of [Synapse Kit](https://github.com/minseokk77/synapse-kit) | Official Docs: [https://synapse.minseok.online](https://synapse.minseok.online)
 
 ## Installation
 ```bash
-bun add -d @synapse-kit/compiler
+bun add -d synapse-compiler
 # or
-npm install -D @synapse-kit/compiler
+npm install -D synapse-compiler
 ```
 
 ## CLI Usage

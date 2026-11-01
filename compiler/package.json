@@ -1,5 +1,5 @@
 {
-  "name": "@synapse-kit/compiler",
+  "name": "synapse-compiler",
   "version": "0.2.2",
   "description": "Blazing-fast polyglot compiler & incremental verification engine for 10 languages and systems",
   "type": "module",

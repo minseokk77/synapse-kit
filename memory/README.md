@@ -1,12 +1,12 @@
-# 💾 @synapse-kit/memory
+# 💾 synapse-kit-memory
 > **AI-Native 0-Token Causal Memory Engine 2.0 with SQLite WAL Atomic Transactions & MCP Server**  
 > Part of [Synapse Kit](https://github.com/minseokk77/synapse-kit) | Official Docs: [https://synapse.minseok.online/memory/](https://synapse.minseok.online/memory/)
 
 ## Installation
 ```bash
-bun add -d @synapse-kit/memory
+bun add -d synapse-kit-memory
 # or
-npm install -D @synapse-kit/memory
+npm install -D synapse-kit-memory
 ```
 
 ## CLI Usage
