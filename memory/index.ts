@@ -4,5 +4,5 @@ export * from './causal-query';
 export * from './causal-server';
 export * from './causal-migrator';
 export * from './causal-benchmark';
-export * from './causal-graph';
-export * from './causal-build';
+export * from '../compiler/causal-graph';
+export * from '../compiler/causal-build';

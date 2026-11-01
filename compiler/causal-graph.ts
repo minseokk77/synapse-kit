@@ -1,6 +1,6 @@
-import type { CausalDecision, CheckerPlugin, SynapseOptions } from '../types';
+import type { CausalDecision, CheckerPlugin, SynapseOptions } from './types';
 import { getGitState, loadBuildCache } from './causal-build';
-import { t } from '../i18n';
+import { t } from './i18n';
 
 /**
  * 프로젝트 시냅스(Project Synapse) 범용 AI 인과율 메모리 분석 엔진

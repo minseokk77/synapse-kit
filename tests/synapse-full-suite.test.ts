@@ -20,7 +20,7 @@ import {
   nsisChecker,
   CausalMemoryStore,
   formatResonanceForAgent,
-} from '../src/index';
+} from '../index';
 
 describe('Synapse Kit v0.2.1 Full Verification Suite', () => {
   test('1. 7 Standard Language Checkers + 3 System Checkers Registration & Dynamic i18n Titles', () => {

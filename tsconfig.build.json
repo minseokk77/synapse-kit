@@ -6,9 +6,9 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["tests/**/*", "examples/**/*"]
+  "include": ["compiler/**/*", "memory/**/*", "index.ts"],
+  "exclude": ["tests/**/*", "examples/**/*", "dist/**/*"]
 }

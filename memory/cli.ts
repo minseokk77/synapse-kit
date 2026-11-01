@@ -1,9 +1,9 @@
-import { CAUSAL_MEMORY_CONFIG } from './memory/causal-config';
-import { CausalMemoryStore, type CausalRule } from './memory/causal-store';
-import { runCausalQuery, formatResonanceForAgent } from './memory/causal-query';
-import { startCausalServer, startCausalMcpStdioServer } from './memory/causal-server';
-import { migrateLegacyMemoryGraph } from './memory/causal-migrator';
-import type { SynapseOptions } from './types';
+import { CAUSAL_MEMORY_CONFIG } from './causal-config';
+import { CausalMemoryStore, type CausalRule } from './causal-store';
+import { runCausalQuery, formatResonanceForAgent } from './causal-query';
+import { startCausalServer, startCausalMcpStdioServer } from './causal-server';
+import { migrateLegacyMemoryGraph } from './causal-migrator';
+import type { SynapseOptions } from '../compiler/types';
 
 const RESET = '\x1b[0m';
 const BOLD = '\x1b[1m';
@@ -83,7 +83,7 @@ export async function handleMemoryCommand(args: readonly string[], options: Syna
       }
     }
 
-    const { executeOverloadBenchmark } = await import('./memory/causal-benchmark');
+    const { executeOverloadBenchmark } = await import('./causal-benchmark');
     const report = await executeOverloadBenchmark(
       {
         ruleScale,

@@ -2,7 +2,7 @@ import { spawn } from 'bun';
 import { existsSync, mkdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
-import type { BuildTrack } from '../types';
+import type { BuildTrack } from './types';
 
 export interface TrackCacheRecord {
   lastBuildTime: string;

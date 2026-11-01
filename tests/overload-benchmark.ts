@@ -1,6 +1,6 @@
-import { executeOverloadBenchmark } from '../src/memory/causal-benchmark';
+import { executeOverloadBenchmark } from '../memory/causal-benchmark';
 
-export * from '../src/memory/causal-benchmark';
+export * from '../memory/causal-benchmark';
 
 if (import.meta.main) {
   executeOverloadBenchmark().then((report) => {

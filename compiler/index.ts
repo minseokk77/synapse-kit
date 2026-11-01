@@ -1,29 +1,13 @@
 /**
- * 프로젝트 시냅스 (Project Synapse) 프레임워크 공개 API
+ * 프로젝트 시냅스 (Project Synapse) 초고속 컴파일러 & 검사 엔진 공개 API
  */
 
 export * from './types';
 export { defineConfig, createCheckerPlugin, loadSynapseConfig } from './core/config';
 export { executeChecks, executeBuild, executePackage, executeSign } from './core/engine';
 export { reportResults } from './core/reporter';
-export { analyzeCausalGraph } from './memory/causal-graph';
-export { loadBuildCache, saveBuildCache, computeFileHash } from './memory/causal-build';
-export {
-  CAUSAL_MEMORY_CONFIG,
-  CausalMemoryStore,
-  runCausalQuery,
-  formatResonanceForAgent,
-  startCausalServer,
-  startCausalMcpStdioServer,
-  handleMcpJsonRpcRequest,
-  migrateLegacyMemoryGraph,
-  type CausalRule,
-  type CausalRelation,
-  type CausalTrigger,
-  type CausalMemoryDatabase,
-  type CausalQueryOptions,
-  type CausalResonanceResult,
-} from './memory';
+export { analyzeCausalGraph } from './causal-graph';
+export { loadBuildCache, saveBuildCache, computeFileHash } from './causal-build';
 
 // i18n 국제화 엔진
 export { detectLocale, setLocale, getLocale, t, type SupportedLocale, type MessageKey } from './i18n';

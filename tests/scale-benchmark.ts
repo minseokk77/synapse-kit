@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks';
-import type { CheckerPlugin } from '../src/types';
+import type { CheckerPlugin } from '../compiler/types';
 import {
   rustChecker,
   svelteChecker,
@@ -11,7 +11,7 @@ import {
   schemaChecker,
   nativeChecker,
   nsisChecker,
-} from '../src/index';
+} from '../index';
 
 const RESET = '\x1b[0m';
 const BOLD = '\x1b[1m';

@@ -3,11 +3,11 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'bun';
-import { analyzeCausalGraph } from '../src/memory/causal-graph';
-import { rustChecker } from '../src/plugins/rust';
-import { svelteChecker } from '../src/plugins/svelte';
-import { saveBuildCache, loadBuildCache, getGitState } from '../src/memory/causal-build';
-import type { SynapseOptions } from '../src/types';
+import { analyzeCausalGraph } from '../compiler/causal-graph';
+import { rustChecker } from '../compiler/plugins/rust';
+import { svelteChecker } from '../compiler/plugins/svelte';
+import { saveBuildCache, loadBuildCache, getGitState } from '../compiler/causal-build';
+import type { SynapseOptions } from '../compiler/types';
 
 test('Clean Working Tree 0.00s Causal Skip Lifecycle', async () => {
   const tempDir = mkdtempSync(join(tmpdir(), 'synapse-clean-test-'));

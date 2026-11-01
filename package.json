@@ -10,8 +10,23 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "synapse": "./dist/cli.js",
-    "synapse-kit": "./dist/cli.js"
+    "synapse": "./dist/compiler/cli.js",
+    "synapse-kit": "./dist/compiler/cli.js",
+    "synapse-memory": "./dist/memory/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./compiler": {
+      "types": "./dist/compiler/index.d.ts",
+      "import": "./dist/compiler/index.js"
+    },
+    "./memory": {
+      "types": "./dist/memory/index.d.ts",
+      "import": "./dist/memory/index.js"
+    }
   },
   "files": [
     "dist",
@@ -20,12 +35,12 @@
     "LICENSE"
   ],
   "scripts": {
-    "build:bundle": "bun build src/cli.ts --outfile dist/cli.js --target bun && bun build src/index.ts --outfile dist/index.js --target bun",
+    "build:bundle": "bun build compiler/cli.ts --outfile dist/compiler/cli.js --target bun && bun build memory/cli.ts --outfile dist/memory/cli.js --target bun && bun build index.ts --outfile dist/index.js --target bun && bun build compiler/index.ts --outfile dist/compiler/index.js --target bun && bun build memory/index.ts --outfile dist/memory/index.js --target bun",
     "build:types": "tsc -p tsconfig.build.json",
     "build": "bun run build:bundle && bun run build:types",
     "prepublishOnly": "bun run build",
-    "start": "bun run src/cli.ts",
-    "check": "bun run src/cli.ts check",
+    "start": "bun run compiler/cli.ts",
+    "check": "bun run compiler/cli.ts check",
     "test": "bun test"
   },
   "repository": {
@@ -44,6 +59,7 @@
     "svelte",
     "typescript",
     "ai-native",
+    "causal-memory",
     "bun"
   ],
   "author": "Vesper",

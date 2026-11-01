@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import pkg from '../package.json';
 import { loadSynapseConfig } from './core/config';
 import { executeChecks, executeBuild, executePackage, executeSign } from './core/engine';
-import { handleMemoryCommand } from './cli-memory';
+import { handleMemoryCommand } from '../memory/cli';
 import { detectLocale, t } from './i18n';
 import type { SynapseOptions } from './types';
 

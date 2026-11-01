@@ -3,10 +3,10 @@ import { mkdtempSync, rmSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'bun';
-import { CAUSAL_MEMORY_CONFIG } from '../src/memory/causal-config';
-import { CausalMemoryStore } from '../src/memory/causal-store';
-import { runCausalQuery, formatResonanceForAgent } from '../src/memory/causal-query';
-import { startCausalServer } from '../src/memory/causal-server';
+import { CAUSAL_MEMORY_CONFIG } from '../memory/causal-config';
+import { CausalMemoryStore } from '../memory/causal-store';
+import { runCausalQuery, formatResonanceForAgent } from '../memory/causal-query';
+import { startCausalServer } from '../memory/causal-server';
 
 test('1. Causal Memory Store - 152 Rules & 37 Relations Integrity Audit', () => {
   const store = new CausalMemoryStore();

@@ -2,7 +2,7 @@ import { spawn } from 'bun';
 import { existsSync, readdirSync, watch } from 'node:fs';
 import { resolve } from 'node:path';
 import type { CheckResult, CheckerPlugin, SynapseConfig, SynapseOptions } from '../types';
-import { analyzeCausalGraph } from '../memory/causal-graph';
+import { analyzeCausalGraph } from '../causal-graph';
 import {
   loadBuildCache,
   saveBuildCache,
@@ -10,7 +10,7 @@ import {
   shouldSkipBuildTrack,
   shouldSkipSign,
   computeFileHash,
-} from '../memory/causal-build';
+} from '../causal-build';
 import { reportResults } from './reporter';
 import { t } from '../i18n';
 
