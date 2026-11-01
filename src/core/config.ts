@@ -1,12 +1,19 @@
 import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
-import type { SynapseConfig } from '../types';
+import type { CheckerPlugin, SynapseConfig } from '../types';
 
 /**
  * 프레임워크 설정 헬퍼 (타입 추론 지원)
  */
 export function defineConfig(config: SynapseConfig): SynapseConfig {
   return config;
+}
+
+/**
+ * 커스텀 체커 플러그인 생성 헬퍼 (타입 추론 지원)
+ */
+export function createCheckerPlugin(plugin: CheckerPlugin): CheckerPlugin {
+  return plugin;
 }
 
 const CONFIG_FILENAMES = [

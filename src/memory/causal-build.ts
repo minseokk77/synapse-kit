@@ -17,6 +17,7 @@ export interface SignCacheRecord {
 }
 
 export interface BuildCacheData {
+  lastVerifiedHead?: string;
   tracks: Record<string, TrackCacheRecord>;
   sign?: SignCacheRecord;
 }
@@ -31,6 +32,7 @@ export function loadBuildCache(rootDir: string): BuildCacheData {
       const content = readFileSync(cacheFile, 'utf-8');
       const parsed = JSON.parse(content);
       return {
+        lastVerifiedHead: parsed.lastVerifiedHead,
         tracks: parsed.tracks || {},
         sign: parsed.sign,
       };
@@ -77,7 +79,7 @@ export async function getGitState(rootDir: string): Promise<{ head: string; modi
     const modifiedFiles = statusText
       .split('\n')
       .map((line) => line.slice(3).trim().replaceAll('\\', '/'))
-      .filter((line) => line.length > 0);
+      .filter((line) => line.length > 0 && !line.startsWith('.synapse/') && !line.includes('/.synapse/'));
 
     return { head, modifiedFiles, repoRoot: repoRoot || rootDir };
   } catch {

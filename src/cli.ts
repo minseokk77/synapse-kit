@@ -5,6 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import pkg from '../package.json';
 import { loadSynapseConfig } from './core/config';
 import { executeChecks, executeBuild, executePackage, executeSign } from './core/engine';
+import { handleMemoryCommand } from './cli-memory';
 import { detectLocale, t } from './i18n';
 import type { SynapseOptions } from './types';
 
@@ -102,6 +103,7 @@ ${BOLD}${t('cliCommands')}${RESET}
   package        ${t('cmdPackage')}
   sign           ${t('cmdSign')}
   init           ${t('cmdInit')}
+  memory         ${t('cmdMemory')}
 
 ${BOLD}${t('cliOptions')}${RESET}
   --all              ${t('optAll')}
@@ -162,6 +164,11 @@ async function main(): Promise<void> {
     interactive: isInteractive,
     force: isForce,
   };
+
+  if (command === 'memory') {
+    const code = await handleMemoryCommand(args, options);
+    process.exit(code);
+  }
 
   try {
     const { config } = await loadSynapseConfig();

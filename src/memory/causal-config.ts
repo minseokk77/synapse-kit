@@ -1,0 +1,39 @@
+import { homedir } from 'node:os';
+import { resolve } from 'node:path';
+
+/**
+ * 인과율 메모리(Causal Memory) 전역 설정 및 환경 변수 모듈
+ * 하드코딩을 배제하고 환경 변수와 OS 표준 경로를 통해 설정값을 관리합니다.
+ */
+export const CAUSAL_MEMORY_CONFIG = {
+  /** 데이터베이스 스키마 버전 */
+  SCHEMA_VERSION: process.env.SYNAPSE_MEMORY_VERSION || '2.1.0',
+
+  /** 전역 인과율 메모리 데이터베이스 기본 경로 */
+  GLOBAL_DB_PATH:
+    process.env.SYNAPSE_MEMORY_PATH ||
+    resolve(homedir(), '.gemini', 'antigravity', 'causal_memory.json'),
+
+  /** 구형 메모리 백업 경로 */
+  LEGACY_BACKUP_PATH:
+    process.env.SYNAPSE_MEMORY_BACKUP_PATH ||
+    resolve(homedir(), '.gemini', 'antigravity', 'memory_backup_20261101.json'),
+
+  /** 패키지 내장 폴백 데이터베이스 경로 */
+  LOCAL_DB_PATH: resolve(import.meta.dir, 'causal-memory.json'),
+
+  /** 독립 로컬 데몬 서버 기본 호스트 */
+  DEFAULT_HOST: process.env.SYNAPSE_MEMORY_HOST || '127.0.0.1',
+
+  /** 독립 로컬 데몬 서버 기본 포트 */
+  DEFAULT_PORT: parseInt(process.env.SYNAPSE_MEMORY_PORT || '4242', 10),
+
+  /** MCP 서버 프로토콜 버전 */
+  MCP_PROTOCOL_VERSION: process.env.SYNAPSE_MCP_VERSION || '2024-11-05',
+
+  /** MCP 서버 식별 이름 */
+  MCP_SERVER_NAME: 'synapse-causal-memory',
+
+  /** 공명 쿼리 시 컨텍스트 최대 노출 줄 수 (토큰 절감 임계치) */
+  MAX_CONTEXT_PREVIEW_LINES: parseInt(process.env.SYNAPSE_MEMORY_MAX_PREVIEW || '5', 10),
+} as const;

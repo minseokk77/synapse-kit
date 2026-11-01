@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
+import { t } from '../i18n';
 
 export interface SchemaTarget {
   readonly path: string;
@@ -19,7 +20,9 @@ export function schemaChecker(options: SchemaPluginOptions): CheckerPlugin {
 
   return {
     name: 'schema',
-    title: '데이터 및 설정 스키마 무결성 검사',
+    get title() {
+      return t('pluginSchemaTitle');
+    },
     triggers,
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
@@ -40,7 +43,7 @@ export function schemaChecker(options: SchemaPluginOptions): CheckerPlugin {
           }
           verifiedCount++;
         } catch (error) {
-          errors.push(`${target.path} 파싱 실패: ${error instanceof Error ? error.message : String(error)}`);
+          errors.push(t('pluginSchemaParseFail', target.path, error instanceof Error ? error.message : String(error)));
         }
       }
 
@@ -49,7 +52,7 @@ export function schemaChecker(options: SchemaPluginOptions): CheckerPlugin {
       if (errors.length > 0) {
         return {
           name: 'schema',
-          title: '데이터 및 설정 스키마 무결성 검사',
+          title: t('pluginSchemaTitle'),
           status: 'error',
           durationMs,
           details: errors.join(' | '),
@@ -59,10 +62,10 @@ export function schemaChecker(options: SchemaPluginOptions): CheckerPlugin {
 
       return {
         name: 'schema',
-        title: '데이터 및 설정 스키마 무결성 검사',
+        title: t('pluginSchemaTitle'),
         status: 'success',
         durationMs,
-        details: `${verifiedCount}개 스키마/데이터 파일 정상 확인 완료`,
+        details: t('pluginSchemaSuccess', verifiedCount),
       };
     },
   };

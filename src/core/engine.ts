@@ -37,7 +37,7 @@ async function runPluginChecker(
       title: plugin.title,
       status: 'skipped',
       durationMs: 0,
-      details: '인과 메모리 추론에 의해 검사 생략됨',
+      details: t('checkSkipped'),
     };
   }
 
@@ -49,7 +49,7 @@ async function runPluginChecker(
       title: plugin.title,
       status: 'error',
       durationMs: 0,
-      details: `플러그인 실행 중 치명적 오류 발생: ${error instanceof Error ? error.message : String(error)}`,
+      details: `Critical plugin execution failure: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }
@@ -78,6 +78,16 @@ export async function executeChecks(config: SynapseConfig, options: SynapseOptio
 
   const hasError = results.some((r) => r.status === 'error');
 
+  // 검증 성공 시 Git HEAD 캐시 기록 (Clean Worktree 0.00초 스킵 보장)
+  if (!hasError) {
+    const cache = loadBuildCache(rootDir);
+    const { head } = await getGitState(rootDir);
+    if (head && head !== 'unknown') {
+      cache.lastVerifiedHead = head;
+      saveBuildCache(rootDir, cache);
+    }
+  }
+
   // 4. 대화형 인과 핫픽스 루프 (--interactive, -i)
   if (hasError && options.interactive) {
     const failedNames = new Set(results.filter((r) => r.status === 'error').map((r) => r.name));
@@ -97,11 +107,11 @@ async function runInteractiveLoop(
   options: SynapseOptions
 ): Promise<number> {
   const line = '━'.repeat(68);
-  process.stdout.write(`\n${BOLD}${CYAN}⏸️  [대화형 인과 핫픽스 모드] 오류 발생으로 프로세스를 일시정지했습니다.${RESET}\n`);
+  process.stdout.write(`\n${BOLD}${CYAN}${t('interactiveTitle')}${RESET}\n`);
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
-  process.stdout.write(` • 대상 플러그인 : ${BOLD}${failedPlugins.map((p) => p.name).join(', ')}${RESET}\n`);
-  process.stdout.write(` • 감시 상태     : 👀 소스 코드 수정 대기 중... (저장 시 0.05초 만에 핫 재컴파일)\n`);
-  process.stdout.write(` • 세션 종료     : 터미널에서 ${BOLD}Ctrl+C${RESET} 입력\n`);
+  process.stdout.write(` • ${t('interactiveTarget')} : ${BOLD}${failedPlugins.map((p) => p.name).join(', ')}${RESET}\n`);
+  process.stdout.write(` • ${t('interactiveWatching')}\n`);
+  process.stdout.write(` • ${t('interactiveExit')}\n`);
   process.stdout.write(`${GRAY}${line}${RESET}\n\n`);
 
   return new Promise((resolve) => {
@@ -130,7 +140,7 @@ async function runInteractiveLoop(
         isChecking = true;
 
         const timeStr = new Date().toLocaleTimeString('ko-KR', { hour12: false });
-        process.stdout.write(`\n${CYAN}⚡ [저장 감지 ${timeStr}]${RESET} ${normalized} 수정 감지 ➜ 핫 재컴파일 실행 중...\n`);
+        process.stdout.write(`\n${CYAN}${t('interactiveDetected', timeStr, normalized)}${RESET}\n`);
 
         const retryStart = performance.now();
         const retryResults = await Promise.all(
@@ -140,18 +150,21 @@ async function runInteractiveLoop(
 
         const stillFailed = retryResults.some((r) => r.status === 'error');
         if (!stillFailed) {
-          process.stdout.write(
-            `${BOLD}${GREEN}✨ [핫 재컴파일 통과]${RESET} (${retryDuration}s) 결함이 완전히 해결되었습니다!\n`
-          );
-          process.stdout.write(
-            `${BOLD}${CYAN}▶️  [파이프라인 재개] 모든 검증 통과 완료. 프로세스를 정상 종료합니다.${RESET}\n\n`
-          );
+          process.stdout.write(`${BOLD}${GREEN}${t('interactivePassed', retryDuration)}${RESET}\n`);
+          process.stdout.write(`${BOLD}${CYAN}${t('interactiveResumed')}${RESET}\n\n`);
           watcher.close();
+
+          // 통과 시 캐시 업데이트
+          const cache = loadBuildCache(rootDir);
+          const { head } = await getGitState(rootDir);
+          if (head && head !== 'unknown') {
+            cache.lastVerifiedHead = head;
+            saveBuildCache(rootDir, cache);
+          }
+
           resolve(0);
         } else {
-          process.stdout.write(
-            `${BOLD}${RED}❌ [재검증 실패]${RESET} 여전히 오류가 남아있습니다. 코드를 다시 수정하고 저장해 주세요.\n`
-          );
+          process.stdout.write(`${BOLD}${RED}${t('interactiveFailed')}${RESET}\n`);
           for (const res of retryResults) {
             if (res.status === 'error' && res.details) {
               process.stdout.write(`   └─ ${GRAY}${res.details}${RESET}\n`);
@@ -167,7 +180,10 @@ async function runInteractiveLoop(
 /**
  * 시냅스 인과율 병렬 빌드 엔진 구동 루틴 (synapse build)
  */
-export async function executeBuild(config: SynapseConfig, options: SynapseOptions = { mode: 'smart', agentMode: false, compactMode: false, watch: false }): Promise<number> {
+export async function executeBuild(
+  config: SynapseConfig,
+  options: SynapseOptions = { mode: 'smart', agentMode: false, compactMode: false, watch: false }
+): Promise<number> {
   const rootDir = config.rootDir || process.cwd();
   const tracks = config.buildTracks || [];
 
@@ -261,7 +277,10 @@ export async function executeBuild(config: SynapseConfig, options: SynapseOption
 /**
  * 시냅스 고속 인스톨러 패키징 엔진 구동 루틴 (synapse package)
  */
-export async function executePackage(config: SynapseConfig, options: SynapseOptions = { mode: 'smart', agentMode: false, compactMode: false, watch: false }): Promise<number> {
+export async function executePackage(
+  config: SynapseConfig,
+  options: SynapseOptions = { mode: 'smart', agentMode: false, compactMode: false, watch: false }
+): Promise<number> {
   const rootDir = config.rootDir || process.cwd();
   const startTime = performance.now();
   const line = '━'.repeat(68);
@@ -318,7 +337,10 @@ export async function executePackage(config: SynapseConfig, options: SynapseOpti
 /**
  * 시냅스 인과율 암호화 서명 엔진 구동 루틴 (synapse sign)
  */
-export async function executeSign(config: SynapseConfig, options: SynapseOptions = { mode: 'smart', agentMode: false, compactMode: false, watch: false }): Promise<number> {
+export async function executeSign(
+  config: SynapseConfig,
+  options: SynapseOptions = { mode: 'smart', agentMode: false, compactMode: false, watch: false }
+): Promise<number> {
   const rootDir = config.rootDir || process.cwd();
   const startTime = performance.now();
   const line = '━'.repeat(68);
@@ -328,15 +350,13 @@ export async function executeSign(config: SynapseConfig, options: SynapseOptions
 
   const signConfig = config.sign;
   if (!signConfig || !signConfig.privateKeyPath) {
-    process.stderr.write(
-      `${RED}❌ 서명 설정(sign.privateKeyPath)이 synapse.config.ts에 지정되지 않았습니다.${RESET}\n`
-    );
+    process.stderr.write(`${RED}${t('signNoConfig')}${RESET}\n`);
     return 1;
   }
 
   const keyPath = resolve(rootDir, signConfig.privateKeyPath);
   if (!existsSync(keyPath)) {
-    process.stderr.write(`${RED}❌ 서명 개인키 파일을 찾을 수 없습니다: ${keyPath}${RESET}\n`);
+    process.stderr.write(`${RED}${t('signNoKey', keyPath)}${RESET}\n`);
     return 1;
   }
 
@@ -344,7 +364,6 @@ export async function executeSign(config: SynapseConfig, options: SynapseOptions
   let installerPath = signConfig.targetInstaller ? resolve(rootDir, signConfig.targetInstaller) : '';
 
   if (!installerPath || !existsSync(installerPath)) {
-    // 자동 탐색: target/release/bundle/nsis 또는 src-tauri/target/release/bundle/nsis
     const candidates = [
       resolve(rootDir, 'target/release/bundle/nsis'),
       resolve(rootDir, 'src-tauri/target/release/bundle/nsis'),
@@ -363,7 +382,7 @@ export async function executeSign(config: SynapseConfig, options: SynapseOptions
   }
 
   if (!installerPath || !existsSync(installerPath)) {
-    process.stderr.write(`${RED}❌ 서명 대상 인스톨러(.exe) 파일을 찾을 수 없습니다.${RESET}\n`);
+    process.stderr.write(`${RED}${t('signNoInstaller')}${RESET}\n`);
     return 1;
   }
 
@@ -376,18 +395,18 @@ export async function executeSign(config: SynapseConfig, options: SynapseOptions
 
   if (skip) {
     process.stdout.write(
-      ` • 대상 인스톨러 : ${BOLD}${installerPath}${RESET}\n` +
-      ` • 서명 상태     : ${YELLOW}⚡ 스킵 [인과율 캐시 적중: 바이너리 해시 불변]${RESET} ${GRAY}(0.00s)${RESET}\n` +
-      ` • 서명 파일     : ${GREEN}✅ 기존 서명 파일 유지 (${signaturePath})${RESET}\n`
+      ` • ${t('signTarget')} : ${BOLD}${installerPath}${RESET}\n` +
+      ` • ${t('signStatus')} : ${YELLOW}⚡ ${t('signCacheHit')}${RESET} ${GRAY}(0.00s)${RESET}\n` +
+      ` • ${t('signFile')}   : ${GREEN}✅ ${t('signExistingKeep', signaturePath)}${RESET}\n`
     );
     process.stdout.write(`${GRAY}${line}${RESET}\n`);
-    process.stdout.write(`${BOLD}${GREEN}✨ 서명 무결성 확인 완료 (0.00초)${RESET}\n\n`);
+    process.stdout.write(`${BOLD}${GREEN}${t('signIntegrityPass')}${RESET}\n\n`);
     return 0;
   }
 
-  process.stdout.write(` • 대상 인스톨러 : ${BOLD}${installerPath}${RESET}\n`);
-  process.stdout.write(` • 서명 사유     : ${CYAN}${reason}${RESET}\n`);
-  process.stdout.write(` • 서명 엔진     : ${BOLD}Bun Native Tauri Signer (Ed25519)${RESET}\n`);
+  process.stdout.write(` • ${t('signTarget')} : ${BOLD}${installerPath}${RESET}\n`);
+  process.stdout.write(` • ${t('signReasonLabel')} : ${CYAN}${reason}${RESET}\n`);
+  process.stdout.write(` • ${t('signEngineLabel')} : ${BOLD}Bun Native Tauri Signer (Ed25519)${RESET}\n`);
 
   const passwordEnvName = signConfig.passwordEnv || 'TAURI_KEY_PASSWORD';
   const passwordVal =
@@ -426,7 +445,6 @@ export async function executeSign(config: SynapseConfig, options: SynapseOptions
 
   process.stdout.write(`${GRAY}${line}${RESET}\n`);
   if (exitCode === 0) {
-    // 캐시 저장
     cache.sign = {
       lastSignTime: new Date().toISOString(),
       installerHash: currentHash || computeFileHash(installerPath),
@@ -435,12 +453,12 @@ export async function executeSign(config: SynapseConfig, options: SynapseOptions
     saveBuildCache(rootDir, cache);
 
     process.stdout.write(
-      `${BOLD}${GREEN}✨ 암호화 서명 완료!${RESET} ${GRAY}(총 소요 시간: ${duration}초)${RESET}\n` +
-      ` • 생성된 서명: ${BOLD}${signaturePath}${RESET}\n\n`
+      `${BOLD}${GREEN}${t('signSuccess', duration)}${RESET}\n` +
+      ` • ${t('signFile')}: ${BOLD}${signaturePath}${RESET}\n\n`
     );
     return 0;
   } else {
-    process.stdout.write(`${BOLD}${RED}🚨 암호화 서명 실패 (종료 코드: ${exitCode})${RESET}\n\n`);
+    process.stdout.write(`${BOLD}${RED}${t('signFailed', duration)}${RESET}\n\n`);
     return exitCode;
   }
 }

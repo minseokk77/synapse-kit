@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
+import { t } from '../i18n';
 
 export interface NsisPluginOptions {
   readonly templatePath: string;
@@ -13,7 +14,9 @@ export interface NsisPluginOptions {
 export function nsisChecker(options: NsisPluginOptions): CheckerPlugin {
   return {
     name: 'nsis',
-    title: 'NSIS 인스톨러 템플릿 구문 검사',
+    get title() {
+      return t('pluginNsisTitle');
+    },
     triggers: [options.templatePath.replaceAll('\\', '/')],
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
@@ -21,22 +24,22 @@ export function nsisChecker(options: NsisPluginOptions): CheckerPlugin {
       const fullPath = resolve(ctx.rootDir, options.templatePath);
 
       if (!existsSync(fullPath)) {
-        errors.push(`NSIS 템플릿 파일이 누락되었습니다: ${options.templatePath}`);
+        errors.push(t('pluginNsisMissing', options.templatePath));
       } else {
         try {
           const content = await readFile(fullPath, 'utf8');
           if (content.length < 50) {
-            errors.push('NSIS 템플릿 파일 내용이 비어 있거나 손상되었습니다.');
+            errors.push(t('pluginNsisCorrupt'));
           }
 
           const requiredDirectives = ['Section', '!include'];
           for (const dir of requiredDirectives) {
             if (!content.includes(dir)) {
-              errors.push(`NSIS 필수 지시문 누락: '${dir}' 구문이 발견되지 않았습니다.`);
+              errors.push(t('pluginNsisDirectiveMissing', dir));
             }
           }
         } catch (error) {
-          errors.push(`NSIS 템플릿 읽기 실패: ${error instanceof Error ? error.message : String(error)}`);
+          errors.push(`${options.templatePath}: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
 
@@ -45,7 +48,7 @@ export function nsisChecker(options: NsisPluginOptions): CheckerPlugin {
       if (errors.length > 0) {
         return {
           name: 'nsis',
-          title: 'NSIS 인스톨러 템플릿 구문 검사',
+          title: t('pluginNsisTitle'),
           status: 'error',
           durationMs,
           details: errors.join(' | '),
@@ -55,10 +58,10 @@ export function nsisChecker(options: NsisPluginOptions): CheckerPlugin {
 
       return {
         name: 'nsis',
-        title: 'NSIS 인스톨러 템플릿 구문 검사',
+        title: t('pluginNsisTitle'),
         status: 'success',
         durationMs,
-        details: `${options.templatePath} 구문 및 필수 지시문 확인 완료`,
+        details: t('pluginNsisSuccess', options.templatePath),
       };
     },
   };

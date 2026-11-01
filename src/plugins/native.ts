@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { open } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
+import { t } from '../i18n';
 
 export interface NativeBinaryTarget {
   readonly path: string;
@@ -25,7 +26,9 @@ export function nativeChecker(options: NativePluginOptions): CheckerPlugin {
 
   return {
     name: 'native',
-    title: '네이티브 바이너리 & 에셋 검사',
+    get title() {
+      return t('pluginNativeTitle');
+    },
     triggers,
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
@@ -35,21 +38,21 @@ export function nativeChecker(options: NativePluginOptions): CheckerPlugin {
       for (const target of options.targets) {
         const fullPath = resolve(ctx.rootDir, target.path);
         if (!existsSync(fullPath)) {
-          errors.push(`필수 바이너리가 누락되었습니다: ${target.path}`);
+          errors.push(t('pluginNativeMissing', target.path));
           continue;
         }
 
         // PE 파일일 경우 헤더 아키텍처 검증
         if (fullPath.endsWith('.dll') || fullPath.endsWith('.exe')) {
+          let handle;
           try {
-            const handle = await open(fullPath, 'r');
+            handle = await open(fullPath, 'r');
             const buffer = Buffer.alloc(1024);
             await handle.read(buffer, 0, 1024, 0);
-            await handle.close();
 
             const dosSig = buffer.readUInt16LE(0);
             if (dosSig !== DOS_SIGNATURE_MZ) {
-              errors.push(`${target.path}: 올바른 PE 포맷(MZ 시그니처 누락)이 아닙니다.`);
+              errors.push(t('pluginNativeNotPe', target.path));
               continue;
             }
 
@@ -59,14 +62,18 @@ export function nativeChecker(options: NativePluginOptions): CheckerPlugin {
               const machine = buffer.readUInt16LE(peOffset + 4);
 
               if (peSig !== PE_SIGNATURE) {
-                errors.push(`${target.path}: 유효하지 않은 PE 시그니처입니다.`);
+                errors.push(t('pluginNativeInvalidPe', target.path));
               } else if (target.expectedArchitecture === 'x64' && machine !== PE_MACHINE_X64) {
-                errors.push(`${target.path}: 64비트(x64) 바이너리가 아닙니다 (머신 코드: 0x${machine.toString(16)}).`);
+                errors.push(t('pluginNativeInvalidArch', target.path, machine.toString(16)));
               }
             }
           } catch (error) {
-            errors.push(`${target.path} 헤더 분석 실패: ${error instanceof Error ? error.message : String(error)}`);
+            errors.push(`${target.path}: ${error instanceof Error ? error.message : String(error)}`);
             continue;
+          } finally {
+            if (handle) {
+              await handle.close().catch(() => {});
+            }
           }
         }
         checkedCount++;
@@ -77,7 +84,7 @@ export function nativeChecker(options: NativePluginOptions): CheckerPlugin {
       if (errors.length > 0) {
         return {
           name: 'native',
-          title: '네이티브 바이너리 & 에셋 검사',
+          title: t('pluginNativeTitle'),
           status: 'error',
           durationMs,
           details: errors.join(' | '),
@@ -87,10 +94,10 @@ export function nativeChecker(options: NativePluginOptions): CheckerPlugin {
 
       return {
         name: 'native',
-        title: '네이티브 바이너리 & 에셋 검사',
+        title: t('pluginNativeTitle'),
         status: 'success',
         durationMs,
-        details: `${checkedCount}개 바이너리 및 리소스 무결성 확인 완료`,
+        details: t('pluginNativeSuccess', checkedCount),
       };
     },
   };

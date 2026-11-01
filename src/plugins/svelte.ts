@@ -1,6 +1,7 @@
 import { spawn } from 'bun';
 import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
+import { t } from '../i18n';
 
 export interface SveltePluginOptions {
   readonly tsconfig?: string;
@@ -14,7 +15,9 @@ export interface SveltePluginOptions {
 export function svelteChecker(options: SveltePluginOptions = {}): CheckerPlugin {
   return {
     name: 'svelte',
-    title: 'Svelte 5 & TypeScript (svelte-check)',
+    get title() {
+      return t('pluginSvelteTitle');
+    },
     triggers: [
       '.svelte',
       '.ts',
@@ -59,28 +62,28 @@ export function svelteChecker(options: SveltePluginOptions = {}): CheckerPlugin 
           const outputText = `${stdout}\n${stderr}`.trim();
           return {
             name: 'svelte',
-            title: 'Svelte 5 & TypeScript (svelte-check)',
+            title: t('pluginSvelteTitle'),
             status: 'error',
             durationMs,
-            details: 'Svelte 템플릿 또는 TypeScript 타입 오류가 발생했습니다.',
+            details: t('pluginSvelteError'),
             diagnostics: [{ message: outputText.slice(-1500), severity: 'error' }],
           };
         }
 
         return {
           name: 'svelte',
-          title: 'Svelte 5 & TypeScript (svelte-check)',
+          title: t('pluginSvelteTitle'),
           status: 'success',
           durationMs,
-          details: 'Svelte 5 Runes 및 TS 타입 무결성 검증 완료 (0 Errors, 0 Warnings)',
+          details: t('pluginSvelteSuccess'),
         };
       } catch (error) {
         return {
           name: 'svelte',
-          title: 'Svelte 5 & TypeScript (svelte-check)',
+          title: t('pluginSvelteTitle'),
           status: 'error',
           durationMs: performance.now() - start,
-          details: `Svelte 검사 도구 실행 실패: ${error instanceof Error ? error.message : String(error)}`,
+          details: t('pluginSvelteExecFail', error instanceof Error ? error.message : String(error)),
         };
       }
     },

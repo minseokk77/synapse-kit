@@ -168,7 +168,11 @@ $ bunx synapse-kit check --compact
 | :--- | :--- | :--- |
 | `rustChecker()` | Rust / Cargo | `Cargo.toml`, `*.rs` 변경 감지 ➜ `cargo check` 병렬 수행 |
 | `svelteChecker()` | Svelte 5 / TypeScript | `src/**/*.svelte`, `*.ts` 감지 ➜ TS 7.1 네이티브 결합 검사 |
-| `javaChecker()` | Java / Spring / Gradle | `pom.xml`, `build.gradle`, `*.java` 감지 ➜ `javac` 구문 검사 |
+| `javaChecker()` | Java / Spring / Gradle | `pom.xml`, `build.gradle`, `*.java` 감지 ➜ `javac` 바이트코드 검증 |
+| `cppChecker()` | C / C++ 네이티브 커널 | `*.cpp`, `*.hpp`, `*.h` 감지 ➜ `g++ -fsyntax-only` 구문 검증 |
+| `csharpChecker()` | C# / .NET 솔루션 | `*.cs`, `*.csproj`, `*.sln` 감지 ➜ `dotnet build -c Release` 빌드 검증 |
+| `goChecker()` | Go 백엔드 서비스 | `*.go`, `go.mod` 감지 ➜ `go vet ./...` 정적 분석 |
+| `pythonChecker()` | Python DSP 및 스크립트 | `*.py`, `pyproject.toml` 감지 ➜ `python -m py_compile` 바이트코드 검증 |
 | `schemaChecker()` | Tauri / JSON 스키마 | `tauri.conf.json`, `package.json` 구조적 무결성 검증 |
 | `nativeChecker()` | C/C++ PE DLL / 바이너리 | Windows x64 DLL 머신 헤더 및 심볼 무결성 검증 |
 | `nsisChecker()` | NSIS 인스톨러 스크립트 | `.nsi` 템플릿 문법 및 파일 참조 유효성 검사 |

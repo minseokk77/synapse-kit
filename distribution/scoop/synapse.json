@@ -1,12 +1,12 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "AI-Native Unified Compiler, Linter & Verification Framework for Tauri and Full-Stack Apps",
   "homepage": "https://github.com/minseokk77/synapse-kit",
   "license": "MIT",
   "suggest": {
     "bun": "bun"
   },
-  "url": "https://github.com/minseokk77/synapse-kit/archive/refs/tags/v0.1.0.zip",
+  "url": "https://github.com/minseokk77/synapse-kit/archive/refs/tags/v0.2.1.zip",
   "bin": [
     [
       "dist/cli.js",

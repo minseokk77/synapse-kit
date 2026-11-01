@@ -1,6 +1,7 @@
 import { spawn } from 'bun';
 import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
+import { t } from '../i18n';
 
 export interface RustPluginOptions {
   readonly workspaceDir?: string;
@@ -13,7 +14,9 @@ export interface RustPluginOptions {
 export function rustChecker(options: RustPluginOptions = {}): CheckerPlugin {
   return {
     name: 'rust',
-    title: 'Rust 백엔드 워크스페이스 (Check & Clippy)',
+    get title() {
+      return t('pluginRustTitle');
+    },
     triggers: [
       'Cargo.toml',
       'Cargo.lock',
@@ -44,10 +47,10 @@ export function rustChecker(options: RustPluginOptions = {}): CheckerPlugin {
           const outputText = `${checkStderr}\n${checkStdout}`.trim();
           return {
             name: 'rust',
-            title: 'Rust 백엔드 워크스페이스 (Check & Clippy)',
+            title: t('pluginRustTitle'),
             status: 'error',
             durationMs,
-            details: 'Rust 워크스페이스 컴파일에 실패했습니다.',
+            details: t('pluginRustCompileFail'),
             diagnostics: [{ message: outputText.slice(-1500), severity: 'error' }],
           };
         }
@@ -72,27 +75,27 @@ export function rustChecker(options: RustPluginOptions = {}): CheckerPlugin {
         if (clippyExitCode !== 0 || warningCount > 0) {
           return {
             name: 'rust',
-            title: 'Rust 백엔드 워크스페이스 (Check & Clippy)',
+            title: t('pluginRustTitle'),
             status: warningCount > 0 && clippyExitCode === 0 ? 'warning' : 'error',
             durationMs,
-            details: `컴파일 통과 완료 (${warningCount}개 Clippy 권장사항 감지됨)`,
+            details: t('pluginRustClippyWarn', warningCount),
           };
         }
 
         return {
           name: 'rust',
-          title: 'Rust 백엔드 워크스페이스 (Check & Clippy)',
+          title: t('pluginRustTitle'),
           status: 'success',
           durationMs,
-          details: 'Rust 워크스페이스 컴파일 및 Clippy 무결성 확인 완료 (0 Warnings, 0 Errors)',
+          details: t('pluginRustSuccess'),
         };
       } catch (error) {
         return {
           name: 'rust',
-          title: 'Rust 백엔드 워크스페이스 (Check & Clippy)',
+          title: t('pluginRustTitle'),
           status: 'error',
           durationMs: performance.now() - start,
-          details: `Rust 검사 도구 실행 실패: ${error instanceof Error ? error.message : String(error)}`,
+          details: t('pluginRustExecFail', error instanceof Error ? error.message : String(error)),
         };
       }
     },

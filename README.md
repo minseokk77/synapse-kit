@@ -168,7 +168,11 @@ $ bunx synapse-kit check --compact
 | :--- | :--- | :--- |
 | `rustChecker()` | Rust / Cargo | Listens to `Cargo.toml`, `*.rs` ➜ runs non-blocking `cargo check` |
 | `svelteChecker()` | Svelte 5 / TypeScript | Listens to `src/**/*.svelte`, `*.ts` ➜ runs TS 7.1 native checker |
-| `javaChecker()` | Java / Spring / Gradle | Listens to `pom.xml`, `build.gradle`, `*.java` ➜ runs `javac` syntax check |
+| `javaChecker()` | Java / Spring / Gradle | Listens to `pom.xml`, `build.gradle`, `*.java` ➜ runs `javac` bytecode check |
+| `cppChecker()` | C / C++ Native Kernels | Listens to `*.cpp`, `*.hpp`, `*.h` ➜ runs `g++ -fsyntax-only` |
+| `csharpChecker()` | C# / .NET Solutions | Listens to `*.cs`, `*.csproj`, `*.sln` ➜ runs `dotnet build -c Release` |
+| `goChecker()` | Go Backend Services | Listens to `*.go`, `go.mod` ➜ runs `go vet ./...` |
+| `pythonChecker()` | Python DSP & AI Scripts | Listens to `*.py`, `pyproject.toml` ➜ runs `python -m py_compile` |
 | `schemaChecker()` | Tauri / JSON Config | Verifies structural validity of `tauri.conf.json` and `package.json` |
 | `nativeChecker()` | C/C++ PE DLL / Binaries | Validates machine headers (x64) and export symbols for Windows DLLs |
 | `nsisChecker()` | NSIS Installer Script | Validates `.nsi` template syntax and referenced file targets |
