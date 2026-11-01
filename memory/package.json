@@ -1,0 +1,43 @@
+{
+  "name": "@synapse-kit/memory",
+  "version": "0.2.2",
+  "description": "AI-Native 0-Token Causal Memory Engine 2.0 with SQLite WAL atomic transactions and MCP server",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "synapse-memory": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "causal-memory.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build:bundle": "bun build cli.ts --outfile dist/cli.js --target bun && bun build index.ts --outfile dist/index.js --target bun",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build": "bun run build:bundle && bun run build:types",
+    "prepublishOnly": "bun run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minseokk77/synapse-kit.git",
+    "directory": "memory"
+  },
+  "keywords": [
+    "ai-memory",
+    "causal-memory",
+    "context-compression",
+    "sqlite-wal",
+    "mcp-server",
+    "ai-agent",
+    "claude-code",
+    "cursor"
+  ],
+  "author": "Vesper",
+  "license": "MIT"
+}

@@ -28,6 +28,10 @@
       "import": "./dist/memory/index.js"
     }
   },
+  "workspaces": [
+    "compiler",
+    "memory"
+  ],
   "files": [
     "dist",
     "README.md",
@@ -35,9 +39,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build:bundle": "bun build compiler/cli.ts --outfile dist/compiler/cli.js --target bun && bun build memory/cli.ts --outfile dist/memory/cli.js --target bun && bun build index.ts --outfile dist/index.js --target bun && bun build compiler/index.ts --outfile dist/compiler/index.js --target bun && bun build memory/index.ts --outfile dist/memory/index.js --target bun",
-    "build:types": "tsc -p tsconfig.build.json",
-    "build": "bun run build:bundle && bun run build:types",
+    "build:compiler": "cd compiler && bun run build",
+    "build:memory": "cd memory && bun run build",
+    "build:root": "bun build compiler/cli.ts --outfile dist/compiler/cli.js --target bun && bun build memory/cli.ts --outfile dist/memory/cli.js --target bun && bun build index.ts --outfile dist/index.js --target bun && bun build compiler/index.ts --outfile dist/compiler/index.js --target bun && bun build memory/index.ts --outfile dist/memory/index.js --target bun && tsc -p tsconfig.build.json",
+    "build": "bun run build:root && bun run build:compiler && bun run build:memory",
     "prepublishOnly": "bun run build",
     "start": "bun run compiler/cli.ts",
     "check": "bun run compiler/cli.ts check",

@@ -3,7 +3,15 @@ import { CausalMemoryStore, type CausalRule } from './causal-store';
 import { runCausalQuery, formatResonanceForAgent } from './causal-query';
 import { startCausalServer, startCausalMcpStdioServer } from './causal-server';
 import { migrateLegacyMemoryGraph } from './causal-migrator';
-import type { SynapseOptions } from '../compiler/types';
+
+export interface MemoryCliOptions {
+  lang?: string;
+  compact?: boolean;
+  agent?: boolean;
+  agentMode?: boolean;
+  force?: boolean;
+  [key: string]: unknown;
+}
 
 const RESET = '\x1b[0m';
 const BOLD = '\x1b[1m';
@@ -52,7 +60,7 @@ ${BOLD}공통 플래그:${RESET}
 /**
  * synapse memory CLI 명령어 핸들러
  */
-export async function handleMemoryCommand(args: readonly string[], options: SynapseOptions): Promise<number> {
+export async function handleMemoryCommand(args: readonly string[], options?: MemoryCliOptions): Promise<number> {
   const subArgs = args.filter((a) => a !== 'memory');
   const subCommand = subArgs.find((a) => !a.startsWith('-')) || 'query';
 
@@ -93,7 +101,7 @@ export async function handleMemoryCommand(args: readonly string[], options: Syna
         fileInputScale: ruleScale,
         crudIterations: totalRequests,
       },
-      options.agentMode
+      Boolean(options?.agentMode)
     );
 
     if (options.agentMode) {

@@ -5,7 +5,6 @@ import { writeFile } from 'node:fs/promises';
 import pkg from '../package.json';
 import { loadSynapseConfig } from './core/config';
 import { executeChecks, executeBuild, executePackage, executeSign } from './core/engine';
-import { handleMemoryCommand } from '../memory/cli';
 import { detectLocale, t } from './i18n';
 import type { SynapseOptions } from './types';
 
@@ -166,8 +165,15 @@ async function main(): Promise<void> {
   };
 
   if (command === 'memory') {
-    const code = await handleMemoryCommand(args, options);
-    process.exit(code);
+    try {
+      // @ts-ignore
+      const { handleMemoryCommand } = await import('../../memory/cli');
+      const code = await handleMemoryCommand(args, options);
+      process.exit(code);
+    } catch {
+      process.stderr.write(`${RED}❌ Causal Memory 모듈이 설치되지 않았습니다. '@synapse-kit/memory' 패키지를 설치하거나 'synapse-memory' 명령어를 사용하세요.${RESET}\n`);
+      process.exit(1);
+    }
   }
 
   try {
