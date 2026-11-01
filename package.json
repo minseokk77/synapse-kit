@@ -5,7 +5,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "description": "AI-Native Unified Compiler, Linter & Verification Framework for Tauri and Full-Stack Apps",
+  "description": "AI-Native Unified Twin-Core: Polyglot Compiler Engine & Causal Memory 2.0 Brain for Monorepos and Agents",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

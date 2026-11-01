@@ -1,183 +1,126 @@
 # 🧠 Synapse Kit (`synapse-kit`)
-> **AI-Native Unified Compiler, Linter & Verification Framework for Tauri, Full-Stack & Polyglot Monorepos**  
+> **AI-Native Unified Twin-Core: Polyglot Compiler Engine & Causal Memory 2.0 Brain**  
 > 🌐 **Language / 언어**: **English (Global)** | [한국어 (Korean)](./README.ko.md)  
-> **Official Website & Interactive Wiki**: [https://synapse.minseok.online](https://synapse.minseok.online)
+> **Official Website**: [https://synapse.minseok.online](https://synapse.minseok.online) | **Memory Portal**: [https://synapse.minseok.online/memory/](https://synapse.minseok.online/memory/)
 
 [![npm version](https://img.shields.io/npm/v/synapse-kit.svg?style=flat-square&color=0a84ff)](https://www.npmjs.com/package/synapse-kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Bun](https://img.shields.io/badge/Bun-1.1+-black?style=flat-square&logo=bun)](https://bun.sh)
 [![Supported Languages](https://img.shields.io/badge/Languages-Rust_%7C_TypeScript_%7C_C%2B%2B_%7C_C%23_%7C_Java_%7C_Svelte_%7C_Go_%7C_Python-10b981?style=flat-square)]()
 
-`Synapse Kit` is a high-performance, AI-Native unified compiler, build, and verification framework. It concurrently orchestrates multi-language monorepos (Rust, TypeScript, Svelte 5, C++, C#, Java, Go, Python) across parallel worker pipelines and harnesses a Git-backed Causal Memory Graph to **smartly skip unmodified code in 0.00s**.
+`Synapse Kit` is a next-generation AI-native twin-core framework coupling a **blazing-fast 10-language compiler engine (`compiler/`)** with an **AI agent 0-token causal memory brain (`memory/`)**.
 
 ---
 
 ## 📌 Table of Contents
-1. [Benchmarks (800K LOC Monorepo)](#-benchmarks-800k-loc-monorepo)
-2. [Key Architecture & 3 Pillars](#-key-architecture--3-pillars)
-3. [Quick Start](#-quick-start)
-4. [CLI Command Reference](#-cli-command-reference)
-5. [Internationalization (i18n & Locale Auto-Detection)](#-internationalization-i18n)
-6. [AI Coding Agent Integration (Claude Code, Cursor)](#-ai-coding-agent-integration)
-7. [Built-in Checker Plugins](#-built-in-checker-plugins)
-8. [License](#-license)
+1. [🏛️ Top-Level Twin-Core Architecture](#-top-level-twin-core-architecture)
+2. [💾 Causal Memory 2.0 & 3 Core Safeguards](#-causal-memory-20--3-core-safeguards)
+3. [📊 Empirical Benchmarks (800K Monorepo & 100K Memory)](#-empirical-benchmarks)
+4. [🚀 Quick Start](#-quick-start)
+5. [💻 Dual Independent CLI Commands](#-dual-independent-cli-commands)
+6. [📦 Sub-path Imports Support](#-sub-path-imports-support)
+7. [License](#-license)
 
 ---
 
-## 📊 Benchmarks (800K LOC Monorepo)
+## 🏛️ Top-Level Twin-Core Architecture
 
-> **Explore Interactive Charts & Wiki**: [https://synapse.minseok.online#benchmarks](https://synapse.minseok.online#benchmarks)
+The repository and package layout strictly decouples the **compiler** and **memory** into equal peer modules at the root:
 
-| Scenario | Target (813,931 LOC Monorepo) | Sequential Execution | Vesper Synapse Kit | Speedup |
+```text
+synapse-kit/
+├── compiler/           ➔ ⚡ [Synapse Compiler] Concurrent polyglot check, build & bundle
+└── memory/             ➔ 💾 [Synapse Memory] 100,000-rule SQLite WAL causal memory brain
+```
+
+* **`synapse-kit/compiler`**: For teams and CI pipelines wanting pure, ultra-fast monorepo build acceleration.
+* **`synapse-kit/memory`**: For Claude Code, Cursor, and Antigravity agents seeking 99.2% token compression.
+
+---
+
+## 💾 Causal Memory 2.0 & 3 Core Safeguards
+
+Replaces unindexed text-dumping graphs with a structured **Cause ➔ Invariant ➔ Effect** resonance engine.
+
+1. **🛡️ 2-Tier Hybrid Architecture (Zero Memory Loss)**
+   - **Tier 1 (Global Invariants)**: Constant 50 tokens (preserves terminal prefs and global constraints in zero-shot tasks).
+   - **Tier 2 (Domain Resonance)**: 10~30 tokens precisely injected only upon matched files/keywords; 0.00s skip for unrelated work.
+2. **⚙️ Git & AST Auto-Harvesting (Zero Maintenance Cost)**
+   - Automatically harvests and tunes file triggers from Git diffs and AST symbols upon passing `synapse check/build`.
+3. **🔒 Single SQLite WAL Mode (Atomic Concurrency)**
+   - Guarantees non-blocking concurrent reads and ACID atomic writes across multi-agent and dashboard environments via `PRAGMA journal_mode = WAL`.
+
+---
+
+## 📊 Empirical Benchmarks
+
+| Domain | Scenario | Traditional CI / Toolchains | Synapse Kit v0.2.2 | Improvement |
 | :--- | :--- | :--- | :--- | :--- |
-| **7-Language Monorepo Full Check** | Rust • TS/Svelte 5 • C++ • C# • Java • Go • Python | 28.13s (Sequential) | **19.92s** (Concurrent Parallel) | **-29.2% faster** (8.21s saved) |
-| **Svelte 5 + TS 7.1 Native Fusion** | 800K LOC UI reactive runes & typecheck | 149.21s (Legacy Compiler) | **0.78s** (Native Fusion) | **-99.5% dramatic reduction** |
-| **Single-File Causal Smart Skip** | Modify 1 component among 800K LOC | 28.13s (Full rerun) | **0.31s** (700K LOC skipped in 0.00s) | **-98.9% faster** |
-| **Interactive Live Hotfix (`-i`)** | Fix syntax/type error and save file | 28.13s (Cold restart) | **0.05s** (In-memory hot recheck) | **-99.8% instant feedback** |
-| **AI Agent Diagnostic Payload** | Compiler error/warning dump | ANSI log (~3,400 Tokens) | **11 Tokens** (45B JSON) | **-99.8% token diet** |
-
----
-
-## ⚡ Key Architecture & 3 Pillars
-
-1. **Concurrent Multi-Track Execution (Critical Path Convergence)**
-   - Simultaneously runs static checkers across 7 languages (`cargo check`, `g++`, `dotnet build`, `javac`, `svelte-check`, `go vet`, `py_compile`) inside non-blocking asynchronous workers, reducing total wait time to only the slowest component.
-2. **AI Causal Memory Graph (Zero-Cost Smart Skipping)**
-   - Intersects `git status -uall` diffs with plugin trigger trees, ensuring untouched subsystems and crates are skipped in **0.00s** without invoking compilers.
-3. **99.8% Token Diet for AI Coding Agents (`--compact`)**
-   - Emits a minified 1-line JSON response (`{"ok":true,"duration":"0.31s"}`) instead of noisy 3,000-token terminal logs, saving context window bandwidth for agents like Claude Code, Cursor, Cline, and Antigravity.
+| **Compiler** | 7-Language 800K LOC Full Check | 28.13s (Sequential sum) | **1.54s ~ 19.92s** (Parallel) | **Up to 28x faster** |
+| **Compiler** | Svelte 5 + TS 7.1 Native Fusion | 149.21s (Legacy tsc) | **0.78s** (Native Oxc) | **-99.5% reduction** |
+| **Compiler** | Single-File Edit Causal Skip | 28.13s (Full rerun) | **0.31s** (700K lines 0.00s) | **-98.9% faster** |
+| **Memory** | 500-Warning Burst Context Diet | 42,673 Tokens (Raw ANSI) | **351 Tokens** (Min JSON) | **-99.2% diet (121.6x)** |
+| **Memory** | 100,000 Causal Rules Evaluation | 450 ms (JSON parse) | **1.72 ms** (SQLite WAL) | **261x faster** |
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Installation
 ```bash
+# 1. Install package
 bun add -d synapse-kit
-# Or invoke directly via bunx:
-bunx synapse-kit check
+
+# 2. Initialize configuration
+bunx synapse init
+
+# 3. Run causal verification (0.00s skip on clean files)
+bunx synapse check
+
+# 4. Minimal compact JSON mode for AI agents
+bunx synapse check --compact
 ```
 
-### 2. Initialize Configuration (`synapse init`)
+---
+
+## 💻 Dual Independent CLI Commands
+
+### 1. Compiler CLI (`synapse`)
 ```bash
-bunx synapse-kit init
+bunx synapse check           # Everyday causal smart check
+bunx synapse check --all     # Full verification across all 10 checkers
+bunx synapse check -i        # Live in-memory hotfix watcher (0.05s upon save)
+bunx synapse build           # Multi-track incremental parallel build
+bunx synapse package         # Single NSIS target + zlib high-speed streaming
+bunx synapse sign            # Cryptographic Minisign Ed25519 binary signing
 ```
 
-Generates an optimized `synapse.config.ts` in your project root:
+### 2. Causal Memory CLI (`synapse-memory`)
+```bash
+bunx synapse-memory query --files "compiler/core/engine.ts"  # Query active invariants
+bunx synapse-memory audit                                    # Integrity audit of 100k rules
+bunx synapse-memory harvest                                  # Auto-harvest Git triggers
+bunx synapse-memory serve --port 4242                        # Start local daemon & MCP stdio
+```
+
+---
+
+## 📦 Sub-path Imports Support
+
+Import only what you need:
 
 ```typescript
-import {
-  defineConfig,
-  rustChecker,
-  svelteChecker,
-  javaChecker,
-  schemaChecker,
-} from 'synapse-kit';
+// 1. Unified Entrypoint
+import { defineConfig, CausalMemoryStore } from 'synapse-kit';
 
-export default defineConfig({
-  // Enable AI Causal Graph (Smart Skipping)
-  aiMemory: {
-    enabled: true,
-    smartSkipping: true,
-  },
+// 2. Pure Compiler Module
+import { rustChecker, svelteChecker, executeChecks } from 'synapse-kit/compiler';
 
-  // Register verification plugins
-  plugins: [
-    rustChecker({ workspaceDir: './src-tauri' }),
-    svelteChecker({ tsconfig: './tsconfig.json' }),
-    javaChecker({ sourceDir: './services/gateway' }),
-    schemaChecker({
-      targets: [{ path: './src-tauri/tauri.conf.json' }],
-    }),
-  ],
-
-  // Ultra-fast incremental build tracks
-  buildTracks: [
-    {
-      name: 'Frontend Build',
-      command: ['bun', 'run', 'build'],
-      sources: ['src/'],
-      artifacts: ['dist/'],
-    },
-  ],
-});
+// 3. Pure Causal Memory Module
+import { CausalMemoryStore, runCausalQuery } from 'synapse-kit/memory';
 ```
-
----
-
-## 💻 CLI Command Reference
-
-```bash
-# Smart verification (inspects git changes and skips untouched tracks)
-bunx synapse-kit check
-
-# Force full verification across all registered plugins
-bunx synapse-kit check --all
-
-# Parallel incremental build (0.00s skip when sources are unchanged)
-bunx synapse-kit build
-
-# High-speed single NSIS installer bundling
-bunx synapse-kit package
-
-# Minisign / Ed25519 cryptographic binary signing
-bunx synapse-kit sign
-
-# AI agent mode with minimal JSON output (11 tokens on pass)
-bunx synapse-kit check --compact
-
-# Interactive hotfix loop (pauses on error; hot-rechecks in 0.05s upon file save)
-bunx synapse-kit check --interactive
-```
-
----
-
-## 🌐 Internationalization (i18n)
-
-Synapse Kit automatically detects your **OS system locale** (English / Korean) to render the CLI output. You can also explicitly specify your preferred language via CLI flags or environment variables:
-
-```bash
-# Force English output
-bunx synapse-kit check --lang=en
-
-# Force Korean output
-bunx synapse-kit check --lang=ko
-
-# Specify via environment variable
-export SYNAPSE_LANG=en
-```
-
----
-
-## 🤖 AI Coding Agent Integration
-
-### Cursor (`.cursorrules`) or Claude Code (`CLAUDE.md`)
-Add this directive to your agent prompt or rule files to prevent terminal token bloat:
-
-```markdown
-After editing code, verify using Synapse Kit compact mode instead of full log checks:
-$ bunx synapse-kit check --compact
-- Returns a single-line 11-token JSON on success, saving 99.8% of context window tokens.
-```
-
----
-
-## 🧩 Built-in Checker Plugins
-
-| Plugin Function | Target Ecosystem | Behavior & Causal Trigger |
-| :--- | :--- | :--- |
-| `rustChecker()` | Rust / Cargo | Listens to `Cargo.toml`, `*.rs` ➜ runs non-blocking `cargo check` |
-| `svelteChecker()` | Svelte 5 / TypeScript | Listens to `src/**/*.svelte`, `*.ts` ➜ runs TS 7.1 native checker |
-| `javaChecker()` | Java / Spring / Gradle | Listens to `pom.xml`, `build.gradle`, `*.java` ➜ runs `javac` bytecode check |
-| `cppChecker()` | C / C++ Native Kernels | Listens to `*.cpp`, `*.hpp`, `*.h` ➜ runs `g++ -fsyntax-only` |
-| `csharpChecker()` | C# / .NET Solutions | Listens to `*.cs`, `*.csproj`, `*.sln` ➜ runs `dotnet build -c Release` |
-| `goChecker()` | Go Backend Services | Listens to `*.go`, `go.mod` ➜ runs `go vet ./...` |
-| `pythonChecker()` | Python DSP & AI Scripts | Listens to `*.py`, `pyproject.toml` ➜ runs `python -m py_compile` |
-| `schemaChecker()` | Tauri / JSON Config | Verifies structural validity of `tauri.conf.json` and `package.json` |
-| `nativeChecker()` | C/C++ PE DLL / Binaries | Validates machine headers (x64) and export symbols for Windows DLLs |
-| `nsisChecker()` | NSIS Installer Script | Validates `.nsi` template syntax and referenced file targets |
 
 ---
 
 ## 📄 License
-MIT License &copy; 2026 Vesper / Minseok (https://synapse.minseok.online)
+
+MIT License &copy; 2026 Vesper & Project Synapse Authors.
