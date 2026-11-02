@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 import { CAUSAL_MEMORY_CONFIG } from './causal-config';
 import { CausalMemoryStore, type CausalRule } from './causal-store';
 import { runCausalQuery, formatResonanceForAgent } from './causal-query';
@@ -298,7 +299,7 @@ export async function handleMemoryCommand(args: readonly string[], options?: Mem
 
     const server = startCausalServer({ port, host });
 
-    if (options.agentMode) {
+    if (options?.agentMode) {
       process.stdout.write(
         JSON.stringify({ ok: true, port: server.port, host, url: `http://${host}:${server.port}` }) + '\n'
       );
@@ -318,4 +319,19 @@ ${BOLD}${GREEN}🚀 [Causal Memory Daemon 가동 완료]${RESET}
   process.stderr.write(`${RED}❌ 알 수 없는 memory 서브 명령어: '${subCommand}'${RESET}\n`);
   printMemoryHelp();
   return 1;
+}
+
+if (import.meta.main) {
+  const rawArgs = process.argv.slice(2);
+  const options: MemoryCliOptions = {
+    agentMode: rawArgs.includes('--agent') || rawArgs.includes('--compact'),
+    compact: rawArgs.includes('--compact'),
+    force: rawArgs.includes('--force') || rawArgs.includes('-f'),
+  };
+  handleMemoryCommand(rawArgs, options).then((code) => {
+    process.exit(code);
+  }).catch((err) => {
+    process.stderr.write(`❌ Error: ${err instanceof Error ? err.message : String(err)}\n`);
+    process.exit(1);
+  });
 }
