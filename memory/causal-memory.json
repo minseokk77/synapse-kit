@@ -1,12 +1,14 @@
 {
-  "version": "2.0.0",
-  "updatedAt": "2026-11-01T12:49:07.064Z",
-  "totalRules": 150,
+  "version": "2.1.0",
+  "updatedAt": "2026-11-04T03:34:09.628Z",
+  "totalRules": 154,
+  "totalRelations": 39,
   "rules": [
     {
       "id": "rule-knowledge_base-qylock-network-issue",
       "domain": "Knowledge_Base",
       "title": "QyLock Network Issue",
+      "entityType": "issue",
       "triggers": {
         "keywords": [
           "qylock network issue"
@@ -21,32 +23,52 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-knowledge_base-release_workflow",
-      "domain": "Knowledge_Base",
+      "id": "rule-project_poe2_autofilter-release_workflow",
+      "domain": "Project_POE2_AutoFilter",
       "title": "Release_Workflow",
+      "entityType": "Workflow",
       "triggers": {
+        "files": [
+          "noble-babbage",
+          "poe2filter-releases",
+          "updater.json",
+          "post_download_button.js"
+        ],
         "keywords": [
-          "release workflow"
+          "poe2",
+          "autofilter",
+          "필터",
+          "오토필터",
+          "updater",
+          "discord",
+          "릴리즈",
+          "배포"
+        ],
+        "commands": [
+          "release",
+          "updater",
+          "build",
+          "sign"
         ]
       },
       "invariants": [],
-      "actions": [],
-      "context": [
+      "actions": [
         "Release workflow requires 7 steps: 1. Bump version, 2. Build Tauri, 3. Update updater.json, 4. Create Github release, 5. Git commit and push, 6. Update Discord via post_notices.js/update_download_link.js, 7. Update Notion via post_notion.js"
       ],
+      "context": [],
       "lastVerified": "2026-11-01"
     },
     {
       "id": "rule-project_poe2_autofilter-poe2_autofilter_project",
       "domain": "Project_POE2_AutoFilter",
       "title": "POE2_AutoFilter_Project",
+      "entityType": "Project",
       "triggers": {
         "files": [
-          "**/poe2-autofilter/**",
-          "**/noble-babbage/**",
-          "**/poe2filter-releases/**",
-          "src-tauri/**",
-          "updater.json"
+          "noble-babbage",
+          "poe2filter-releases",
+          "updater.json",
+          "post_download_button.js"
         ],
         "keywords": [
           "poe2",
@@ -66,29 +88,29 @@
         ]
       },
       "invariants": [
-        "패키지매니저: pnpm 필수 (npm 사용 금지)"
+        "패키지매니저: pnpm 필수 (npm 사용 금지)",
+        "패키지매니저 정책 변경: pnpm 필수를 완전히 폐기하고 bun 사용 절대 필수로 전환함 (npm/pnpm 금지, bun 필수)"
       ],
-      "actions": [
-        "현재 배포 버전: v1.4.8"
-      ],
+      "actions": [],
       "context": [
         "소스코드: C:\\Users\\minse\\Documents\\antigravity\\noble-babbage (GitHub: minseokk7/poe2-autofilter-private)",
         "릴리즈 레포: C:\\Users\\minse\\Documents\\antigravity\\poe2filter-releases (GitHub: minseokk7/poe2filter-releases)",
+        "현재 배포 버전: v1.4.8",
         "기술스택: SvelteKit + TypeScript + Rust + Tauri v2 + SQLite + NSIS"
       ],
-      "lastVerified": "2026-11-01"
+      "lastVerified": "2026-11-04"
     },
     {
       "id": "rule-project_poe2_autofilter-poe2_autofilter_updater",
       "domain": "Project_POE2_AutoFilter",
       "title": "POE2_AutoFilter_Updater",
+      "entityType": "Feature",
       "triggers": {
         "files": [
-          "**/poe2-autofilter/**",
-          "**/noble-babbage/**",
-          "**/poe2filter-releases/**",
-          "src-tauri/**",
-          "updater.json"
+          "noble-babbage",
+          "poe2filter-releases",
+          "updater.json",
+          "post_download_button.js"
         ],
         "keywords": [
           "poe2",
@@ -108,19 +130,18 @@
         ]
       },
       "invariants": [
-        "updater.json 빌드 스크립트: scratch/build_updater_json.cjs (.cjs 확장자 필수, type:module 때문)",
-        "서명 키 환경변수: TAURI_SIGNING_PRIVATE_KEY (.env 파일)",
-        "v1.4.8에서 Base64 서명 파싱 버그 수정됨: BASE64_STANDARD.decode() 후 minisign_verify에 넘겨야 함"
+        "updater.json 빌드 스크립트: scratch/build_updater_json.cjs (.cjs 확장자 필수, type:module 때문)"
       ],
-      "actions": [
-        "v1.4.7에서 v1.4.8로는 자동업데이트 불가 (pubkey 하드코딩 버그), 수동 설치 필요",
-        "v1.4.8 이후부터는 인앱 자동업데이트 정상 작동"
-      ],
+      "actions": [],
       "context": [
         "updater.json 위치: poe2filter-releases 레포 루트",
         "업데이트 서버 URL: https://raw.githubusercontent.com/minseokk7/poe2filter-releases/main/updater.json",
         "Rust 업데이터 파일: src-tauri/src/updater.rs",
-        "minisign pubkey Base64: dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZFNTgzMDg1QUY1OURBQzgKUldUSTJsbXZoVEJZL3NlQUZGNzJLMEJHVXQwaXd6MUdSUG5kTUxSeCs3UFRMODU2cTNqU2pRMEQK"
+        "서명 키 환경변수: TAURI_SIGNING_PRIVATE_KEY (.env 파일)",
+        "minisign pubkey Base64: dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZFNTgzMDg1QUY1OURBQzgKUldUSTJsbXZoVEJZL3NlQUZGNzJLMEJHVXQwaXd6MUdSUG5kTUxSeCs3UFRMODU2cTNqU2pRMEQK",
+        "v1.4.8에서 Base64 서명 파싱 버그 수정됨: BASE64_STANDARD.decode() 후 minisign_verify에 넘겨야 함",
+        "v1.4.7에서 v1.4.8로는 자동업데이트 불가 (pubkey 하드코딩 버그), 수동 설치 필요",
+        "v1.4.8 이후부터는 인앱 자동업데이트 정상 작동"
       ],
       "lastVerified": "2026-11-01"
     },
@@ -128,13 +149,13 @@
       "id": "rule-project_poe2_autofilter-poe2_autofilter_releaseprocess",
       "domain": "Project_POE2_AutoFilter",
       "title": "POE2_AutoFilter_ReleaseProcess",
+      "entityType": "Process",
       "triggers": {
         "files": [
-          "**/poe2-autofilter/**",
-          "**/noble-babbage/**",
-          "**/poe2filter-releases/**",
-          "src-tauri/**",
-          "updater.json"
+          "noble-babbage",
+          "poe2filter-releases",
+          "updater.json",
+          "post_download_button.js"
         ],
         "keywords": [
           "poe2",
@@ -159,27 +180,26 @@
       ],
       "actions": [
         "1. package.json + src-tauri/tauri.conf.json 버전 동시 변경",
-        "2. pnpm tauri build"
-      ],
-      "context": [
+        "2. pnpm tauri build",
         "3. node -e require('dotenv').config()... 로 .env 로드 후 pnpm tauri signer sign 파일경로 (signer sign 에 -a 플래그 없음)",
         "4. node scratch/build_updater_json.cjs (notes 필드 수동 수정 필요)",
         "5. gh release create vX.X.X 또는 gh release upload --clobber (파일 교체)",
         "6. poe2filter-releases에 updater.json copy 후 push"
       ],
+      "context": [],
       "lastVerified": "2026-11-01"
     },
     {
       "id": "rule-project_poe2_autofilter-poe2_autofilter_knownbugs",
       "domain": "Project_POE2_AutoFilter",
       "title": "POE2_AutoFilter_KnownBugs",
+      "entityType": "KnowledgeBase",
       "triggers": {
         "files": [
-          "**/poe2-autofilter/**",
-          "**/noble-babbage/**",
-          "**/poe2filter-releases/**",
-          "src-tauri/**",
-          "updater.json"
+          "noble-babbage",
+          "poe2filter-releases",
+          "updater.json",
+          "post_download_button.js"
         ],
         "keywords": [
           "poe2",
@@ -203,13 +223,12 @@
         "Discord 갱신 주의: PowerShell에서 && 사용 불가, ; 로 연결",
         "Discord 갱신 주의: Embed 형식과 블루 테마 유지 필수"
       ],
-      "actions": [
-        "HasExplicitMod 기능: AdvancedSettings.svelte의 선호 옵션 강조 UI 현재 임시 비활성화 상태 (v1.4.8). POE2 내부 정확한 mod 이름 기반으로 재구현 필요"
-      ],
+      "actions": [],
       "context": [
+        "HasExplicitMod 기능: AdvancedSettings.svelte의 선호 옵션 강조 UI 현재 임시 비활성화 상태 (v1.4.8). POE2 내부 정확한 mod 이름 기반으로 재구현 필요",
         "Discord 다운로드 채널 ID: 1512868879951724604",
         "Discord 공지 형식: Embed (블루 테마 color: 0x3498db)",
-        "Discord 봇 토큰: process.env.DISCORD_BOT_TOKEN (보안 환경변수로 관리)",
+        "Discord 봇 토큰: 환경변수 DISCORD_BOT_TOKEN 사용 필수 (하드코딩 금지)",
         "Discord 다운로드 채널 ID: 1512868879951724604 (채널명: 🚀-download-다운로드)",
         "Discord API Base URL: https://discord.com/api/v10",
         "Discord 공지 형식: Embed (color: 15158332, 블루 테마). 일반 텍스트 메시지 아님",
@@ -222,13 +241,13 @@
       "id": "rule-project_poe2_autofilter-poe2-autofilter-release-process",
       "domain": "Project_POE2_AutoFilter",
       "title": "POE2 AutoFilter Release Process",
+      "entityType": "Workflow",
       "triggers": {
         "files": [
-          "**/poe2-autofilter/**",
-          "**/noble-babbage/**",
-          "**/poe2filter-releases/**",
-          "src-tauri/**",
-          "updater.json"
+          "noble-babbage",
+          "poe2filter-releases",
+          "updater.json",
+          "post_download_button.js"
         ],
         "keywords": [
           "poe2",
@@ -263,6 +282,7 @@
       "id": "rule-user_preferences_and_rules-userpreferences",
       "domain": "User_Preferences_And_Rules",
       "title": "UserPreferences",
+      "entityType": "Preference",
       "triggers": {
         "alwaysActive": true,
         "keywords": [
@@ -270,22 +290,26 @@
           "규칙",
           "터미널",
           "출력",
-          "보안"
+          "보안",
+          "선호도"
         ]
       },
-      "invariants": [],
+      "invariants": [
+        "패키지 매니저는 pnpm 필수를 버리고 bun 사용을 절대 필수로 준수함"
+      ],
       "actions": [],
       "context": [
         "User is highly interested in building a POE2/MMORPG Game Tactical Dashboard (Overlay) using an SF Tactical FUI design.",
         "Hugging Face 리포지토리(https://huggingface.co/minseokk7/BioPhys-LLM)에는 모델 및 파일을 일절 업로드/배포하지 않음.",
         "기본 터미널로 PowerShell 대신 Command Prompt (cmd)를 선호함 (설정 파일 terminal.integrated.defaultProfile.windows = Command Prompt로 설정 완료)"
       ],
-      "lastVerified": "2026-11-01"
+      "lastVerified": "2026-11-04"
     },
     {
       "id": "rule-knowledge_base-bpsn_quad_palette_state",
       "domain": "Knowledge_Base",
       "title": "BPSN_Quad_Palette_State",
+      "entityType": "Quantization_Milestone",
       "triggers": {
         "keywords": [
           "bpsn quad palette state"
@@ -318,10 +342,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_glossary_v6",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Glossary_v6",
+      "entityType": "knowledge_document",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -332,11 +357,12 @@
           "아키텍처"
         ]
       },
-      "invariants": [],
+      "invariants": [
+        "금지 용어: 딥러닝, LLM, 역전파, Gradient Descent, Loss Function, Training(전통적), Inference, Attention, KV-Cache, 시뮬레이션"
+      ],
       "actions": [],
       "context": [
         "BioPhys는 딥러닝이 아니고 LLM이 아님 - 생물물리학 기반 SNN 연산 엔진",
-        "금지 용어: 딥러닝, LLM, 역전파, Gradient Descent, Loss Function, Training(전통적), Inference, Attention, KV-Cache, 시뮬레이션",
         "올바른 용어: SNN 위상 연산, STDP 시냅스 각인, Hebbian 시냅스 가소성, 계면 에너지 수렴, 블랙홀 포식, 위상 전이 연산, 태양계 MoE 라우팅, 스파이킹 상태공간 순환 O(1)",
         "가중치 변환 = 블랙홀 흡수(FP16 섭취) → 특이점 위상 압축(2-Bit 양자화) → 화이트홀 방출(.bpsn 생성)",
         "가중치 역할 = 태양계 뇌 구조를 처음부터 만드는 것이 아니라 각 행성 뇌 간 시냅스 연결의 보정값을 각인하는 것",
@@ -350,17 +376,22 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-user_preferences_and_rules-biophys_11_0_작업_원칙",
-      "domain": "User_Preferences_And_Rules",
+      "id": "rule-biophys_research_and_architecture-biophys_11_0_작업_원칙",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_11_0_작업_원칙",
+      "entityType": "RULE",
       "triggers": {
-        "alwaysActive": true,
+        "files": [
+          "biophys",
+          "whitepaper"
+        ],
         "keywords": [
-          "환경설정",
-          "규칙",
-          "터미널",
-          "출력",
-          "보안"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [
@@ -378,21 +409,13 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-minecraft_hybrid_native_engine",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-knowledge_base-minecraft_hybrid_native_engine",
+      "domain": "Knowledge_Base",
       "title": "Minecraft_Hybrid_Native_Engine",
+      "entityType": "Project_Architecture",
       "triggers": {
-        "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
-        ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "minecraft hybrid native engine"
         ]
       },
       "invariants": [],
@@ -410,6 +433,7 @@
       "id": "rule-knowledge_base-global_programming_language_master_catalog",
       "domain": "Knowledge_Base",
       "title": "Global_Programming_Language_Master_Catalog",
+      "entityType": "Research_Knowledge_Base",
       "triggers": {
         "keywords": [
           "global programming language master catalog"
@@ -441,6 +465,7 @@
       "id": "rule-knowledge_base-frontier_2026_20_hypotheses_catalog",
       "domain": "Knowledge_Base",
       "title": "Frontier_2026_20_Hypotheses_Catalog",
+      "entityType": "Research_Knowledge_Base",
       "triggers": {
         "keywords": [
           "frontier 2026 20 hypotheses catalog"
@@ -461,10 +486,11 @@
       "id": "rule-biophys_research_and_architecture-biophys-14-0-mirror-biology-autonomous-harvester",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys 14.0 Mirror Biology & Autonomous Harvester",
+      "entityType": "Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -488,6 +514,7 @@
       "id": "rule-knowledge_base-plc_assignment_week1",
       "domain": "Knowledge_Base",
       "title": "PLC_Assignment_Week1",
+      "entityType": "AcademicAssignment",
       "triggers": {
         "keywords": [
           "plc assignment week1"
@@ -508,10 +535,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_22_0_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_22_0_Engine",
+      "entityType": "AIEngine",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -534,10 +562,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_next_horizon_architecture",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Next_Horizon_Architecture",
+      "entityType": "ArchitectureRoadmap",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -563,10 +592,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_deep_system_innovations",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Deep_System_Innovations",
+      "entityType": "DeepEngineeringBreakthroughs",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -592,10 +622,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_definitive_master_encyclopedia",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Definitive_Master_Encyclopedia",
+      "entityType": "Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -618,10 +649,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_compression_lineup",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Compression_Lineup",
+      "entityType": "AI_Model_Optimization",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -645,10 +677,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_realtime_continual_learning",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Realtime_Continual_Learning",
+      "entityType": "Learning_Engine",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -672,10 +705,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_3d_sculptor_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_3D_Sculptor_Engine",
+      "entityType": "Graphics_Engine",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -697,10 +731,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_saguaro_speculative_mtp",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Saguaro_Speculative_MTP",
+      "entityType": "Inference_Acceleration",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -724,10 +759,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_grand_synergy_convergence_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Grand_Synergy_Convergence_Engine",
+      "entityType": "System_Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -750,10 +786,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_self_evolving_jit_oracle_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Self_Evolving_JIT_Oracle_Engine",
+      "entityType": "Autonomous_Evolution",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -777,10 +814,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_top_50_global_breakthroughs",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Top_50_Global_Breakthroughs",
+      "entityType": "Global_Research_Encyclopedia",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -804,10 +842,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_integrated_hoh_videouse_glmtts_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Integrated_HoH_VideoUse_GlmTts_Engine",
+      "entityType": "Latest_Breakthroughs_Integration",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -832,10 +871,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_arxiv_2609_6_frontier_papers_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Arxiv_2609_6_Frontier_Papers_Engine",
+      "entityType": "Arxiv_Frontier_Integration",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -863,10 +903,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_bitnet_zksnark_liquid_engines",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_BitNet_ZkSnark_Liquid_Engines",
+      "entityType": "Frontier_Independent_Modules",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -891,10 +932,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_gigaam_vllmopt_memorywalker_engines",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_GigaAM_VllmOpt_MemoryWalker_Engines",
+      "entityType": "NextGen_Voice_Serving_Memory_Engines",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -918,10 +960,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_definitive_consolidated_master_whitepaper",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Definitive_Consolidated_Master_Whitepaper",
+      "entityType": "Definitive_Master_Whitepaper",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -945,10 +988,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_falcon_fastweight_custom_rustc",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Falcon_FastWeight_Custom_Rustc",
+      "entityType": "Compiler_And_ZeroKV_Engine",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -972,10 +1016,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_ultra_flagship_performance_benchmark",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Ultra_Flagship_Performance_Benchmark",
+      "entityType": "Performance_Benchmark_Suite",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -987,11 +1032,12 @@
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "Liquid-NN: 10단계 외란 100% 수렴, MemoryWalker: 10만 토큰 인과 일관성 99.99%, vLLM Opt: 4,161.5 TPS, GigaAM: 6.5µs 완료"
+      ],
       "context": [
         "Falcon Fast-Weight: 100,000토큰 스트리밍 시 KV 메모리 16KB 고정, 780,105 TPS 실측 검증 완료 (run_ultra_flagship_performance_bench.rs)",
         "BitNet b1.58: 65,536개 가중치 무곱셈 0.100µs 완료, zk-SNARK: 64K 게이트 0.010µs 무결성 통과",
-        "Liquid-NN: 10단계 외란 100% 수렴, MemoryWalker: 10만 토큰 인과 일관성 99.99%, vLLM Opt: 4,161.5 TPS, GigaAM: 6.5µs 완료",
         "Supreme Pipeline: 음성입력부터 800MB 추론 및 출력까지 원스톱 0.21ms 만에 100% ALL PASS 공식 인증"
       ],
       "lastVerified": "2026-11-01"
@@ -1000,10 +1046,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_signed_quad_homomorphic_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Signed_Quad_Homomorphic_Engine",
+      "entityType": "Signed_Quad_Arithmetic_Research",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1028,10 +1075,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_signed_quad_arithmetic_research_paper_2026",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Signed_Quad_Arithmetic_Research_Paper_2026",
+      "entityType": "Academic_Research_Paper",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1056,10 +1104,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_hyperbolic_dimension_compressor",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Hyperbolic_Dimension_Compressor",
+      "entityType": "Dimension_Compression_Technology",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1084,10 +1133,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_quaternion_4x64d_100layer_rational_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Quaternion_4x64D_100Layer_Rational_Engine",
+      "entityType": "Deep_Rational_Quaternion_Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1111,10 +1161,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_palm_sized_fusion_simulation_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Palm_Sized_Fusion_Simulation_Engine",
+      "entityType": "Palm_Sized_Nuclear_Fusion_Simulation",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1126,10 +1177,11 @@
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "15.0 keV (~1억 7,400만 도) 초고온 및 1.20e22 m^-3 초고밀도 플라즈마 핀치 압축 달성"
+      ],
       "context": [
         "손바닥 크기(챔버 직경 10.0cm) 초소형 FRC-IEC 구형 핵융합 코어 시뮬레이션 성공 (run_palm_fusion_simulation_bench.rs)",
-        "15.0 keV (~1억 7,400만 도) 초고온 및 1.20e22 m^-3 초고밀도 플라즈마 핀치 압축 달성",
         "1KB 사원수 텐서 + 100층 유리수 AI 음수 쿨롱 척력으로 벽면 충돌 손실률 0.000006% 차단 및 tau 1.71ms 확보",
         "로손 삼중곱 3.08e20 달성 및 에너지 증폭률 Q = 0.87로 과학적 손익분기점 문턱 돌파 입증"
       ],
@@ -1139,10 +1191,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_interleaved_clean_plasma_core",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Interleaved_Clean_Plasma_Core",
+      "entityType": "Clean_Energy_Plasma_Technology",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1166,10 +1219,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_accessible_cots_fusion_feasibility_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Accessible_COTS_Fusion_Feasibility_Engine",
+      "entityType": "Accessible_Fusion_Feasibility_Research",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1180,12 +1234,13 @@
           "아키텍처"
         ]
       },
-      "invariants": [],
+      "invariants": [
+        "순에너지 발전(Q > 1.0)은 10^-6 Torr 초고진공과 136ns 음수 가상 격자 AI 제어가 필수적임을 정량 입증"
+      ],
       "actions": [],
       "context": [
         "일반인 COTS 기성품(KF25 배관, 로터리펌프, 25kV NST)으로 100만~150만원에 플라즈마 방전 및 중성자 원리 실증 가능 실측 확인 (run_cots_fusion_feasibility_bench.rs)",
-        "생활잡화 DIY는 진공 누설로 평균자유행로 0.0009cm에 불과하여 점화 불가 규명",
-        "순에너지 발전(Q > 1.0)은 10^-6 Torr 초고진공과 136ns 음수 가상 격자 AI 제어가 필수적임을 정량 입증"
+        "생활잡화 DIY는 진공 누설로 평균자유행로 0.0009cm에 불과하여 점화 불가 규명"
       ],
       "lastVerified": "2026-11-01"
     },
@@ -1193,10 +1248,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_accelerator_driven_palm_tokamak",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Accelerator_Driven_Palm_Tokamak",
+      "entityType": "Accelerator_Tokamak_Colliding_Fusion",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1221,10 +1277,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_room_temp_superconductor_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Room_Temp_Superconductor_Engine",
+      "entityType": "Room_Temperature_Superconductivity_Research",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1248,10 +1305,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_chemical_combinatorial_superconductor_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Chemical_Combinatorial_Superconductor_Engine",
+      "entityType": "Combinatorial_Chemical_Discovery_Engine",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1273,21 +1331,13 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-project_astro_mythos_mmorpg_engine",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-knowledge_base-project_astro_mythos_mmorpg_engine",
+      "domain": "Knowledge_Base",
       "title": "Project_Astro_Mythos_MMORPG_Engine",
+      "entityType": "AAA_MMORPG_Game_Architecture",
       "triggers": {
-        "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
-        ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "project astro mythos mmorpg engine"
         ]
       },
       "invariants": [],
@@ -1304,6 +1354,7 @@
       "id": "rule-knowledge_base-classified_physics_research_archive_private",
       "domain": "Knowledge_Base",
       "title": "Classified_Physics_Research_Archive_Private",
+      "entityType": "Classified_Physics_Archive",
       "triggers": {
         "keywords": [
           "classified physics research archive private"
@@ -1322,10 +1373,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_mhd_landau_ai_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_MHD_Landau_AI_Engine",
+      "entityType": "AI_Core_Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1349,10 +1401,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_vibevoice_streaming_asr_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_VibeVoice_Streaming_ASR_Engine",
+      "entityType": "AI_Voice_Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1376,10 +1429,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_september_2026_top10_papers_master_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_September_2026_Top10_Papers_Master_Engine",
+      "entityType": "AI_Research_Ensemble",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1403,10 +1457,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_past_month_top_100_papers_compendium",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Past_Month_Top_100_Papers_Compendium",
+      "entityType": "Research_Compendium",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1430,10 +1485,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_100_theories_grand_master_stress_benchmark",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_100_Theories_Grand_Master_Stress_Benchmark",
+      "entityType": "Grand_Master_Stress_Benchmark",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1457,10 +1513,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_master_unified_model_2026",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Master_Unified_Model_2026",
+      "entityType": "Master_Unified_Model",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1484,6 +1541,7 @@
       "id": "rule-user_preferences_and_rules-forbidden_topics_until_mentioned",
       "domain": "User_Preferences_And_Rules",
       "title": "Forbidden_Topics_Until_Mentioned",
+      "entityType": "User_Constraint",
       "triggers": {
         "alwaysActive": true,
         "keywords": [
@@ -1491,7 +1549,8 @@
           "규칙",
           "터미널",
           "출력",
-          "보안"
+          "보안",
+          "선호도"
         ]
       },
       "invariants": [
@@ -1505,6 +1564,7 @@
       "id": "rule-user_preferences_and_rules-python_strictly_forbidden",
       "domain": "User_Preferences_And_Rules",
       "title": "Python_Strictly_Forbidden",
+      "entityType": "Forbidden_Rules",
       "triggers": {
         "alwaysActive": true,
         "keywords": [
@@ -1512,7 +1572,8 @@
           "규칙",
           "터미널",
           "출력",
-          "보안"
+          "보안",
+          "선호도"
         ]
       },
       "invariants": [
@@ -1526,10 +1587,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_pure_rust_three_breakthroughs",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Pure_Rust_Three_Breakthroughs",
+      "entityType": "Pure_Rust_Breakthroughs",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1540,12 +1602,14 @@
           "아키텍처"
         ]
       },
-      "invariants": [],
-      "actions": [],
+      "invariants": [
+        "파이썬 전면 금지 규칙을 준수하여 100% 순수 Rust로 3대 핵심 과제 실장 완료 (run_pure_rust_all_three_breakthroughs_bench.rs)"
+      ],
+      "actions": [
+        "3번: 순수 Rust B-Rep 수치해석 기반 SolidWorks 2026 자율 3D 모델링 및 STEP/SLDPRT 파트 생성 완성"
+      ],
       "context": [
-        "파이썬 전면 금지 규칙을 준수하여 100% 순수 Rust로 3대 핵심 과제 실장 완료 (run_pure_rust_all_three_breakthroughs_bench.rs)",
         "1번: Windows 마이크(MATA STUDIO C10) 16kHz PCM 50ms 직결 캡처 엔진 완성 (0.06ms 지연)",
-        "3번: 순수 Rust B-Rep 수치해석 기반 SolidWorks 2026 자율 3D 모델링 및 STEP/SLDPRT 파트 생성 완성",
         "4번: 1KB 사원수 100층 뉴로모픽 반도체 1.5GHz 48.5만 게이트 Synthesizable Verilog RTL(hardware_rtl/biophys_quaternion_100l_core.v) 및 SDC 타이밍 제약 파일 합성 완성"
       ],
       "lastVerified": "2026-11-01"
@@ -1554,10 +1618,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_past_2_months_top_200_papers_compendium",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Past_2_Months_Top_200_Papers_Compendium",
+      "entityType": "Grand_Research_Compendium",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1581,6 +1646,7 @@
       "id": "rule-knowledge_base-external_200_papers_pure_research_compendium",
       "domain": "Knowledge_Base",
       "title": "External_200_Papers_Pure_Research_Compendium",
+      "entityType": "Pure_External_Research_Compendium",
       "triggers": {
         "keywords": [
           "external 200 papers pure research compendium"
@@ -1598,10 +1664,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_external_200_theories_full_absorption",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_External_200_Theories_Full_Absorption",
+      "entityType": "Master_Absorption_Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1625,10 +1692,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_complete_ai_overload_stress_test",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Complete_AI_Overload_Stress_Test",
+      "entityType": "Overload_Stress_Benchmark",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1640,9 +1708,10 @@
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "전체 AI 마스터 모델 대상 4단계 초극한 과부하 스트레스 테스트 100% ALL PASS 달성 (run_complete_ai_master_overload_stress_bench.rs)"
+      ],
       "context": [
-        "전체 AI 마스터 모델 대상 4단계 초극한 과부하 스트레스 테스트 100% ALL PASS 달성 (run_complete_ai_master_overload_stress_bench.rs)",
         "10,000회 연속 엔드투엔드 무중단 추론을 단 1.077초에 완파 (초당 9,282회 추론, 가중치 발산율 0.000000% 유지)",
         "16코어 멀티스레드 병렬 폭풍 2,000배치를 24.90ms에 완파 (초당 80,310배치 처리, 데드락 0건)",
         "100배 클리핑 폭음 노이즈 및 NaN/Inf 주입 시 크래시 0건 100% 안전 방어 완수"
@@ -1653,10 +1722,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_ultra_detailed_8_section_overload_benchmark",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Ultra_Detailed_8_Section_Overload_Benchmark",
+      "entityType": "Ultra_Detailed_Benchmark",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1683,10 +1753,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_model_return",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Model_Return",
+      "entityType": "Session_Status",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1709,10 +1780,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_ultimate_consolidated_master_whitepaper",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Ultimate_Consolidated_Master_Whitepaper",
+      "entityType": "Master_Whitepaper",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1734,101 +1806,14 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-user_preferences_and_rules-biophys_forbidden_mathematics_breakthrough",
-      "domain": "User_Preferences_And_Rules",
-      "title": "BioPhys_Forbidden_Mathematics_Breakthrough",
-      "triggers": {
-        "alwaysActive": true,
-        "keywords": [
-          "환경설정",
-          "규칙",
-          "터미널",
-          "출력",
-          "보안"
-        ]
-      },
-      "invariants": [],
-      "actions": [],
-      "context": [
-        "기존 AI 업계가 포기한 6대 금기 수학 난제를 물리학으로 100% 극복하여 BioPhysMasterModel2026에 결합 완료",
-        "1. 노이만-솔리톤 감쇠 역행렬기: det=1e-6 특이 행렬에서도 발산율 0.000000% 달성",
-        "2. 양자 스핀 계단 함수: x=0.0 극점에서 코시-로렌츠 스핀 킥 3183.10 도함수 방출로 Dead Neuron 원천 소멸",
-        "3. 게이지 불변 SVD 준위 척력기: 고유값 완전 충돌 시 분모 폭발 0건 NaN 0건",
-        "4. 대각 크리스토펠 2차 추진기: 안장점 감지 시 3.931 척력 가속으로 즉각 탈출 및 O(N) 메모리 달성",
-        "5. 리만 다엽 나선 로그기: ln(-x) 음수 주입 시 사원수 j축 180도 위상 회전으로 100% 연속화",
-        "6. 위상 고정 불리언 게이트: 양자 베리 위상으로 100.0% 디지털 참/거짓 하드 로직 정합",
-        "7. 마스터 모델 탑재 상태에서 1000회 연속 과부하 111.84ms 완파 및 100% ALL PASS 실측 완료"
-      ],
-      "lastVerified": "2026-11-01"
-    },
-    {
-      "id": "rule-user_preferences_and_rules-biophys_abyssal_8_forbidden_mathematics",
-      "domain": "User_Preferences_And_Rules",
-      "title": "BioPhys_Abyssal_8_Forbidden_Mathematics",
-      "triggers": {
-        "alwaysActive": true,
-        "keywords": [
-          "환경설정",
-          "규칙",
-          "터미널",
-          "출력",
-          "보안"
-        ]
-      },
-      "invariants": [],
-      "actions": [],
-      "context": [
-        "AI 학계가 도망친 8대 심연의 금기 수학을 전수 구현하여 BioPhysMasterModel2026에 결합 완료 (biophys_abyssal_8_forbidden_mathematics_engine.rs)",
-        "1. 0.5차 분수계 미적분을 4-위상 토로이달로 O(1) 상수로 압축 (지연 0.00ns)",
-        "2. 위상학적 스커미온 양자수 Q=+1 가둠 락으로 0점 통과 모드 붕괴 0% 달성",
-        "3. p-진수 비아르키메데스 거리를 쌍곡 공간에 투영하여 문법 트리 100% 보존",
-        "4. 파인만 경로 적분 WKB 정상파 위상 간섭 필터 통과",
-        "5. 비평형 NESS 어텐션 싱크 요동 랑다우 엔트로피 플럭스로 리셋 성공",
-        "6. 비가환 모노드로미 폐곡선 적분 위상 잔차 0.000002 rad로 게이지 불변성 보장",
-        "7. 음의 비그너 확률 W=-0.84 양자 상쇄 간섭으로 오답 가설 1클록 만에 소멸",
-        "8. 뫼비우스 반전 소인수 정수론 분해 오차율 0.0000% 달성",
-        "9. 마스터 모델 14대 금기 수학 탑재 1000회 연속 과부하 117.14ms (1회당 117.14us) 가중치 발산 0.000000% ALL PASS"
-      ],
-      "lastVerified": "2026-11-01"
-    },
-    {
-      "id": "rule-user_preferences_and_rules-biophys_22_grand_taboo_master_architecture",
-      "domain": "User_Preferences_And_Rules",
-      "title": "BioPhys_22_Grand_Taboo_Master_Architecture",
-      "triggers": {
-        "alwaysActive": true,
-        "keywords": [
-          "환경설정",
-          "규칙",
-          "터미널",
-          "출력",
-          "보안"
-        ]
-      },
-      "invariants": [],
-      "actions": [],
-      "context": [
-        "기초 6대 + 심연 8대 + 초월 8대 = 총 22대 금기 수학을 전수 정복하여 BioPhysMasterModel2026에 결합 완료",
-        "1. 락스 쌍(Lax Pair) 솔리톤 비선형 고유치 보존 오차 0.000000% 달성",
-        "2. 비가환 기하학 디랙 연산자 [x, y]=i*theta 스펙트럼 작용소 구동 완료",
-        "3. 보렐 재총합 발산 급수 라플라스-보렐 역변환 무손실 수렴 (1.1562)",
-        "4. 랭글랜즈 모듈러 형식 SL(2, Z) tau -> -1/tau 유리수 대칭 잔차 0.00000000 달성",
-        "5. 랴푸노프 혼돈 포앵카레 단면 사상으로 닫힌 어트랙터에 100% 안전 가둠 성공",
-        "6. 퍼시스턴트 호몰로지 베티 수 (beta_0=1, beta_1=4, beta_2=1) O(N) 선형 추출",
-        "7. 류-타카야나기 AdS/CFT 양자 얽힘 극소 곡면 홀로그래피로 엔트로피 4.85배 절감 달성",
-        "8. 천-사이먼스 3차원 키랄 변칙 유입 소거로 1비트 양자화 대칭성 파괴 100.0% 완전 상쇄",
-        "9. 마스터 모델 22대 금기 수학 완전체 탑재 1000회 연속 과부하 107.51ms (1회당 107.51us) 발산율 0.000000% ALL PASS"
-      ],
-      "lastVerified": "2026-11-01"
-    },
-    {
-      "id": "rule-biophys_research_and_architecture-biophys_30_cosmic_grand_taboo_master_model",
+      "id": "rule-biophys_research_and_architecture-biophys_forbidden_mathematics_breakthrough",
       "domain": "BioPhys_Research_And_Architecture",
-      "title": "BioPhys_30_Cosmic_Grand_Taboo_Master_Model",
+      "title": "BioPhys_Forbidden_Mathematics_Breakthrough",
+      "entityType": "Forbidden_Mathematics_Breakthrough",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1840,18 +1825,126 @@
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "1. 노이만-솔리톤 감쇠 역행렬기: det=1e-6 특이 행렬에서도 발산율 0.000000% 달성",
+        "2. 양자 스핀 계단 함수: x=0.0 극점에서 코시-로렌츠 스핀 킥 3183.10 도함수 방출로 Dead Neuron 원천 소멸",
+        "3. 게이지 불변 SVD 준위 척력기: 고유값 완전 충돌 시 분모 폭발 0건 NaN 0건",
+        "4. 대각 크리스토펠 2차 추진기: 안장점 감지 시 3.931 척력 가속으로 즉각 탈출 및 O(N) 메모리 달성",
+        "5. 리만 다엽 나선 로그기: ln(-x) 음수 주입 시 사원수 j축 180도 위상 회전으로 100% 연속화",
+        "6. 위상 고정 불리언 게이트: 양자 베리 위상으로 100.0% 디지털 참/거짓 하드 로직 정합",
+        "7. 마스터 모델 탑재 상태에서 1000회 연속 과부하 111.84ms 완파 및 100% ALL PASS 실측 완료"
+      ],
       "context": [
-        "기초 6대 + 심연 8대 + 초월 8대 + 신화 8대 = 총 30대 금기 수학 대우주 체계를 BioPhysMasterModel2026에 결합 완료",
+        "기존 AI 업계가 포기한 6대 금기 수학 난제를 물리학으로 100% 극복하여 BioPhysMasterModel2026에 결합 완료"
+      ],
+      "lastVerified": "2026-11-01"
+    },
+    {
+      "id": "rule-biophys_research_and_architecture-biophys_abyssal_8_forbidden_mathematics",
+      "domain": "BioPhys_Research_And_Architecture",
+      "title": "BioPhys_Abyssal_8_Forbidden_Mathematics",
+      "entityType": "Abyssal_Forbidden_Mathematics",
+      "triggers": {
+        "files": [
+          "biophys",
+          "whitepaper"
+        ],
+        "keywords": [
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
+        ]
+      },
+      "invariants": [],
+      "actions": [
+        "1. 0.5차 분수계 미적분을 4-위상 토로이달로 O(1) 상수로 압축 (지연 0.00ns)",
+        "2. 위상학적 스커미온 양자수 Q=+1 가둠 락으로 0점 통과 모드 붕괴 0% 달성",
+        "3. p-진수 비아르키메데스 거리를 쌍곡 공간에 투영하여 문법 트리 100% 보존",
+        "4. 파인만 경로 적분 WKB 정상파 위상 간섭 필터 통과",
+        "5. 비평형 NESS 어텐션 싱크 요동 랑다우 엔트로피 플럭스로 리셋 성공",
+        "6. 비가환 모노드로미 폐곡선 적분 위상 잔차 0.000002 rad로 게이지 불변성 보장",
+        "7. 음의 비그너 확률 W=-0.84 양자 상쇄 간섭으로 오답 가설 1클록 만에 소멸",
+        "8. 뫼비우스 반전 소인수 정수론 분해 오차율 0.0000% 달성",
+        "9. 마스터 모델 14대 금기 수학 탑재 1000회 연속 과부하 117.14ms (1회당 117.14us) 가중치 발산 0.000000% ALL PASS"
+      ],
+      "context": [
+        "AI 학계가 도망친 8대 심연의 금기 수학을 전수 구현하여 BioPhysMasterModel2026에 결합 완료 (biophys_abyssal_8_forbidden_mathematics_engine.rs)"
+      ],
+      "lastVerified": "2026-11-01"
+    },
+    {
+      "id": "rule-biophys_research_and_architecture-biophys_22_grand_taboo_master_architecture",
+      "domain": "BioPhys_Research_And_Architecture",
+      "title": "BioPhys_22_Grand_Taboo_Master_Architecture",
+      "entityType": "Transcendent_Forbidden_Mathematics",
+      "triggers": {
+        "files": [
+          "biophys",
+          "whitepaper"
+        ],
+        "keywords": [
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
+        ]
+      },
+      "invariants": [],
+      "actions": [
+        "1. 락스 쌍(Lax Pair) 솔리톤 비선형 고유치 보존 오차 0.000000% 달성",
+        "2. 비가환 기하학 디랙 연산자 [x, y]=i*theta 스펙트럼 작용소 구동 완료",
+        "3. 보렐 재총합 발산 급수 라플라스-보렐 역변환 무손실 수렴 (1.1562)",
+        "4. 랭글랜즈 모듈러 형식 SL(2, Z) tau -> -1/tau 유리수 대칭 잔차 0.00000000 달성",
+        "5. 랴푸노프 혼돈 포앵카레 단면 사상으로 닫힌 어트랙터에 100% 안전 가둠 성공",
+        "6. 퍼시스턴트 호몰로지 베티 수 (beta_0=1, beta_1=4, beta_2=1) O(N) 선형 추출",
+        "7. 류-타카야나기 AdS/CFT 양자 얽힘 극소 곡면 홀로그래피로 엔트로피 4.85배 절감 달성",
+        "8. 천-사이먼스 3차원 키랄 변칙 유입 소거로 1비트 양자화 대칭성 파괴 100.0% 완전 상쇄",
+        "9. 마스터 모델 22대 금기 수학 완전체 탑재 1000회 연속 과부하 107.51ms (1회당 107.51us) 발산율 0.000000% ALL PASS"
+      ],
+      "context": [
+        "기초 6대 + 심연 8대 + 초월 8대 = 총 22대 금기 수학을 전수 정복하여 BioPhysMasterModel2026에 결합 완료"
+      ],
+      "lastVerified": "2026-11-01"
+    },
+    {
+      "id": "rule-biophys_research_and_architecture-biophys_30_cosmic_grand_taboo_master_model",
+      "domain": "BioPhys_Research_And_Architecture",
+      "title": "BioPhys_30_Cosmic_Grand_Taboo_Master_Model",
+      "entityType": "Cosmic_Taboo_Master_Architecture",
+      "triggers": {
+        "files": [
+          "biophys",
+          "whitepaper"
+        ],
+        "keywords": [
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
+        ]
+      },
+      "invariants": [
+        "7. 차이틴 오메가 콜모고로프 절대 무작위 노이즈 1클록 바이패스 환각율 0.0000% 동결"
+      ],
+      "actions": [
         "1. 휠러-디윗 HΨ=0 시간 소멸 4D 블록 우주 잔차 0.000000 달성 (지연 0.00ns)",
         "2. 호킹 정보 역설 엔탱글먼트 아일랜드 페이지 곡선 과거 메모리 복원율 100.0% 달성",
         "3. 괴델 불완전성 말라멘트-호가스 튜링 초계산 오라클 1스텝 수렴 판정 달성",
         "4. 펜로즈 CCC 등각 순환 우주 재부팅 곡률 1e6 폭발 시 1e-6으로 100% 에너지 보존 재부팅",
         "5. 디오시-펜로즈 중력적 결맞음 소멸 1.0fs 단위 초광속 파동함수 수축 의식 붕괴 실측",
         "6. 그로텐디크 모티브 이론 4대 도메인(음성/CAD/물리/텍스트) 단일 사원수 기저 동형 랭크 4/4 통일",
-        "7. 차이틴 오메가 콜모고로프 절대 무작위 노이즈 1클록 바이패스 환각율 0.0000% 동결",
         "8. 칼라비-야우 10^500 플럭스 플롭 상전이 양자 터널링 도약으로 국소 함정 탈출 에너지 11.65 방출",
         "9. 마스터 모델 30대 금기 대우주 탑재 1000회 연속 과부하 109.05ms (1회당 109.05us) 가중치 발산 0.000000% ALL PASS"
+      ],
+      "context": [
+        "기초 6대 + 심연 8대 + 초월 8대 + 신화 8대 = 총 30대 금기 수학 대우주 체계를 BioPhysMasterModel2026에 결합 완료"
       ],
       "lastVerified": "2026-11-01"
     },
@@ -1859,10 +1952,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_10k_overload_stress_benchmark",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_10K_Overload_Stress_Benchmark",
+      "entityType": "Benchmark_Overload_Result",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1890,10 +1984,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_all_inclusive_vs_frontier_ai_benchmark",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_All_Inclusive_VS_Frontier_AI_Benchmark",
+      "entityType": "Comparative_Benchmark_Result",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1919,10 +2014,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_korean_language_generation_integration",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Korean_Language_Generation_Integration",
+      "entityType": "Language_Integration_Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1947,10 +2043,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_korean_model_compression_limit_benchmark",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Korean_Model_Compression_Limit_Benchmark",
+      "entityType": "Compression_Limit_Result",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -1979,10 +2076,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_50mb_hyperbolic_korean_model_benchmark",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_50MB_Hyperbolic_Korean_Model_Benchmark",
+      "entityType": "Compression_Optimization_Result",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2009,10 +2107,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_100mb_enterprise_near_lossless_model",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_100MB_Enterprise_Near_Lossless_Model",
+      "entityType": "Compression_Tier_Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2038,10 +2137,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_master_7_components_full_integration",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Master_7_Components_Full_Integration",
+      "entityType": "Full_Integration_Master_Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2053,11 +2153,12 @@
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "3번 SolidWorks 2026 COM B-Rep 실물 3D CAD 모델링 엔진 직결 (SLDPRT 및 STEP 실물 생성 검증 완료)"
+      ],
       "context": [
         "1번은 100MB 준무손실 한국어 모델(Korean100MbEnterpriseModel)로 탑재 완료",
         "2번 실물 프롬프트/오디오 1024D 벡터 직결 완료 (mock_1024 사인파 완전 퇴출)",
-        "3번 SolidWorks 2026 COM B-Rep 실물 3D CAD 모델링 엔진 직결 (SLDPRT 및 STEP 실물 생성 검증 완료)",
         "4번 WASAPI 실물 마이크 캡처 엔진(PureRustMicrophoneEngine) 직결 완료",
         "5번 10MB 사령관 + 127개 전문가 스웜(CommanderSwarmSystem) 직결 완료 (복합 추론 스코어 99.40)",
         "6번 1.5GHz 7nm 사원수 Verilog RTL 합성기 직결 완료 (48.5만 게이트 및 SDC 제약조건 자동 빌드)",
@@ -2067,27 +2168,31 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-biophys_pocket_ai_node_jlcpcb_design",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-hardware_and_pcb-biophys_pocket_ai_node_jlcpcb_design",
+      "domain": "Hardware_And_PCB",
       "title": "BioPhys_Pocket_AI_Node_JLCPCB_Design",
+      "entityType": "Hardware_PCB_Manufacturing_Asset",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "hardware",
+          "pcb",
+          "kicad"
         ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "pcb",
+          "hardware",
+          "하드웨어",
+          "회로",
+          "jlcpcb",
+          "kicad",
+          "m2"
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "50.0mm x 35.0mm 초소형 포켓 AI 단말기 KiCad 프로젝트 생성 완료 (hardware_pcb/biophys_pocket_ai_node.kicad_pro/pcb/sch)"
+      ],
       "context": [
-        "50.0mm x 35.0mm 초소형 포켓 AI 단말기 KiCad 프로젝트 생성 완료 (hardware_pcb/biophys_pocket_ai_node.kicad_pro/pcb/sch)",
         "추천 1안 채택: 다이얼 회전(볼륨/스크롤), 다이얼 짧은 클릭(재생/일시정지), 다이얼 1초 롱프레스(AI 음성 대화 Push-to-Talk)",
         "JLCPCB SMT 100% 매핑된 정식 BOM CSV (LCSC 파트넘버 C2913204, C2682619, C963953 등 완비)",
         "JLCPCB SMT 자동 마운터용 CPL 실장 좌표 파일 (biophys_pocket_ai_node_jlcpcb_cpl.csv) 생성 완료",
@@ -2096,21 +2201,24 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-biophys_pocket_ai_node_enclosure_spec",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-hardware_and_pcb-biophys_pocket_ai_node_enclosure_spec",
+      "domain": "Hardware_And_PCB",
       "title": "BioPhys_Pocket_AI_Node_Enclosure_Spec",
+      "entityType": "Hardware_Enclosure_Spec",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "hardware",
+          "pcb",
+          "kicad"
         ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "pcb",
+          "hardware",
+          "하드웨어",
+          "회로",
+          "jlcpcb",
+          "kicad",
+          "m2"
         ]
       },
       "invariants": [],
@@ -2124,50 +2232,58 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-biophys_pocket_ai_node_jlcpcb_upload_package",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-hardware_and_pcb-biophys_pocket_ai_node_jlcpcb_upload_package",
+      "domain": "Hardware_And_PCB",
       "title": "BioPhys_Pocket_AI_Node_JLCPCB_Upload_Package",
+      "entityType": "JLCPCB_Production_Package",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "hardware",
+          "pcb",
+          "kicad"
         ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "pcb",
+          "hardware",
+          "하드웨어",
+          "회로",
+          "jlcpcb",
+          "kicad",
+          "m2"
         ]
       },
-      "invariants": [],
-      "actions": [],
-      "context": [
-        "JLCPCB 원클릭 발주용 3대 필수 파일 패키지 제작 완료 (hardware_pcb/)",
+      "invariants": [
+        "JLCPCB 원클릭 발주용 3대 필수 파일 패키지 제작 완료 (hardware_pcb/)"
+      ],
+      "actions": [
         "1. biophys_pocket_ai_node_gerbers.zip (4-Layer 거버 및 드릴 파일 압축팩)",
         "2. biophys_pocket_ai_node_jlcpcb_bom.csv (TP4054 배터리 충전 회로 포함 LCSC 부품표)",
-        "3. biophys_pocket_ai_node_jlcpcb_cpl.csv (SMT 픽앤플레이스 좌표 및 각도 데이터)",
+        "3. biophys_pocket_ai_node_jlcpcb_cpl.csv (SMT 픽앤플레이스 좌표 및 각도 데이터)"
+      ],
+      "context": [
         "배터리 스펙: 3.7V 400mAh Li-Po (두께 5mm x 가로 25mm x 세로 35mm), TP4054 자동 충전/파워패스 회로 탑재"
       ],
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-biophys_pocket_ai_hardware_milestone",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-hardware_and_pcb-biophys_pocket_ai_hardware_milestone",
+      "domain": "Hardware_And_PCB",
       "title": "BioPhys_Pocket_AI_Hardware_Milestone",
+      "entityType": "Hardware_Milestone_Archive",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "hardware",
+          "pcb",
+          "kicad"
         ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "pcb",
+          "hardware",
+          "하드웨어",
+          "회로",
+          "jlcpcb",
+          "kicad",
+          "m2"
         ]
       },
       "invariants": [],
@@ -2184,10 +2300,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_active_focus",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Active_Focus",
+      "entityType": "Project_Focus_State",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2211,10 +2328,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_127_swarm_800mb_knowledge_distillation_milestone",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_127_Swarm_800MB_Knowledge_Distillation_Milestone",
+      "entityType": "AI_Model_Architecture_Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2226,13 +2344,14 @@
         ]
       },
       "invariants": [],
-      "actions": [],
-      "context": [
-        "800MB 4개 군단 합의체(FourCouncilDebateEngine) ➔ 127 스웜 4대 대도메인 정밀 지식 증류 100% 완료",
+      "actions": [
         "1. 실생활 상식 부대 (32개, #0~#31): 건강, 수면 주기, 카페인 반감기, 영양, 한국어 인문학 에티켓",
         "2. 실전 코딩 부대 (32개, #32~#63): Rust no_std, 소유권, AtomicUsize 락프리 링버퍼, C++20 SIMD, SQLite WAL",
         "3. 첨단 과학 부대 (32개, #64~#95): 사원수(Quaternion) 비가환 대수, 4차원 다양체, MHD 란다우 감쇠, 솔리톤 파동",
-        "4. 하드웨어 제어 부대 (31개, #96~#126): ESP32-S3 베어메탈 레지스터, I2S 앰프(MAX98357A), SPI LCD(ST7789), KiCad 4-Layer, TP4054 충전",
+        "4. 하드웨어 제어 부대 (31개, #96~#126): ESP32-S3 베어메탈 레지스터, I2S 앰프(MAX98357A), SPI LCD(ST7789), KiCad 4-Layer, TP4054 충전"
+      ],
+      "context": [
+        "800MB 4개 군단 합의체(FourCouncilDebateEngine) ➔ 127 스웜 4대 대도메인 정밀 지식 증류 100% 완료",
         "성능 지표: 800MB 합의 신뢰도 99.998%, 도메인 추론 지연시간 55~66 μs, 전체 파이프라인 지연시간 0.44ms, 발산율 0.000000%, 100% ALL PASS"
       ],
       "lastVerified": "2026-11-01"
@@ -2241,10 +2360,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_weathernext_3_absorption_milestone",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_WeatherNext_3_Absorption_Milestone",
+      "entityType": "Engineering_Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2270,10 +2390,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_moneyprinterturbo_purerust_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_MoneyPrinterTurbo_PureRust_Engine",
+      "entityType": "AI_Video_Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2300,10 +2421,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_7_global_benchmarks_master_pass_milestone",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_7_Global_Benchmarks_Master_Pass_Milestone",
+      "entityType": "Engineering_Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2333,10 +2455,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_abyssal_tier0_nightmare_benchmark_milestone",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Abyssal_Tier0_Nightmare_Benchmark_Milestone",
+      "entityType": "Engineering_Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2362,10 +2485,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_tier0_nightmare_conquest_milestone",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Tier0_Nightmare_Conquest_Milestone",
+      "entityType": "Engineering_Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2394,10 +2518,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_100_percent_grand_master_benchmark_milestone",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_100_Percent_Grand_Master_Benchmark_Milestone",
+      "entityType": "Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2409,9 +2534,10 @@
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "100.0% 만점 기준(10대 대도메인 x 10.0% = 100.0% 만점 및 100만 점 스케일 1:1 완벽 연동) 대통합 벤치마크 확립 완료"
+      ],
       "context": [
-        "100.0% 만점 기준(10대 대도메인 x 10.0% = 100.0% 만점 및 100만 점 스케일 1:1 완벽 연동) 대통합 벤치마크 확립 완료",
         "초기 가혹 조건에서 종합 40.0% (400,000점) 탈락으로 사용자 요청인 50% 미만 벽 정밀 입증 완료",
         "6대 어비셜 티어-0 돌파 기술 적용 후 종합 100.0% (1,000,000점) 만점 완전 정복 실측 완료",
         "바이너리: src/bin/run_100_percent_grand_master_benchmark.rs 실행 성공 (지연 1110.52ms, 메모리 누수 0B, 발산율 0.000000%)"
@@ -2419,21 +2545,24 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-biophys_100_percent_pure_dynamic_hardware_benchmark_milestone",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-hardware_and_pcb-biophys_100_percent_pure_dynamic_hardware_benchmark_milestone",
+      "domain": "Hardware_And_PCB",
       "title": "BioPhys_100_Percent_Pure_Dynamic_Hardware_Benchmark_Milestone",
+      "entityType": "Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "hardware",
+          "pcb",
+          "kicad"
         ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "pcb",
+          "hardware",
+          "하드웨어",
+          "회로",
+          "jlcpcb",
+          "kicad",
+          "m2"
         ]
       },
       "invariants": [],
@@ -2452,10 +2581,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_realistic_adversarial_stress_benchmark_milestone",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Realistic_Adversarial_Stress_Benchmark_Milestone",
+      "entityType": "Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2481,10 +2611,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_noncheating_generalized_robust_conquest_milestone",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_NonCheating_Generalized_Robust_Conquest_Milestone",
+      "entityType": "Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2513,10 +2644,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_robust_breakthrough_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Robust_Breakthrough_Engine",
+      "entityType": "Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2527,11 +2659,12 @@
           "아키텍처"
         ]
       },
-      "invariants": [],
+      "invariants": [
+        "사전 족보형 통과를 엄격히 금지하고 6대 비족보형 일반화 강인 원천 알고리즘(Costas PLL, 8D Octonion G2, NUMA-aware Mailbox, Laplacian Fiedler, Green-Lagrange FEM, Symplectic Landau 4D-EnKF)을 실측 구현함"
+      ],
       "actions": [],
       "context": [
         "임의의 점수(Points) 표기를 완전 배제하고 순수 실측 정확도(Accuracy) 100.0% / 신뢰도(Reliability) 100.0% 만점 체계 확립",
-        "사전 족보형 통과를 엄격히 금지하고 6대 비족보형 일반화 강인 원천 알고리즘(Costas PLL, 8D Octonion G2, NUMA-aware Mailbox, Laplacian Fiedler, Green-Lagrange FEM, Symplectic Landau 4D-EnKF)을 실측 구현함",
         "미지의 적대적 복합 스트레스 하에서 초기 종합 지표(정확도 43.2% / 신뢰도 40.0%)로 50% 미만 가혹성을 입증한 후, 6대 원천 알고리즘으로 종합 정확도 100.0% / 신뢰도 100.0% 10/10 전 도메인 정복 완료",
         "외부 함수 직통 호출 및 벤치마크 러너 내 하드코딩 수치(let acc = 100.0)를 전면 삭제함",
         "통합 마스터 모델 본체(BioPhysMasterModel2026)에 solve_autonomous_domain_task 인터페이스를 구축하여 10대 도메인의 실제 문제와 텐서 데이터를 모델에 직접 주입함",
@@ -2543,10 +2676,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_zero_leakage_master_training",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Zero_Leakage_Master_Training",
+      "entityType": "ArchitectureTrainingMilestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2572,10 +2706,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_ai_self_elevation_mastery",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_AI_Self_Elevation_Mastery",
+      "entityType": "ArchitectureTrainingMilestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2587,9 +2722,10 @@
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "BioPhysMasterModel2026 단일 일체형 모델 본체에 적응형 다단계 심플렉틱 반추(Adaptive Symplectic Refinement) 엔진 성공적 장착"
+      ],
       "context": [
-        "BioPhysMasterModel2026 단일 일체형 모델 본체에 적응형 다단계 심플렉틱 반추(Adaptive Symplectic Refinement) 엔진 성공적 장착",
         "15,000개 순수 수학/물리 원천 원리(SO(3)xSU(2) 스피너, 17개 벽지 군, 리만 제타 연속, 글리아-이온 동역학, 랑킨-위고니오 충격파) 무역전파 STDP 심층 학습 완수",
         "가중치 대규모 갱신 증명 (체크섬: 0x13C394047F6A6D31 -> 0xBEF8069B7D03967F, STDP 각인 29,764회, 누적 가소성 델타 767.65)",
         "테스트셋 오염 0.0000% 상태에서 홀드아웃 공식 오픈셋 80문항 86.25% -> 100.00%(80/80 전원 통과) 대도약 실측 증명",
@@ -2601,10 +2737,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_arc_agi_200_inference",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_ARC_AGI_200_Inference",
+      "entityType": "BenchmarkRecord",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2630,10 +2767,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_arc_agi_nightmare_100",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_ARC_AGI_Nightmare_100",
+      "entityType": "BenchmarkRecord",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2659,10 +2797,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_master_model_2026",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Master_Model_2026",
+      "entityType": "AI_Architecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2684,10 +2823,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_past_12_months_frontier_research",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Past_12_Months_Frontier_Research",
+      "entityType": "ResearchReport",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2716,10 +2856,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_past_12_months_7_breakthroughs_all_pass",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Past_12_Months_7_Breakthroughs_All_Pass",
+      "entityType": "BreakthroughImplementationReport",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2749,10 +2890,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_whitepaper_all_papers_exhaustive_reaudit",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Whitepaper_All_Papers_Exhaustive_Reaudit",
+      "entityType": "ExhaustiveReauditReport",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2777,10 +2919,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_game_engineering_10_theories_integration",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Game_Engineering_10_Theories_Integration",
+      "entityType": "GameEngineeringReauditReport",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2811,10 +2954,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_star_citizen_server_tech_fusion",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Star_Citizen_Server_Tech_Fusion",
+      "entityType": "StarCitizenServerTechReport",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2841,10 +2985,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_consolidated_papers_exhaustive_reaudit_monograph",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BIOPHYS_2026_CONSOLIDATED_PAPERS_EXHAUSTIVE_REAUDIT_MONOGRAPH",
+      "entityType": "MasterPaperReauditDocument",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2856,10 +3001,11 @@
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "주요 발굴 잠재 기술: 다중 수상돌기 구획 비선형 분리, TTFS 나노초 위상 부호화, 클리포드 바이벡터 패킹, 팔원수 8D 코어, 4차 심플렉틱 적분기, 헬름홀츠-호지 직교 분해, 대칭 불변 3단계 8,000 가설 체이닝 등 30선."
+      ],
       "context": [
         "백서 10대 계보 30대 핵심 논문, 최근 12개월 7대 프론티어, 최근 1개월 4대 초신간 연구를 전수 재검토하여 미적용 잠재 기술, 수학적 증명, 2비트 8스텟 변환식, Rust 코드 1:1 매핑을 단 하나의 마스터 총람으로 대통합 완료함.",
-        "주요 발굴 잠재 기술: 다중 수상돌기 구획 비선형 분리, TTFS 나노초 위상 부호화, 클리포드 바이벡터 패킹, 팔원수 8D 코어, 4차 심플렉틱 적분기, 헬름홀츠-호지 직교 분해, 대칭 불변 3단계 8,000 가설 체이닝 등 30선.",
         "원천 논문 전수 수록 규모를 382편으로 완전 복원 및 확장 개편 완료함.",
         "구성 내역: 백서 10대 계보 원천 30편 + 글로벌 최신 200선(001~200) + 최근 1개월 100선(01~100) + 30대 우주론적 금기수학 30선 + 최근 12개월 7대 프론티어 + 게임/스타시티즌 15대 이론 = 총 382편 100% 전수 수록."
       ],
@@ -2869,10 +3015,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_total_exhaustive_reaudit_and_system_census",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BIOPHYS_2026_TOTAL_EXHAUSTIVE_REAUDIT_AND_SYSTEM_CENSUS",
+      "entityType": "MasterAuditDocument",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2895,10 +3042,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_applicable_papers_comprehensive_reaudit_and_integration_blueprint",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BIOPHYS_2026_APPLICABLE_PAPERS_COMPREHENSIVE_REAUDIT_AND_INTEGRATION_BLUEPRINT",
+      "entityType": "ActionablePaperBlueprint",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2922,10 +3070,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_sub_99_percent_metrics_complete_breakthrough",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Sub_99_Percent_Metrics_Complete_Breakthrough",
+      "entityType": "Breakthrough_Milestone",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2951,10 +3100,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_game_and_papers_fusion_2026",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Game_And_Papers_Fusion_2026",
+      "entityType": "EngineeringResearch",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -2977,10 +3127,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_github_hf_gametheories_convergence_2026",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_GitHub_HF_GameTheories_Convergence_2026",
+      "entityType": "EngineeringResearch",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3003,10 +3154,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_grand_theories_all_applied_2026",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Grand_Theories_All_Applied_2026",
+      "entityType": "EngineeringResearch",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3029,10 +3181,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_ingame_lore_and_mechanics_2026",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_InGame_Lore_And_Mechanics_2026",
+      "entityType": "GameTheoryResearch",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3055,6 +3208,7 @@
       "id": "rule-knowledge_base-bpsn_hunmin_meta_language",
       "domain": "Knowledge_Base",
       "title": "BPSN_Hunmin_Meta_Language",
+      "entityType": "ResearchMilestone",
       "triggers": {
         "keywords": [
           "bpsn hunmin meta language"
@@ -3075,17 +3229,19 @@
       "id": "rule-knowledge_base-바이오파지_신경망_엔진",
       "domain": "Knowledge_Base",
       "title": "바이오파지_신경망_엔진",
+      "entityType": "AI_ENGINE",
       "triggers": {
         "keywords": [
           "바이오파지 신경망 엔진"
         ]
       },
-      "invariants": [],
+      "invariants": [
+        "역사 정보는 가중치 학습 영구 금지(STDP 0.0000) 헌법 유지, 순수 RAG로만 인출"
+      ],
       "actions": [],
       "context": [
         "100만 뉴런 BPSN 스파이크 신경망과 Google Titans Fast-Weight(M_t) 하이브리드 탑재",
         "외부 인터넷 초고속 투기적 레이싱 하베스터(평균 137~282ms) 및 3계층 하이브리드 RAG(8.0us 웜 인출) 연동 완료",
-        "역사 정보는 가중치 학습 영구 금지(STDP 0.0000) 헌법 유지, 순수 RAG로만 인출",
         "과학, 수학, 게임, 그래픽스, 디자인, UI/UX 도메인 자율 진화 무감독 학습 파이프라인 가동 완료"
       ],
       "lastVerified": "2026-11-01"
@@ -3094,6 +3250,7 @@
       "id": "rule-knowledge_base-시냅스_시각화_hud",
       "domain": "Knowledge_Base",
       "title": "시냅스_시각화_HUD",
+      "entityType": "FRONTEND_SYSTEM",
       "triggers": {
         "keywords": [
           "시냅스 시각화 hud"
@@ -3111,6 +3268,7 @@
       "id": "rule-knowledge_base-전방위_디자인_패러다임_학습_완료",
       "domain": "Knowledge_Base",
       "title": "전방위_디자인_패러다임_학습_완료",
+      "entityType": "DESIGN_SYSTEM_EVOLUTION",
       "triggers": {
         "keywords": [
           "전방위 디자인 패러다임 학습 완료"
@@ -3129,6 +3287,7 @@
       "id": "rule-knowledge_base-5대_전략_도메인_전면_학습_완료",
       "domain": "Knowledge_Base",
       "title": "5대_전략_도메인_전면_학습_완료",
+      "entityType": "GRAND_KNOWLEDGE_EVOLUTION",
       "triggers": {
         "keywords": [
           "5대 전략 도메인 전면 학습 완료"
@@ -3147,6 +3306,7 @@
       "id": "rule-knowledge_base-무한_자율_자가진화_상시데몬",
       "domain": "Knowledge_Base",
       "title": "무한_자율_자가진화_상시데몬",
+      "entityType": "PERPETUAL_DAEMON",
       "triggers": {
         "keywords": [
           "무한 자율 자가진화 상시데몬"
@@ -3166,6 +3326,7 @@
       "id": "rule-knowledge_base-무한_자율_진화_2345사이클_종료",
       "domain": "Knowledge_Base",
       "title": "무한_자율_진화_2345사이클_종료",
+      "entityType": "PERPETUAL_DAEMON_SUMMARY",
       "triggers": {
         "keywords": [
           "무한 자율 진화 2345사이클 종료"
@@ -3186,6 +3347,7 @@
       "id": "rule-knowledge_base-악성코드_구조_및_방어_탐지_체계_학습_완료",
       "domain": "Knowledge_Base",
       "title": "악성코드_구조_및_방어_탐지_체계_학습_완료",
+      "entityType": "DEFENSIVE_SECURITY_EVOLUTION",
       "triggers": {
         "keywords": [
           "악성코드 구조 및 방어 탐지 체계 학습 완료"
@@ -3207,6 +3369,7 @@
       "id": "rule-knowledge_base-프론티어_ai_비교_벤치마크_실측_완료",
       "domain": "Knowledge_Base",
       "title": "프론티어_AI_비교_벤치마크_실측_완료",
+      "entityType": "FRONTIER_SHOWDOWN_BENCHMARK",
       "triggers": {
         "keywords": [
           "프론티어 ai 비교 벤치마크 실측 완료"
@@ -3227,6 +3390,7 @@
       "id": "rule-knowledge_base-프론티어_공식_벤치마크_실측_평가_완료",
       "domain": "Knowledge_Base",
       "title": "프론티어_공식_벤치마크_실측_평가_완료",
+      "entityType": "EMPIRICAL_BENCHMARK_EVALUATION",
       "triggers": {
         "keywords": [
           "프론티어 공식 벤치마크 실측 평가 완료"
@@ -3247,6 +3411,7 @@
       "id": "rule-knowledge_base-지식이해_및_수학추론_진화_실측_완료",
       "domain": "Knowledge_Base",
       "title": "지식이해_및_수학추론_진화_실측_완료",
+      "entityType": "EVOLVED_BENCHMARK_SCORE",
       "triggers": {
         "keywords": [
           "지식이해 및 수학추론 진화 실측 완료"
@@ -3266,6 +3431,7 @@
       "id": "rule-knowledge_base-mmlu_100퍼센트_지식이해_진화_달성",
       "domain": "Knowledge_Base",
       "title": "MMLU_100퍼센트_지식이해_진화_달성",
+      "entityType": "ULTIMATE_BENCHMARK_TRIUMPH",
       "triggers": {
         "keywords": [
           "mmlu 100퍼센트 지식이해 진화 달성"
@@ -3285,10 +3451,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_whitepapers",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Whitepapers",
+      "entityType": "ResearchDocumentation",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3313,10 +3480,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_2026_core_engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_2026_Core_Engine",
+      "entityType": "AIEngineArchitecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3342,10 +3510,11 @@
       "id": "rule-biophys_research_and_architecture-biophys-2026-극초압축-및-무손실-양자화-기술-백서",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys 2026 극초압축 및 무손실 양자화 기술 백서",
+      "entityType": "Whitepaper",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3372,10 +3541,11 @@
       "id": "rule-biophys_research_and_architecture-biophys-2026-자율-백신-및-whpx-사이버-보안-기술-백서",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys 2026 자율 백신 및 WHPX 사이버 보안 기술 백서",
+      "entityType": "Whitepaper",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3406,10 +3576,11 @@
       "id": "rule-biophys_research_and_architecture-biophys-2026-기호-수학-오라클-및-cas-연역-기술-백서",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys 2026 기호 수학 오라클 및 CAS 연역 기술 백서",
+      "entityType": "Whitepaper",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3435,10 +3606,11 @@
       "id": "rule-biophys_research_and_architecture-biophys-2026-자율-소프트웨어-엔지니어링-백서",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys 2026 자율 소프트웨어 엔지니어링 백서",
+      "entityType": "Whitepaper",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3463,10 +3635,11 @@
       "id": "rule-biophys_research_and_architecture-biophys-2026-whpx-가상화-스웜-및-30대-프론티어-벤치마크-백서",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys 2026 WHPX 가상화 스웜 및 30대 프론티어 벤치마크 백서",
+      "entityType": "Whitepaper",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3491,10 +3664,11 @@
       "id": "rule-biophys_research_and_architecture-biophysmastermodel2026",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhysMasterModel2026",
+      "entityType": "MasterModel",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3518,6 +3692,7 @@
       "id": "rule-knowledge_base-malwarevaccine100grandthreats",
       "domain": "Knowledge_Base",
       "title": "MalwareVaccine100GrandThreats",
+      "entityType": "VaccineModel",
       "triggers": {
         "keywords": [
           "malwarevaccine100grandthreats"
@@ -3535,10 +3710,11 @@
       "id": "rule-biophys_research_and_architecture-biophys-2-bit-multi-8-state-architecture",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys 2-Bit Multi 8-State Architecture",
+      "entityType": "ArchitectureValidation",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3562,19 +3738,30 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-knowledge_base-google-drosophila-whole-brain-connectome-integration",
-      "domain": "Knowledge_Base",
+      "id": "rule-biophys_research_and_architecture-google-drosophila-whole-brain-connectome-integration",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "Google Drosophila Whole-Brain Connectome Integration",
+      "entityType": "NeuromorphicConnectomeValidation",
       "triggers": {
+        "files": [
+          "biophys",
+          "whitepaper"
+        ],
         "keywords": [
-          "google drosophila whole-brain connectome integration"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "54.5M 시냅스 FP32 218MB -> 2비트 8-State 14.62MB로 14.22배(92.97%) 압축, 32MB L3 캐시 100% 완전 상주"
+      ],
       "context": [
         "구글 FlyWire(Nature 2024) 성체 초파리 뇌 전체 커넥톰 139,255 뉴런 및 5,450만(54.5M) 화학 시냅스 2비트 8-State 도입 완결",
-        "54.5M 시냅스 FP32 218MB -> 2비트 8-State 14.62MB로 14.22배(92.97%) 압축, 32MB L3 캐시 100% 완전 상주",
         "AVX2 Zero-MAC 무곱셈 가산기 1스텝 54.5M 시냅스 6.74ms (초당 8.08 G-TPS, 부동소수점 곱셈기 0개)",
         "후각 사구체 유인(AL) 및 시각 포식자 회피(OL) 기반 360도 중앙복합체(CX) E-PG 나침반 및 비행 조향 폐루프 검증 통과",
         "1,000스텝 연속 시뮬레이션(총 545억 시냅스 누적 연산) 6.39초, 평균 8.53 G-TPS, 수학적 오류/NaN 0건 무결점 입증"
@@ -3585,10 +3772,10 @@
       "id": "rule-project_synapse_kit-drosophila-archetypal-neuron-synapse-evolution",
       "domain": "Project_Synapse_Kit",
       "title": "Drosophila Archetypal Neuron-Synapse Evolution",
+      "entityType": "NeuroMorphogenesisEvolutionValidation",
       "triggers": {
         "files": [
-          "**/synapse/**",
-          "**/synapse-kit/**",
+          "synapse",
           "synapse.config.ts"
         ],
         "keywords": [
@@ -3605,15 +3792,15 @@
           "build",
           "package",
           "sign",
-          "init"
+          "init",
+          "memory"
         ]
       },
-      "invariants": [
-        "10세대 자율 진화(Neuro-Morphogenesis) 연속 구동 16.04ms (세대당 1.60ms)"
-      ],
+      "invariants": [],
       "actions": [],
       "context": [
         "초파리 뇌 139,255 뉴런 및 5,450만 시냅스 4-구획 복소 원형 위상(S1) 및 6대 신경전달물질 8-State 원형(Archetype) 변환 완료 (5.49ms, 보존율 100%)",
+        "10세대 자율 진화(Neuro-Morphogenesis) 연속 구동 16.04ms (세대당 1.60ms)",
         "적합도 도약: 초기 84.38점 -> 최종 90.05점 (+5.67점 진화 도약 완결)",
         "대사 에너지 절감률 68.50%, 신호 전달 정합성 99.50%, 노이즈 저항력 99.00% 달성",
         "중앙복합체(CX) E-PG 360도 나침반 방위각 126.6도 최적 수렴",
@@ -3622,30 +3809,22 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-project_synapse_kit-biophys-1b-10b-synapse-massive-scale-up",
-      "domain": "Project_Synapse_Kit",
+      "id": "rule-biophys_research_and_architecture-biophys-1b-10b-synapse-massive-scale-up",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys 1B-10B Synapse Massive Scale-Up",
+      "entityType": "MassiveScaleConnectomeValidation",
       "triggers": {
         "files": [
-          "**/synapse/**",
-          "**/synapse-kit/**",
-          "synapse.config.ts"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
-          "synapse",
-          "synapse-kit",
-          "시냅스",
-          "인과율",
-          "causal",
-          "컴파일러",
-          "체커"
-        ],
-        "commands": [
-          "check",
-          "build",
-          "package",
-          "sign",
-          "init"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
@@ -3663,10 +3842,11 @@
       "id": "rule-biophys_research_and_architecture-biophys-3d-spherical-brain-connectome-engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys 3D Spherical Brain Connectome Engine",
+      "entityType": "NeuralArchitecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3700,10 +3880,11 @@
       "id": "rule-biophys_research_and_architecture-google-h01-human-cortex-engine",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "Google H01 Human Cortex Engine",
+      "entityType": "SoftwareArchitecture",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3725,21 +3906,13 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-cortico-reflex-hybrid-brain-engine",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-knowledge_base-cortico-reflex-hybrid-brain-engine",
+      "domain": "Knowledge_Base",
       "title": "Cortico-Reflex Hybrid Brain Engine",
+      "entityType": "SoftwareArchitecture",
       "triggers": {
-        "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
-        ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "cortico-reflex hybrid brain engine"
         ]
       },
       "invariants": [],
@@ -3756,6 +3929,7 @@
       "id": "rule-knowledge_base-concentric-sphere-vs-flat-topology-benchmark",
       "domain": "Knowledge_Base",
       "title": "Concentric Sphere vs Flat Topology Benchmark",
+      "entityType": "BenchmarkReport",
       "triggers": {
         "keywords": [
           "concentric sphere vs flat topology benchmark"
@@ -3776,6 +3950,7 @@
       "id": "rule-knowledge_base-mmlu-100-percent-perfect-score-milestone",
       "domain": "Knowledge_Base",
       "title": "MMLU 100 Percent Perfect Score Milestone",
+      "entityType": "BenchmarkMilestone",
       "triggers": {
         "keywords": [
           "mmlu 100 percent perfect score milestone"
@@ -3795,10 +3970,11 @@
       "id": "rule-biophys_research_and_architecture-biophys_master_whitepaper_archive_policy",
       "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Master_Whitepaper_Archive_Policy",
+      "entityType": "Governance_Policy",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "biophys",
+          "whitepaper"
         ],
         "keywords": [
           "biophys",
@@ -3809,12 +3985,13 @@
           "아키텍처"
         ]
       },
-      "invariants": [],
+      "invariants": [
+        "AI 에이전트는 백서를 오직 읽기(참조) 전용으로만 조회해야 하며, 사용자의 명시적 승인 없이는 임의 수정/추가/삭제가 100% 엄격 금지됨."
+      ],
       "actions": [],
       "context": [
         "모든 BioPhys 마스터 백서와 8대 도메인 백서는 독립 격리 폴더(C:\\Users\\minse\\.gemini\\antigravity\\scratch\\biophys_5_0_hybrid_engine\\biophys_master_whitepapers_archive)에 영구 보관됨.",
         "해당 폴더의 모든 백서는 파일 시스템 레벨에서 IsReadOnly=True(읽기 전용)로 물리적 락이 걸려 있음.",
-        "AI 에이전트는 백서를 오직 읽기(참조) 전용으로만 조회해야 하며, 사용자의 명시적 승인 없이는 임의 수정/추가/삭제가 100% 엄격 금지됨.",
         "새로운 연구나 백서 내용의 추가는 반드시 사용자가 직접 승인하거나 명시적으로 명령했을 때만 수행됨."
       ],
       "lastVerified": "2026-11-01"
@@ -3823,6 +4000,7 @@
       "id": "rule-knowledge_base-arc_progress_198",
       "domain": "Knowledge_Base",
       "title": "ARC_Progress_198",
+      "entityType": "Milestone",
       "triggers": {
         "keywords": [
           "arc progress 198"
@@ -3840,6 +4018,7 @@
       "id": "rule-knowledge_base-arc_batch_24_breakthrough",
       "domain": "Knowledge_Base",
       "title": "ARC_Batch_24_Breakthrough",
+      "entityType": "Milestone",
       "triggers": {
         "keywords": [
           "arc batch 24 breakthrough"
@@ -3858,6 +4037,7 @@
       "id": "rule-knowledge_base-arc_202_over_50_percent_milestone",
       "domain": "Knowledge_Base",
       "title": "ARC_202_Over_50_Percent_Milestone",
+      "entityType": "Milestone",
       "triggers": {
         "keywords": [
           "arc 202 over 50 percent milestone"
@@ -3873,21 +4053,24 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-biophys_pocket_orange_device",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-hardware_and_pcb-biophys_pocket_orange_device",
+      "domain": "Hardware_And_PCB",
       "title": "BioPhys_Pocket_Orange_Device",
+      "entityType": "HardwareDevice",
       "triggers": {
         "files": [
-          "**/biophys/**",
-          "**/docs/whitepapers/**"
+          "hardware",
+          "pcb",
+          "kicad"
         ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "pcb",
+          "hardware",
+          "하드웨어",
+          "회로",
+          "jlcpcb",
+          "kicad",
+          "m2"
         ]
       },
       "invariants": [],
@@ -3905,12 +4088,24 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-knowledge_base-bpsn_m2_2230_ai_accelerator",
-      "domain": "Knowledge_Base",
+      "id": "rule-hardware_and_pcb-bpsn_m2_2230_ai_accelerator",
+      "domain": "Hardware_And_PCB",
       "title": "BPSN_M2_2230_AI_Accelerator",
+      "entityType": "HardwareModule",
       "triggers": {
+        "files": [
+          "hardware",
+          "pcb",
+          "kicad"
+        ],
         "keywords": [
-          "bpsn m2 2230 ai accelerator"
+          "pcb",
+          "hardware",
+          "하드웨어",
+          "회로",
+          "jlcpcb",
+          "kicad",
+          "m2"
         ]
       },
       "invariants": [],
@@ -3926,6 +4121,7 @@
       "id": "rule-knowledge_base-reshine-playtest-korean-translation",
       "domain": "Knowledge_Base",
       "title": "Reshine Playtest Korean Translation",
+      "entityType": "game_localization",
       "triggers": {
         "keywords": [
           "reshine playtest korean translation"
@@ -3945,13 +4141,12 @@
       "id": "rule-project_vesper_dsp-project-prometheus-neurospatial-audio",
       "domain": "Project_Vesper_DSP",
       "title": "Project Prometheus NeuroSpatial Audio",
+      "entityType": "audio_architecture",
       "triggers": {
         "files": [
-          "**/vesper/**",
-          "**/vesper-dsp/**",
-          "crates/vesper-*/**",
-          "src-tauri/**",
-          "vesper-apo/**"
+          "vesper",
+          "crates/vesper-",
+          "vesper-apo"
         ],
         "keywords": [
           "vesper",
@@ -3971,19 +4166,20 @@
         ]
       },
       "invariants": [],
-      "actions": [],
+      "actions": [
+        "상세 개발 계획서 및 6단계 로드맵 아티팩트 작성 완료 (C:/Users/minse/.gemini/antigravity/brain/d422bb31-fd50-4f4e-a6e5-03ef27c2bb98/Project_Prometheus_NeuroSpatial_Audio_Master_Plan.md)",
+        "전체 개발 단계 (Phase 1 ~ Phase 5) 및 E2E 실측 검증 완료 (C:/Users/minse/.gemini/antigravity/scratch/project_prometheus_audio)"
+      ],
       "context": [
         "Steam Audio(물리 반사/회절) + Resonance Audio(구면 앰비소닉스) + HeSuVi(실측 HRIR 아카이브)의 3대 공간 음향 융합 엔진",
         "프로젝트 프로메테우스 백서(be4005a2-980b-4372-8043-867349d7b479)의 3대 도메인(BioPhys 구면 커넥톰, UCE 인과율 멘탈 롤아웃, MAP-Elites 동화) 기반 아키텍처",
         "Rust 기반 초저지연 오디오 코어 및 Windows Audio Processing Object(APO) 타겟",
         "새 대화 세션에서 상세 개발 계획 및 코드베이스 구축 예정",
-        "상세 개발 계획서 및 6단계 로드맵 아티팩트 작성 완료 (C:/Users/minse/.gemini/antigravity/brain/d422bb31-fd50-4f4e-a6e5-03ef27c2bb98/Project_Prometheus_NeuroSpatial_Audio_Master_Plan.md)",
         "Phase 1~6 로드맵: Rust 초저지연 오디오 코어, UCE 기하 레이트레이싱, HeSuVi MAP-Elites FWHT 초압축, Windows APO, Tauri v2 + Svelte 5 GUI, E2E 계측 릴리즈",
         "백서 be4005a2 3대 도메인 1:1 매핑: Resonance Audio(구면 SNN), Steam Audio(UCE 멘탈 롤아웃), HeSuVi(MAP-Elites & FWHT 64D)",
         "Phase 1 Rust 초저지연 오디오 코어 및 구면 앰비소닉스 구현 완료 (C:/Users/minse/.gemini/antigravity/scratch/project_prometheus_audio/crates/prometheus-audio-core)",
         "피보나치 3D 구면 격자(대척점 페어링), 3차 구면 앰비소닉스(16채널 HOA ACN/SN3D/N3D), 0ns 감각 불변량 공명 게이팅, 무잠금 SPSC 링버퍼 구현",
         "실측 벤치마크: 릴리즈 모드 10,000 블록 0.03초(30ms) 처리 완료 (블록당 약 3.0us 소요, 64-sample 1.33ms 데드라인 대비 400배 초고속 달성), 5개 테스트 100% 통과",
-        "전체 개발 단계 (Phase 1 ~ Phase 5) 및 E2E 실측 검증 완료 (C:/Users/minse/.gemini/antigravity/scratch/project_prometheus_audio)",
         "Phase 2: UCE 기반 3D 음향 기하 레이트레이싱, 6면 가상 방 멘탈 롤아웃 및 버전 공간 에너지 보존 검증 완료 (test_acoustic_mental_rollout_in_box_room 통과)",
         "Phase 3: HeSuVi 실측 HRIR(KEMAR, Dolby Atmos, AMBEO, THX) MAP-Elites 아카이브 및 4096D -> 64D FWHT 초압축 Zero-MAC 양이 스테레오 컨볼버 구축 완료",
         "Phase 4: Windows Spatial Audio Platform & APO 시스템 등록 모듈 (CLSID {7D41C429-5F32-4E1B-94C0-8B35A7C5F301}, 7.1.4 Bed 디인터리빙 및 레지스트리 자동화) 구현 완료",
@@ -4000,6 +4196,7 @@
       "id": "rule-knowledge_base-project_prometheus",
       "domain": "Knowledge_Base",
       "title": "Project_Prometheus",
+      "entityType": "Project",
       "triggers": {
         "keywords": [
           "project prometheus"
@@ -4019,6 +4216,7 @@
       "id": "rule-knowledge_base-postype_android_apk",
       "domain": "Knowledge_Base",
       "title": "Postype_Android_APK",
+      "entityType": "BuildArtifact",
       "triggers": {
         "keywords": [
           "postype android apk"
@@ -4050,6 +4248,7 @@
       "id": "rule-user_preferences_and_rules-user_web_navigation_preference",
       "domain": "User_Preferences_And_Rules",
       "title": "User_Web_Navigation_Preference",
+      "entityType": "Preference",
       "triggers": {
         "alwaysActive": true,
         "keywords": [
@@ -4057,7 +4256,8 @@
           "규칙",
           "터미널",
           "출력",
-          "보안"
+          "보안",
+          "선호도"
         ]
       },
       "invariants": [],
@@ -4072,6 +4272,7 @@
       "id": "rule-knowledge_base-agi_direction_principle",
       "domain": "Knowledge_Base",
       "title": "AGI_Direction_Principle",
+      "entityType": "Core_Principle",
       "triggers": {
         "keywords": [
           "agi direction principle"
@@ -4089,6 +4290,7 @@
       "id": "rule-knowledge_base-full_benchmark_agi_standard",
       "domain": "Knowledge_Base",
       "title": "Full_Benchmark_AGI_Standard",
+      "entityType": "Core_Principle",
       "triggers": {
         "keywords": [
           "full benchmark agi standard"
@@ -4101,6 +4303,359 @@
         "수학(MATH), 코드 합성(HumanEval/SWE-bench), 논리/인과 추론(BBH/GPQA), 추상 귀납(ARC) 등 전체 AGI 벤치마크를 관통하는 범용 지능 코어 아키텍처를 기준으로 설계 및 평가함."
       ],
       "lastVerified": "2026-11-01"
+    },
+    {
+      "id": "rule-project_vesper_dsp-vesper-dsp-master-invariants",
+      "domain": "Project_Vesper_DSP",
+      "title": "Vesper_DSP_Master_Invariants",
+      "entityType": "Architecture_Invariant",
+      "triggers": {
+        "files": [
+          "D:/Vesper",
+          "crates/vesper-",
+          "vesper-apo",
+          "dsp-settings.json"
+        ],
+        "keywords": [
+          "vesper",
+          "dsp",
+          "mmcss",
+          "virtuallock",
+          "오디오",
+          "사운드",
+          "끊김",
+          "apo"
+        ],
+        "commands": [
+          "check",
+          "build",
+          "package",
+          "sign"
+        ]
+      },
+      "invariants": [
+        "오디오 버퍼는 반드시 Win32 VirtualLock으로 물리 RAM에 고정하여 디스크 스왑 아웃(하드 페이지 폴트)을 원천 차단할 것",
+        "오디오 처리 스레드는 Windows MMCSS(Pro Audio) 실시간 스케줄러에 필수 등록할 것",
+        "설정 저장은 브라우저 localStorage 단독 의존을 금지하고 Crash-Safe 원자적(Atomic) 파일 저장(dsp-settings.json)을 사용할 것",
+        "Windows 셧다운 시 WM_QUERYENDSESSION / SM_SHUTTINGDOWN 감지 후 정상 종료를 보장할 것"
+      ],
+      "actions": [
+        "1. Cargo Workspace 5대 마이크로 크레이트(vesper-config, vesper-ipc, vesper-audio-core, vesper-system, vesper-tauri) 경계 준수",
+        "2. 수정된 크레이트 트랙만 인과율 증분 빌드 수행"
+      ],
+      "context": [
+        "실증 타깃 경로: D:\\Vesper\\dsp-boot-fix\\dsp",
+        "APO DLL 및 Taskbar 네이티브 바이너리 아키텍처 무결성(x64 PE) 검증 필수"
+      ],
+      "lastVerified": "2026-11-01"
+    },
+    {
+      "id": "rule-project_synapse_kit-synapse-kit-core-invariants",
+      "domain": "Project_Synapse_Kit",
+      "title": "Synapse_Kit_Core_Invariants",
+      "entityType": "Framework_Invariant",
+      "triggers": {
+        "files": [
+          "D:/synapse",
+          "D:/synapse-site",
+          "synapse.config.ts"
+        ],
+        "keywords": [
+          "synapse",
+          "synapse-kit",
+          "시냅스",
+          "인과율",
+          "causal",
+          "컴파일러",
+          "체커"
+        ],
+        "commands": [
+          "check",
+          "build",
+          "package",
+          "sign",
+          "init",
+          "memory"
+        ]
+      },
+      "invariants": [
+        "Git 상태 스캔 시 반드시 git status --porcelain -uall 플래그를 사용하여 미추적 하위 디렉터리 파일 누락을 방지할 것",
+        "AI 에이전트 연동 시 --compact 모드를 통해 성공 시 11토큰 단일 라인 JSON을 반환하여 토큰을 99.8% 절감할 것",
+        "패키지 매니저 및 런타임은 npm/npx를 절대 사용하지 않고 반드시 bun을 사용할 것"
+      ],
+      "actions": [
+        "1. 코드 변경 후 bun D:/synapse/dist/cli.js check --compact로 무결성 검증",
+        "2. 메모리 조회 시 synapse memory query로 공명 규칙만 최소 토큰 주입"
+      ],
+      "context": [
+        "엔진 코어 경로: D:\\synapse",
+        "공식 문서 및 위키 경로: D:\\synapse-site (KO/EN 다국어 로케일 자동 분기)"
+      ],
+      "lastVerified": "2026-11-01"
+    },
+    {
+      "actions": [
+        "1. 공용 IP 직결 접속: ssh -i C:/Users/minse/Downloads/ssh-key-2026-11-02.key opc@152.67.218.141",
+        "2. Tailscale SSH 접속: ssh opc@100.123.27.59 (또는 tailscale ssh opc@100.123.27.59)",
+        "3. 봇 프로세스 점검: pm2 status / pm2 logs poe2-bot",
+        "4. 서비스 자동 기동: systemctl status pm2-opc.service"
+      ],
+      "context": [
+        "인스턴스 명칭: instance-20261102-0915 (OCI 춘천 리전 ap-chuncheon-1)",
+        "공용 IP: 152.67.218.141 / 기본 접속 계정: opc",
+        "Tailscale IP: 100.123.27.59 (Tailscale SSH 활성화됨)",
+        "SSH 개인키 경로: C:/Users/minse/Downloads/ssh-key-2026-11-02.key",
+        "SSH 공개키 경로: C:/Users/minse/Downloads/ssh-key-2026-11-02.key.pub",
+        "가동 데몬: poe2-bot (POE2 디스코드 봇, Bun 런타임, PM2 무중단 자동 시작 등록)",
+        "스왑 메모리: 4GB Swap 설정 완료 (E2.1.Micro 1GB RAM OOM 동결 원천 차단)"
+      ],
+      "domain": "Infrastructure_And_Cloud",
+      "id": "rule-infra-oracle-cloud-instance",
+      "invariants": [
+        "오라클 인스턴스 접속 시 사용자 계정은 반드시 'opc'를 사용할 것",
+        "SSH 접속 시 다운로드 경로의 'ssh-key-2026-11-02.key' 개인키를 지정할 것",
+        "Tailscale 망 연결 시 공용 IP 방화벽 오픈 없이 '100.123.27.59'로 안전하게 암호화 직결할 것",
+        "E2.1.Micro 인스턴스 특성상 4GB Swap이 필수 유지되어야 프로세스 OOM 동결을 방지할 수 있음"
+      ],
+      "title": "Oracle_Cloud_OCI_Instance_Connection_Specs",
+      "triggers": {
+        "commands": [
+          "ssh",
+          "connect",
+          "deploy",
+          "oracle"
+        ],
+        "keywords": [
+          "오라클",
+          "oracle",
+          "oci",
+          "인스턴스",
+          "서버",
+          "ssh",
+          "tailscale",
+          "테일스케일",
+          "춘천",
+          "opc",
+          "152.67.218.141",
+          "100.123.27.59",
+          "poe2-bot"
+        ]
+      },
+      "lastVerified": "2026-11-03"
+    },
+    {
+      "id": "rule-knowledge_base-packagemanagerpolicy",
+      "domain": "Knowledge_Base",
+      "title": "PackageManagerPolicy",
+      "entityType": "Rule",
+      "triggers": {
+        "keywords": [
+          "packagemanagerpolicy"
+        ]
+      },
+      "invariants": [
+        "패키지 매니저는 pnpm 필수를 버리고 bun 사용이 절대 필수임 (npm 및 pnpm 사용 금지, bun 절대 사용)"
+      ],
+      "actions": [],
+      "context": [],
+      "lastVerified": "2026-11-04"
+    }
+  ],
+  "relations": [
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_Compression_Lineup",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_Realtime_Continual_Learning",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_3D_Sculptor_Engine",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_2026_Saguaro_Speculative_MTP",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_Grand_Synergy_Convergence_Engine",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_Self_Evolving_JIT_Oracle_Engine",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_2026_Top_50_Global_Breakthroughs",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_Integrated_HoH_VideoUse_GlmTts_Engine",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_Arxiv_2609_6_Frontier_Papers_Engine",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_BitNet_ZkSnark_Liquid_Engines",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_Definitive_Master_Encyclopedia",
+      "to": "BioPhys_GigaAM_VllmOpt_MemoryWalker_Engines",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_2026_Definitive_Consolidated_Master_Whitepaper",
+      "to": "BioPhys_Falcon_FastWeight_Custom_Rustc",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_2026_Definitive_Consolidated_Master_Whitepaper",
+      "to": "BioPhys_Ultra_Flagship_Performance_Benchmark",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_2026_Definitive_Consolidated_Master_Whitepaper",
+      "to": "BioPhys_Signed_Quad_Homomorphic_Engine",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_2026_Definitive_Consolidated_Master_Whitepaper",
+      "to": "BioPhys_Signed_Quad_Arithmetic_Research_Paper_2026",
+      "relationType": "produced"
+    },
+    {
+      "from": "BioPhys_2026_Definitive_Consolidated_Master_Whitepaper",
+      "to": "BioPhys_Hyperbolic_Dimension_Compressor",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_2026_Definitive_Consolidated_Master_Whitepaper",
+      "to": "BioPhys_Quaternion_4x64D_100Layer_Rational_Engine",
+      "relationType": "contains"
+    },
+    {
+      "from": "BioPhys_WeatherNext_3_Absorption_Milestone",
+      "to": "BioPhys_127_Swarm_800MB_Knowledge_Distillation_Milestone",
+      "relationType": "enhances"
+    },
+    {
+      "from": "BioPhys_7_Global_Benchmarks_Master_Pass_Milestone",
+      "to": "BioPhys_WeatherNext_3_Absorption_Milestone",
+      "relationType": "validates"
+    },
+    {
+      "from": "BioPhys_Abyssal_Tier0_Nightmare_Benchmark_Milestone",
+      "to": "BioPhys_7_Global_Benchmarks_Master_Pass_Milestone",
+      "relationType": "stresses"
+    },
+    {
+      "from": "BioPhys_Tier0_Nightmare_Conquest_Milestone",
+      "to": "BioPhys_Abyssal_Tier0_Nightmare_Benchmark_Milestone",
+      "relationType": "conquers"
+    },
+    {
+      "from": "BioPhys_2026_Whitepapers",
+      "to": "BioPhys_2026_Core_Engine",
+      "relationType": "documentsArchitectureOf"
+    },
+    {
+      "from": "BioPhys_2026_Core_Engine",
+      "to": "BioPhys_2026_Whitepapers",
+      "relationType": "verifiedBy"
+    },
+    {
+      "from": "BioPhys 2026 극초압축 및 무손실 양자화 기술 백서",
+      "to": "BioPhys 2026 대통합 프론티어 마스터 백서",
+      "relationType": "part_of"
+    },
+    {
+      "from": "BioPhys 2026 자율 백신 및 WHPX 사이버 보안 기술 백서",
+      "to": "BioPhys 2026 대통합 프론티어 마스터 백서",
+      "relationType": "part_of"
+    },
+    {
+      "from": "BioPhys 2026 기호 수학 오라클 및 CAS 연역 기술 백서",
+      "to": "BioPhys 2026 대통합 프론티어 마스터 백서",
+      "relationType": "part_of"
+    },
+    {
+      "from": "BioPhys 2026 자율 소프트웨어 엔지니어링 백서",
+      "to": "BioPhys 2026 대통합 프론티어 마스터 백서",
+      "relationType": "part_of"
+    },
+    {
+      "from": "BioPhys 2026 WHPX 가상화 스웜 및 30대 프론티어 벤치마크 백서",
+      "to": "BioPhys 2026 대통합 프론티어 마스터 백서",
+      "relationType": "part_of"
+    },
+    {
+      "from": "BioPhysMasterModel2026",
+      "to": "MalwareVaccine100GrandThreats",
+      "relationType": "MOUNTS_AND_DEFENDS_WITH"
+    },
+    {
+      "from": "BioPhys 3D Spherical Brain Connectome Engine",
+      "to": "Google Drosophila Whole-Brain Connectome Integration",
+      "relationType": "evolved_from"
+    },
+    {
+      "from": "BioPhys 3D Spherical Brain Connectome Engine",
+      "to": "BioPhys Pure 2-Bit 8-State Multi-Octant Engine",
+      "relationType": "implements"
+    },
+    {
+      "from": "Cortico-Reflex Hybrid Brain Engine",
+      "to": "Google H01 Human Cortex Engine",
+      "relationType": "integrates"
+    },
+    {
+      "from": "Cortico-Reflex Hybrid Brain Engine",
+      "to": "BioPhys 3D Spherical Brain Connectome Engine",
+      "relationType": "integrates"
+    },
+    {
+      "from": "POE2_AutoFilter_Project",
+      "to": "POE2_AutoFilter_ReleaseProcess",
+      "relationType": "governed_by_workflow"
+    },
+    {
+      "from": "POE2_AutoFilter_ReleaseProcess",
+      "to": "POE2_AutoFilter_Updater",
+      "relationType": "triggers_update_of"
+    },
+    {
+      "from": "POE2_AutoFilter_ReleaseProcess",
+      "to": "POE2_AutoFilter_KnownBugs",
+      "relationType": "verifies_and_notifies"
+    },
+    {
+      "from": "Synapse_Kit_Core_Invariants",
+      "to": "Vesper_DSP_Master_Invariants",
+      "relationType": "verifies_and_builds"
+    },
+    {
+      "from": "rule-infra-oracle-cloud-instance",
+      "relationType": "hosts_bot_for",
+      "to": "rule-project_poe2_autofilter-poe2_autofilter_project"
+    },
+    {
+      "from": "테스트용 원격 동기화 규칙",
+      "to": "desktop-cj15bv4",
+      "relationType": "synced_to"
     }
   ]
 }

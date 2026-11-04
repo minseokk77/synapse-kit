@@ -531,6 +531,21 @@ export function startCausalServer(options: ServerOptions = {}) {
           return new Response(JSON.stringify(auditResult), { headers });
         }
 
+        // 5-2. 피어 간 인과율 동기화 덤프 (GET /sync)
+        if (url.pathname === '/sync' && req.method === 'GET') {
+          const rawDb = store.getRawDatabase();
+          return new Response(JSON.stringify(rawDb), { headers });
+        }
+
+        // 5-3. 피어 간 인과율 동기화 병합 (POST /sync)
+        if (url.pathname === '/sync' && req.method === 'POST') {
+          const body = await req.json();
+          const incomingRules = Array.isArray(body.rules) ? body.rules : [];
+          const incomingRelations = Array.isArray(body.relations) ? body.relations : [];
+          const mergeResult = store.mergeDatabase(incomingRules, incomingRelations);
+          return new Response(JSON.stringify({ ok: true, ...mergeResult }), { headers });
+        }
+
         // 6. MCP 호환 JSON-RPC 엔드포인트 (POST /mcp)
         if (url.pathname === '/mcp' && req.method === 'POST') {
           const rpc: JsonRpcRequest = await req.json();
@@ -557,11 +572,23 @@ export function startCausalServer(options: ServerOptions = {}) {
 /**
  * MCP 표준 입출력(stdio) 서버 모드
  * Antigravity / Claude Code 등의 MCP 호스트가 프로세스를 직접 스폰하여 통신할 때 동작합니다.
- * 로컬 데몬(4242 포트)이 실행 중이면 데몬으로 프록시하고, 꺼져 있으면 인메모리 스토어로 즉시 응답합니다.
+ * 원격 데몬 URL(Tailscale 피어 등) 또는 로컬 데몬(4242 포트)이 지정/실행 중이면 데몬으로 프록시하고,
+ * 꺼져 있으면 인메모리 스토어로 즉시 안전하게 응답합니다.
  */
-export async function startCausalMcpStdioServer(dbPath?: string): Promise<void> {
+export async function startCausalMcpStdioServer(dbPath?: string, remoteUrl?: string): Promise<void> {
   const store = new CausalMemoryStore(dbPath);
-  const daemonUrl = `http://${CAUSAL_MEMORY_CONFIG.DEFAULT_HOST}:${CAUSAL_MEMORY_CONFIG.DEFAULT_PORT}/mcp`;
+  const targetRemote = remoteUrl || CAUSAL_MEMORY_CONFIG.REMOTE_URL;
+  const isRemoteMode = Boolean(targetRemote && targetRemote.trim().length > 0);
+
+  const activeDaemonUrl = isRemoteMode
+    ? targetRemote.endsWith('/mcp')
+      ? targetRemote
+      : `${targetRemote.replace(/\/+$/, '')}/mcp`
+    : `http://${CAUSAL_MEMORY_CONFIG.DEFAULT_HOST}:${CAUSAL_MEMORY_CONFIG.DEFAULT_PORT}/mcp`;
+
+  const timeoutMs = isRemoteMode
+    ? CAUSAL_MEMORY_CONFIG.REMOTE_TIMEOUT_MS
+    : 150;
 
   const rl = createInterface({
     input: process.stdin,
@@ -576,20 +603,20 @@ export async function startCausalMcpStdioServer(dbPath?: string): Promise<void> 
       const rpc: JsonRpcRequest = JSON.parse(trimmed);
       let responseObj: Record<string, any> | null = null;
 
-      // tools/call 실행 시 로컬 데몬이 떠 있다면 우선 위임 시도 (데몬 미가동 시 즉시 로컬 스토어로 폴백)
+      // tools/call 실행 시 원격 또는 로컬 데몬으로 프록시 위임 시도
       if (rpc.method === 'tools/call') {
         try {
-          const daemonRes = await fetch(daemonUrl, {
+          const daemonRes = await fetch(activeDaemonUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: trimmed,
-            signal: AbortSignal.timeout(150),
+            signal: AbortSignal.timeout(timeoutMs),
           });
           if (daemonRes.ok) {
             responseObj = await daemonRes.json();
           }
         } catch {
-          // 데몬 미실행 상태일 경우 자체 인메모리 스토어에서 0ms 직접 처리
+          // 데몬 미실행 또는 통신 타임아웃 시 자체 인메모리 스토어로 폴백
         }
       }
 

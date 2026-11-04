@@ -28,6 +28,12 @@ export const CAUSAL_MEMORY_CONFIG = {
   /** 독립 로컬 데몬 서버 기본 포트 */
   DEFAULT_PORT: parseInt(process.env.SYNAPSE_MEMORY_PORT || '4242', 10),
 
+  /** 원격 Causal Memory 데몬 프록시 URL (예: Tailscale 피어 http://100.82.92.122:4242) */
+  REMOTE_URL: process.env.SYNAPSE_MEMORY_REMOTE_URL || '',
+
+  /** 원격 요청 제한 시간 (ms) */
+  REMOTE_TIMEOUT_MS: parseInt(process.env.SYNAPSE_MEMORY_REMOTE_TIMEOUT || '3000', 10),
+
   /** MCP 서버 프로토콜 버전 */
   MCP_PROTOCOL_VERSION: process.env.SYNAPSE_MCP_VERSION || '2024-11-05',
 

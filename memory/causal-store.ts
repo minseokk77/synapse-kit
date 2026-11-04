@@ -904,6 +904,31 @@ export class CausalMemoryStore {
   }
 
   /**
+   * 단일 인과 규칙 삭제
+   */
+  public deleteRule(ruleId: string, persistToDisk: boolean = true): boolean {
+    const targetId = ruleId.toLowerCase();
+    const initialCount = this.database.rules.length;
+    const filteredRules = this.database.rules.filter((r) => r.id.toLowerCase() !== targetId);
+
+    if (filteredRules.length === initialCount) {
+      return false;
+    }
+
+    this.database = {
+      ...this.database,
+      updatedAt: new Date().toISOString(),
+      totalRules: filteredRules.length,
+      rules: filteredRules,
+    };
+    this.rebuildIndices();
+    if (persistToDisk) {
+      this.saveDatabase();
+    }
+    return true;
+  }
+
+  /**
    * 구형 memory MCP 호환: delete_entities
    */
   public deleteEntities(entityNames: readonly string[], persistToDisk: boolean = true): void {
@@ -1164,6 +1189,94 @@ export class CausalMemoryStore {
       totalRelations: this.database.relations.length,
       alwaysActiveCount,
       issues,
+    };
+  }
+
+  /**
+   * 원시 데이터베이스 객체 반환 (백업 및 피어 동기화용)
+   */
+  public getRawDatabase(): CausalMemoryDatabase {
+    this.reloadIfNeeded();
+    return this.database;
+  }
+
+  /**
+   * 원격 피어 데이터베이스와 로컬 데이터베이스 양방향 무손실 병합 (Sync)
+   */
+  public mergeDatabase(
+    incomingRules: readonly CausalRule[],
+    incomingRelations: readonly CausalRelation[] = []
+  ): {
+    addedRules: number;
+    updatedRules: number;
+    addedRelations: number;
+    totalRules: number;
+    totalRelations: number;
+  } {
+    this.reloadIfNeeded();
+    let addedRules = 0;
+    let updatedRules = 0;
+    let addedRelations = 0;
+
+    const ruleMap = new Map<string, CausalRule>();
+    for (const r of this.database.rules) {
+      ruleMap.set(r.id, r);
+    }
+
+    for (const incoming of incomingRules) {
+      if (!incoming.id) continue;
+      const existing = ruleMap.get(incoming.id);
+      if (!existing) {
+        ruleMap.set(incoming.id, incoming);
+        addedRules++;
+      } else {
+        // 기존 규칙이 있을 경우 더 최신 검증일자이거나 항목이 많으면 갱신
+        const existingDate = existing.lastVerified || '';
+        const incomingDate = incoming.lastVerified || '';
+        if (incomingDate >= existingDate) {
+          ruleMap.set(incoming.id, incoming);
+          updatedRules++;
+        }
+      }
+    }
+
+    // 간선 병합
+    const relationKey = (rel: CausalRelation) =>
+      `${rel.from.toLowerCase()}::${rel.relationType.toLowerCase()}::${rel.to.toLowerCase()}`;
+    const relMap = new Map<string, CausalRelation>();
+    for (const rel of this.database.relations) {
+      relMap.set(relationKey(rel), rel);
+    }
+
+    for (const incomingRel of incomingRelations) {
+      const key = relationKey(incomingRel);
+      if (!relMap.has(key)) {
+        relMap.set(key, incomingRel);
+        addedRelations++;
+      }
+    }
+
+    const mergedRules = Array.from(ruleMap.values());
+    const mergedRelations = Array.from(relMap.values());
+
+    this.database = {
+      ...this.database,
+      updatedAt: new Date().toISOString(),
+      totalRules: mergedRules.length,
+      totalRelations: mergedRelations.length,
+      rules: mergedRules,
+      relations: mergedRelations,
+    };
+
+    this.rebuildIndices();
+    this.saveDatabase();
+
+    return {
+      addedRules,
+      updatedRules,
+      addedRelations,
+      totalRules: mergedRules.length,
+      totalRelations: mergedRelations.length,
     };
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "synapse-kit",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "publishConfig": {
     "access": "public"
@@ -52,7 +52,8 @@
     "memory:list": "bun run memory/cli.ts list",
     "memory:audit": "bun run memory/cli.ts audit",
     "memory:serve": "bun run memory/cli.ts serve",
-    "memory:bench": "bun run memory/cli.ts benchmark"
+    "memory:bench": "bun run memory/cli.ts benchmark",
+    "memory:peer": "bun run memory/cli.ts peer"
   },
   "repository": {
     "type": "git",
