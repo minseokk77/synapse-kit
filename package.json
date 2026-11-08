@@ -26,11 +26,16 @@
     "./memory": {
       "types": "./dist/memory/index.d.ts",
       "import": "./dist/memory/index.js"
+    },
+    "./db": {
+      "types": "./dist/db/index.d.ts",
+      "import": "./dist/db/index.js"
     }
   },
   "workspaces": [
     "compiler",
-    "memory"
+    "memory",
+    "db"
   ],
   "files": [
     "dist",
@@ -41,8 +46,9 @@
   "scripts": {
     "build:compiler": "cd compiler && bun run build",
     "build:memory": "cd memory && bun run build",
-    "build:root": "bun build compiler/cli.ts --outfile dist/compiler/cli.js --target bun && bun build memory/cli.ts --outfile dist/memory/cli.js --target bun && bun build index.ts --outfile dist/index.js --target bun && bun build compiler/index.ts --outfile dist/compiler/index.js --target bun && bun build memory/index.ts --outfile dist/memory/index.js --target bun && tsc -p tsconfig.build.json",
-    "build": "bun run build:root && bun run build:compiler && bun run build:memory",
+    "build:db": "cd db && bun run build",
+    "build:root": "bun build compiler/cli.ts --outfile dist/compiler/cli.js --target bun && bun build memory/cli.ts --outfile dist/memory/cli.js --target bun && bun build index.ts --outfile dist/index.js --target bun && bun build compiler/index.ts --outfile dist/compiler/index.js --target bun && bun build memory/index.ts --outfile dist/memory/index.js --target bun && bun build db/index.ts --outfile dist/db/index.js --target bun && tsc -p tsconfig.build.json",
+    "build": "bun run build:root && bun run build:compiler && bun run build:memory && bun run build:db",
     "prepublishOnly": "bun run build",
     "start": "bun run compiler/cli.ts",
     "check": "bun run compiler/cli.ts check",

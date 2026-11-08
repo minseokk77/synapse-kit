@@ -298,6 +298,49 @@ export class CausalMemoryStore {
   }
 
   /**
+   * 동일 제목(title) 규칙 중복 시 도메인 우선순위 점수 산출
+   */
+  private static getRuleDomainPriority(rule: CausalRule): number {
+    const titleLower = rule.title.toLowerCase();
+    const dom = rule.domain;
+    if (titleLower.includes('biophys') && dom === 'User_Preferences_And_Rules') {
+      return 0; // 오분류된 BioPhys 상시 활성 규칙은 최저 우선순위
+    }
+    if (dom === 'Knowledge_Base') {
+      return 1; // 일반 지식베이스보다 특화 도메인 우선
+    }
+    return 2;
+  }
+
+  /**
+   * 규칙 배열에서 동일 제목(title) 중복 제거 및 정규화
+   */
+  private static deduplicateRulesByTitle(rules: readonly CausalRule[]): CausalRule[] {
+    const byTitle = new Map<string, CausalRule>();
+    for (const rule of rules) {
+      if (!rule.title) continue;
+      const key = rule.title.toLowerCase();
+      const existing = byTitle.get(key);
+      if (!existing) {
+        byTitle.set(key, rule);
+      } else {
+        const existingPrio = CausalMemoryStore.getRuleDomainPriority(existing);
+        const incomingPrio = CausalMemoryStore.getRuleDomainPriority(rule);
+        if (incomingPrio > existingPrio) {
+          byTitle.set(key, rule);
+        } else if (incomingPrio === existingPrio) {
+          const existingDate = existing.lastVerified || '';
+          const incomingDate = rule.lastVerified || '';
+          if (incomingDate >= existingDate) {
+            byTitle.set(key, rule);
+          }
+        }
+      }
+    }
+    return Array.from(byTitle.values());
+  }
+
+  /**
    * 데이터베이스 로드
    */
   private loadDatabase(): CausalMemoryDatabase {
@@ -307,7 +350,8 @@ export class CausalMemoryStore {
         this.lastMtimeMs = stat.mtimeMs;
         const raw = readFileSync(this.dbPath, 'utf-8');
         const parsed = JSON.parse(raw);
-        const rules: CausalRule[] = Array.isArray(parsed.rules) ? parsed.rules : [];
+        const rawRules: CausalRule[] = Array.isArray(parsed.rules) ? parsed.rules : [];
+        const rules = CausalMemoryStore.deduplicateRulesByTitle(rawRules);
         const relations: CausalRelation[] = Array.isArray(parsed.relations) ? parsed.relations : [];
         return {
           version: parsed.version || CAUSAL_MEMORY_CONFIG.SCHEMA_VERSION,
@@ -904,22 +948,38 @@ export class CausalMemoryStore {
   }
 
   /**
-   * 단일 인과 규칙 삭제
+   * 단일 인과 규칙 삭제 (연결된 고아 인과 간선 동시 정리)
    */
   public deleteRule(ruleId: string, persistToDisk: boolean = true): boolean {
     const targetId = ruleId.toLowerCase();
-    const initialCount = this.database.rules.length;
-    const filteredRules = this.database.rules.filter((r) => r.id.toLowerCase() !== targetId);
+    const removedTitles = new Set<string>();
+    const filteredRules = this.database.rules.filter((r) => {
+      if (r.id.toLowerCase() === targetId) {
+        removedTitles.add(r.title.toLowerCase());
+        return false;
+      }
+      return true;
+    });
 
-    if (filteredRules.length === initialCount) {
+    if (removedTitles.size === 0) {
       return false;
     }
+
+    const filteredRelations = this.database.relations.filter(
+      (rel) =>
+        !removedTitles.has(rel.from.toLowerCase()) &&
+        !removedTitles.has(rel.to.toLowerCase()) &&
+        rel.from.toLowerCase() !== targetId &&
+        rel.to.toLowerCase() !== targetId
+    );
 
     this.database = {
       ...this.database,
       updatedAt: new Date().toISOString(),
       totalRules: filteredRules.length,
+      totalRelations: filteredRelations.length,
       rules: filteredRules,
+      relations: filteredRelations,
     };
     this.rebuildIndices();
     if (persistToDisk) {
@@ -1039,13 +1099,14 @@ export class CausalMemoryStore {
     const context: string[] = [];
 
     const isTrueUserPreference =
-      typeLower === 'preference' ||
-      typeLower === 'user_constraint' ||
-      typeLower === 'forbidden_rules' ||
-      nameLower === 'userpreferences' ||
-      nameLower === 'user_web_navigation_preference' ||
-      nameLower === 'python_strictly_forbidden' ||
-      nameLower === 'forbidden_topics_until_mentioned';
+      !nameLower.includes('biophys') &&
+      (typeLower === 'preference' ||
+        typeLower === 'user_constraint' ||
+        typeLower === 'forbidden_rules' ||
+        nameLower === 'userpreferences' ||
+        nameLower === 'user_web_navigation_preference' ||
+        nameLower === 'python_strictly_forbidden' ||
+        nameLower === 'forbidden_topics_until_mentioned');
 
     if (isTrueUserPreference) {
       domain = 'User_Preferences_And_Rules';
@@ -1157,6 +1218,7 @@ export class CausalMemoryStore {
   } {
     const issues: string[] = [];
     const seenIds = new Set<string>();
+    const seenTitles = new Set<string>();
     let alwaysActiveCount = 0;
 
     for (const rule of this.database.rules) {
@@ -1170,6 +1232,15 @@ export class CausalMemoryStore {
         issues.push(`중복 ID 발견: ${rule.id}`);
       } else {
         seenIds.add(rule.id);
+      }
+
+      const titleLower = (rule.title || '').toLowerCase();
+      if (titleLower) {
+        if (seenTitles.has(titleLower)) {
+          issues.push(`중복 제목(Title) 발견: ${rule.title}`);
+        } else {
+          seenTitles.add(titleLower);
+        }
       }
 
       if (!rule.domain) {
@@ -1218,23 +1289,40 @@ export class CausalMemoryStore {
     let updatedRules = 0;
     let addedRelations = 0;
 
-    const ruleMap = new Map<string, CausalRule>();
+    const byTitle = new Map<string, CausalRule>();
     for (const r of this.database.rules) {
-      ruleMap.set(r.id, r);
+      byTitle.set(r.title.toLowerCase(), r);
     }
 
     for (const incoming of incomingRules) {
-      if (!incoming.id) continue;
-      const existing = ruleMap.get(incoming.id);
+      if (!incoming.id || !incoming.title) continue;
+      const titleKey = incoming.title.toLowerCase();
+      const existing = byTitle.get(titleKey);
       if (!existing) {
-        ruleMap.set(incoming.id, incoming);
+        byTitle.set(titleKey, incoming);
         addedRules++;
       } else {
-        // 기존 규칙이 있을 경우 더 최신 검증일자이거나 항목이 많으면 갱신
+        const existingPrio = CausalMemoryStore.getRuleDomainPriority(existing);
+        const incomingPrio = CausalMemoryStore.getRuleDomainPriority(incoming);
         const existingDate = existing.lastVerified || '';
         const incomingDate = incoming.lastVerified || '';
-        if (incomingDate >= existingDate) {
-          ruleMap.set(incoming.id, incoming);
+
+        if (incomingPrio > existingPrio) {
+          byTitle.set(titleKey, incoming);
+          updatedRules++;
+        } else if (
+          incomingPrio === existingPrio &&
+          incoming.id !== existing.id &&
+          incomingDate > existingDate
+        ) {
+          byTitle.set(titleKey, incoming);
+          updatedRules++;
+        } else if (
+          incomingPrio === existingPrio &&
+          incoming.id === existing.id &&
+          incomingDate > existingDate
+        ) {
+          byTitle.set(titleKey, incoming);
           updatedRules++;
         }
       }
@@ -1256,7 +1344,7 @@ export class CausalMemoryStore {
       }
     }
 
-    const mergedRules = Array.from(ruleMap.values());
+    const mergedRules = Array.from(byTitle.values());
     const mergedRelations = Array.from(relMap.values());
 
     this.database = {

@@ -30,11 +30,13 @@ The repository and package layout strictly decouples the **compiler** and **memo
 ```text
 synapse-kit/
 ├── compiler/           ➔ ⚡ [Synapse Compiler] Concurrent polyglot check, build & bundle
-└── memory/             ➔ 💾 [Synapse Memory] 100,000-rule SQLite WAL causal memory brain
+├── memory/             ➔ 💾 [Synapse Memory] 100,000-rule SQLite WAL causal memory brain
+└── db/                 ➔ 🗄️ [Synapse DB] Universal Markdown-First & In-Memory Connectome DB
 ```
 
-* **`synapse-kit/compiler`**: For teams and CI pipelines wanting pure, ultra-fast monorepo build acceleration.
-* **`synapse-kit/memory`**: For Claude Code, Cursor, and Antigravity agents seeking 99.2% token compression.
+* **`synapse-compiler` (`synapse-kit/compiler`)**: For teams and CI pipelines wanting pure, ultra-fast monorepo build acceleration.
+* **`synapse-causal-memory` (`synapse-kit/memory`)**: For Claude Code, Cursor, and Antigravity agents seeking 99.2% token compression.
+* **`synapse-db` (`synapse-kit/db`)**: Universal Markdown-First & In-Memory Connectome Database with Wikilink Auto-Wiring, Korean 2-gram BM25 search, SQLite/JSON migrator, and Obsidian `.canvas` exporter.
 
 ---
 

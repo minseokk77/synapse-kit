@@ -31,11 +31,13 @@
 ```text
 synapse-kit/
 ├── compiler/           ➔ ⚡ [Synapse Compiler] 10대 언어 동시 병렬 검증·빌드·패키징
-└── memory/             ➔ 💾 [Synapse Memory] 10만 개 규칙 SQLite WAL 인과율 메모리
+├── memory/             ➔ 💾 [Synapse Memory] 10만 개 규칙 SQLite WAL 인과율 메모리
+└── db/                 ➔ 🗄️ [Synapse DB] 범용 마크다운-퍼스트 인메모리 커넥톰 데이터베이스
 ```
 
-* **`synapse-kit/compiler`**: 순수 빌드 가속만 필요한 모노레포 프로젝트를 위한 초고속 컴파일러.
-* **`synapse-kit/memory`**: Claude Code, Cursor, Antigravity 등 AI 에이전트의 컨텍스트 윈도우를 99% 절약하는 인과율 메모리.
+* **`synapse-compiler` (`synapse-kit/compiler`)**: 순수 빌드 가속만 필요한 모노레포 프로젝트를 위한 초고속 컴파일러.
+* **`synapse-causal-memory` (`synapse-kit/memory`)**: Claude Code, Cursor, Antigravity 등 AI 에이전트의 컨텍스트 윈도우를 99% 절약하는 인과율 메모리.
+* **`synapse-db` (`synapse-kit/db`)**: 위키링크 시냅스 자동 결합, 한국어 N-gram BM25 검색, SQLite/JSON 마이그레이터, 옵시디언 캔버스(`.canvas`) 내보내기를 지원하는 범용 마크다운 커넥톰 DB.
 
 ---
 

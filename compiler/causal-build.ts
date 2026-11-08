@@ -77,8 +77,15 @@ export async function getGitState(rootDir: string): Promise<{ head: string; modi
     await statusProc.exited;
 
     const modifiedFiles = statusText
-      .split('\n')
-      .map((line) => line.slice(3).trim().replaceAll('\\', '/'))
+      .split(/\r?\n/)
+      .flatMap((rawLine) => {
+        if (rawLine.trim().length < 4) return [];
+        const rawPath = rawLine.slice(3).trim();
+        if (rawPath.includes(' -> ')) {
+          return rawPath.split(' -> ').map((part) => part.trim().replace(/^"(.*)"$/, '$1').replaceAll('\\', '/'));
+        }
+        return [rawPath.replace(/^"(.*)"$/, '$1').replaceAll('\\', '/')];
+      })
       .filter((line) => line.length > 0 && !line.startsWith('.synapse/') && !line.includes('/.synapse/'));
 
     return { head, modifiedFiles, repoRoot: repoRoot || rootDir };
@@ -124,7 +131,10 @@ export function shouldSkipBuildTrack(
   if (sources.length > 0) {
     const lastBuildEpoch = new Date(record.lastBuildTime).getTime();
     const hasModifiedSource = modifiedFiles.some((file) => {
-      const isMatch = sources.some((src) => file.includes(src.replaceAll('\\', '/')));
+      const isMatch = sources.some((src) => {
+        const cleanSrc = src.replaceAll('\\', '/').replace(/^\.\//, '');
+        return file.includes(cleanSrc);
+      });
       if (!isMatch) return false;
 
       // Git repoRoot 기준 절대 경로로 실제 mtime 조회

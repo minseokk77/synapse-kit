@@ -1,0 +1,44 @@
+{
+  "name": "synapse-db",
+  "version": "0.2.3",
+  "description": "Universal Markdown-First & In-Memory Connectome Database with Wikilink Auto-Wiring, Korean N-gram BM25 & Obsidian Canvas Exporter",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun build index.ts --outfile dist/index.js --target bun && tsc -p tsconfig.build.json",
+    "prepublishOnly": "bun run build",
+    "test": "bun test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minseokk77/synapse-kit.git",
+    "directory": "db"
+  },
+  "keywords": [
+    "markdown-db",
+    "obsidian",
+    "connectome",
+    "wikilinks",
+    "knowledge-graph",
+    "bm25",
+    "ai-native",
+    "synapse-kit",
+    "bun"
+  ],
+  "author": "Vesper",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "typescript": "^5.6.3"
+  }
+}

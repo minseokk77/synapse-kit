@@ -1,8 +1,8 @@
 {
   "version": "2.1.0",
-  "updatedAt": "2026-11-04T03:34:09.628Z",
-  "totalRules": 154,
-  "totalRelations": 39,
+  "updatedAt": "2026-11-08T15:23:54.807Z",
+  "totalRules": 164,
+  "totalRelations": 44,
   "rules": [
     {
       "id": "rule-knowledge_base-qylock-network-issue",
@@ -409,13 +409,21 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-knowledge_base-minecraft_hybrid_native_engine",
-      "domain": "Knowledge_Base",
+      "id": "rule-biophys_research_and_architecture-minecraft_hybrid_native_engine",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "Minecraft_Hybrid_Native_Engine",
-      "entityType": "Project_Architecture",
       "triggers": {
+        "files": [
+          "**/biophys/**",
+          "**/docs/whitepapers/**"
+        ],
         "keywords": [
-          "minecraft hybrid native engine"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
@@ -1331,13 +1339,21 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-knowledge_base-project_astro_mythos_mmorpg_engine",
-      "domain": "Knowledge_Base",
+      "id": "rule-biophys_research_and_architecture-project_astro_mythos_mmorpg_engine",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "Project_Astro_Mythos_MMORPG_Engine",
-      "entityType": "AAA_MMORPG_Game_Architecture",
       "triggers": {
+        "files": [
+          "**/biophys/**",
+          "**/docs/whitepapers/**"
+        ],
         "keywords": [
-          "project astro mythos mmorpg engine"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
@@ -2168,31 +2184,27 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-hardware_and_pcb-biophys_pocket_ai_node_jlcpcb_design",
-      "domain": "Hardware_And_PCB",
+      "id": "rule-biophys_research_and_architecture-biophys_pocket_ai_node_jlcpcb_design",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Pocket_AI_Node_JLCPCB_Design",
-      "entityType": "Hardware_PCB_Manufacturing_Asset",
       "triggers": {
         "files": [
-          "hardware",
-          "pcb",
-          "kicad"
+          "**/biophys/**",
+          "**/docs/whitepapers/**"
         ],
         "keywords": [
-          "pcb",
-          "hardware",
-          "하드웨어",
-          "회로",
-          "jlcpcb",
-          "kicad",
-          "m2"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
-      "actions": [
-        "50.0mm x 35.0mm 초소형 포켓 AI 단말기 KiCad 프로젝트 생성 완료 (hardware_pcb/biophys_pocket_ai_node.kicad_pro/pcb/sch)"
-      ],
+      "actions": [],
       "context": [
+        "50.0mm x 35.0mm 초소형 포켓 AI 단말기 KiCad 프로젝트 생성 완료 (hardware_pcb/biophys_pocket_ai_node.kicad_pro/pcb/sch)",
         "추천 1안 채택: 다이얼 회전(볼륨/스크롤), 다이얼 짧은 클릭(재생/일시정지), 다이얼 1초 롱프레스(AI 음성 대화 Push-to-Talk)",
         "JLCPCB SMT 100% 매핑된 정식 BOM CSV (LCSC 파트넘버 C2913204, C2682619, C963953 등 완비)",
         "JLCPCB SMT 자동 마운터용 CPL 실장 좌표 파일 (biophys_pocket_ai_node_jlcpcb_cpl.csv) 생성 완료",
@@ -2201,24 +2213,21 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-hardware_and_pcb-biophys_pocket_ai_node_enclosure_spec",
-      "domain": "Hardware_And_PCB",
+      "id": "rule-biophys_research_and_architecture-biophys_pocket_ai_node_enclosure_spec",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Pocket_AI_Node_Enclosure_Spec",
-      "entityType": "Hardware_Enclosure_Spec",
       "triggers": {
         "files": [
-          "hardware",
-          "pcb",
-          "kicad"
+          "**/biophys/**",
+          "**/docs/whitepapers/**"
         ],
         "keywords": [
-          "pcb",
-          "hardware",
-          "하드웨어",
-          "회로",
-          "jlcpcb",
-          "kicad",
-          "m2"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
@@ -2232,58 +2241,50 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-hardware_and_pcb-biophys_pocket_ai_node_jlcpcb_upload_package",
-      "domain": "Hardware_And_PCB",
+      "id": "rule-biophys_research_and_architecture-biophys_pocket_ai_node_jlcpcb_upload_package",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Pocket_AI_Node_JLCPCB_Upload_Package",
-      "entityType": "JLCPCB_Production_Package",
       "triggers": {
         "files": [
-          "hardware",
-          "pcb",
-          "kicad"
+          "**/biophys/**",
+          "**/docs/whitepapers/**"
         ],
         "keywords": [
-          "pcb",
-          "hardware",
-          "하드웨어",
-          "회로",
-          "jlcpcb",
-          "kicad",
-          "m2"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
-      "invariants": [
-        "JLCPCB 원클릭 발주용 3대 필수 파일 패키지 제작 완료 (hardware_pcb/)"
-      ],
-      "actions": [
+      "invariants": [],
+      "actions": [],
+      "context": [
+        "JLCPCB 원클릭 발주용 3대 필수 파일 패키지 제작 완료 (hardware_pcb/)",
         "1. biophys_pocket_ai_node_gerbers.zip (4-Layer 거버 및 드릴 파일 압축팩)",
         "2. biophys_pocket_ai_node_jlcpcb_bom.csv (TP4054 배터리 충전 회로 포함 LCSC 부품표)",
-        "3. biophys_pocket_ai_node_jlcpcb_cpl.csv (SMT 픽앤플레이스 좌표 및 각도 데이터)"
-      ],
-      "context": [
+        "3. biophys_pocket_ai_node_jlcpcb_cpl.csv (SMT 픽앤플레이스 좌표 및 각도 데이터)",
         "배터리 스펙: 3.7V 400mAh Li-Po (두께 5mm x 가로 25mm x 세로 35mm), TP4054 자동 충전/파워패스 회로 탑재"
       ],
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-hardware_and_pcb-biophys_pocket_ai_hardware_milestone",
-      "domain": "Hardware_And_PCB",
+      "id": "rule-biophys_research_and_architecture-biophys_pocket_ai_hardware_milestone",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Pocket_AI_Hardware_Milestone",
-      "entityType": "Hardware_Milestone_Archive",
       "triggers": {
         "files": [
-          "hardware",
-          "pcb",
-          "kicad"
+          "**/biophys/**",
+          "**/docs/whitepapers/**"
         ],
         "keywords": [
-          "pcb",
-          "hardware",
-          "하드웨어",
-          "회로",
-          "jlcpcb",
-          "kicad",
-          "m2"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
@@ -2545,24 +2546,21 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-hardware_and_pcb-biophys_100_percent_pure_dynamic_hardware_benchmark_milestone",
-      "domain": "Hardware_And_PCB",
+      "id": "rule-biophys_research_and_architecture-biophys_100_percent_pure_dynamic_hardware_benchmark_milestone",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_100_Percent_Pure_Dynamic_Hardware_Benchmark_Milestone",
-      "entityType": "Milestone",
       "triggers": {
         "files": [
-          "hardware",
-          "pcb",
-          "kicad"
+          "**/biophys/**",
+          "**/docs/whitepapers/**"
         ],
         "keywords": [
-          "pcb",
-          "hardware",
-          "하드웨어",
-          "회로",
-          "jlcpcb",
-          "kicad",
-          "m2"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
@@ -3809,22 +3807,30 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-biophys_research_and_architecture-biophys-1b-10b-synapse-massive-scale-up",
-      "domain": "BioPhys_Research_And_Architecture",
+      "id": "rule-project_synapse_kit-biophys-1b-10b-synapse-massive-scale-up",
+      "domain": "Project_Synapse_Kit",
       "title": "BioPhys 1B-10B Synapse Massive Scale-Up",
-      "entityType": "MassiveScaleConnectomeValidation",
       "triggers": {
         "files": [
-          "biophys",
-          "whitepaper"
+          "**/synapse/**",
+          "**/synapse-kit/**",
+          "synapse.config.ts"
         ],
         "keywords": [
-          "biophys",
-          "connectome",
-          "시냅스신경망",
-          "퀀타이제이션",
-          "백서",
-          "아키텍처"
+          "synapse",
+          "synapse-kit",
+          "시냅스",
+          "인과율",
+          "causal",
+          "컴파일러",
+          "체커"
+        ],
+        "commands": [
+          "check",
+          "build",
+          "package",
+          "sign",
+          "init"
         ]
       },
       "invariants": [],
@@ -3906,13 +3912,21 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-knowledge_base-cortico-reflex-hybrid-brain-engine",
-      "domain": "Knowledge_Base",
+      "id": "rule-biophys_research_and_architecture-cortico-reflex-hybrid-brain-engine",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "Cortico-Reflex Hybrid Brain Engine",
-      "entityType": "SoftwareArchitecture",
       "triggers": {
+        "files": [
+          "**/biophys/**",
+          "**/docs/whitepapers/**"
+        ],
         "keywords": [
-          "cortico-reflex hybrid brain engine"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
@@ -4053,24 +4067,21 @@
       "lastVerified": "2026-11-01"
     },
     {
-      "id": "rule-hardware_and_pcb-biophys_pocket_orange_device",
-      "domain": "Hardware_And_PCB",
+      "id": "rule-biophys_research_and_architecture-biophys_pocket_orange_device",
+      "domain": "BioPhys_Research_And_Architecture",
       "title": "BioPhys_Pocket_Orange_Device",
-      "entityType": "HardwareDevice",
       "triggers": {
         "files": [
-          "hardware",
-          "pcb",
-          "kicad"
+          "**/biophys/**",
+          "**/docs/whitepapers/**"
         ],
         "keywords": [
-          "pcb",
-          "hardware",
-          "하드웨어",
-          "회로",
-          "jlcpcb",
-          "kicad",
-          "m2"
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
         ]
       },
       "invariants": [],
@@ -4459,6 +4470,330 @@
       "actions": [],
       "context": [],
       "lastVerified": "2026-11-04"
+    },
+    {
+      "actions": [
+        "[클라이언트 신규 에러 수신] cmd.exe 파싱 오류: 'Bypass' 및 깨진 한글('') 명령어 인식 실패",
+        "해결책: apply_theme_and_layout.ps1 파일을 우클릭 -> 'PowerShell에서 실행'을 누르면 즉시 해결됨"
+      ],
+      "context": [
+        "Master Node: minseok (100.82.92.122)",
+        "Target Node: desktop-cj15bv4 (100.73.80.80)",
+        "[신규 발생 에러 원문]:",
+        "'Bypass' is not recognized as an internal or external command,",
+        "operable program or batch file.",
+        "'' is not recognized as an internal or external command,",
+        "operable program or batch file."
+      ],
+      "domain": "Infrastructure_And_Cloud",
+      "id": "rule-infra-tailscale-desktop-cj15bv4",
+      "invariants": [
+        "Tailscale 사설 암호화 망(100.x.y.z) 내부에서만 메모리 동기화 및 파일 전송을 수행한다."
+      ],
+      "title": "Tailscale_Mesh_Node_DESKTOP_CJ15BV4",
+      "triggers": {
+        "commands": [
+          "peer",
+          "serve",
+          "sync"
+        ],
+        "keywords": [
+          "tailscale",
+          "100.73.80.80",
+          "desktop-cj15bv4",
+          "bypass",
+          "error"
+        ]
+      },
+      "lastVerified": "2026-11-04"
+    },
+    {
+      "id": "rule-project-gxworks2-mcp-engine",
+      "domain": "Project_PLC_Automation",
+      "title": "GXWorks2_MCP_And_MCProtocol_Engine",
+      "triggers": {
+        "files": [
+          "gxworks2-mcp/**/*",
+          "jog.gxw",
+          "*.gxw"
+        ],
+        "keywords": [
+          "gx",
+          "gxworks",
+          "gxworks2",
+          "plc",
+          "ladder",
+          "melsec",
+          "mc protocol",
+          "q03ude"
+        ]
+      },
+      "invariants": [
+        "MELSEC-Q/L 입출력 X, Y 및 링크 B, W는 16진수 체계 (0~F)",
+        "MELSEC-FX 입출력 X, Y는 8진수 체계 (8과 9 금지)",
+        "MC Protocol 3E Frame 바이너리 기본 포트 5007 (미연결 시 가상 메모리 시뮬레이터 자동 폴백)"
+      ],
+      "actions": [
+        "GX Works2 니모닉(IL) 생성 시 항상 마지막에 END 명령어 포함",
+        "디바이스 코멘트 생성 시 DeviceComment.csv 형식으로 export 지원"
+      ],
+      "context": [
+        "gxworks2-mcp 서버 경로: C:\\Users\\minse\\.gemini\\antigravity\\scratch\\gxworks2-mcp",
+        "제공 툴 7종: plc_read_device, plc_write_device, plc_batch_monitor, plc_connect, plc_generate_ladder, plc_export_gxworks, plc_validate_address"
+      ],
+      "lastVerified": "2026-11-04"
+    },
+    {
+      "actions": [
+        "배치 파일에서 PowerShell 호출 시 따옴표 중첩 금지 (VBScript ShellExecute 또는 Base64 EncodedCommand 사용)",
+        "에러 메시지 원문: The string is missing the terminator: \". CategoryInfo: ParserError, FullyQualifiedErrorId: TerminatorExpectedAtEndOfString"
+      ],
+      "context": [
+        "발생 에러 원문:",
+        "The string is missing the terminator: \".",
+        "    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException",
+        "    + FullyQualifiedErrorId : TerminatorExpectedAtEndOfString",
+        "대상: desktop-cj15bv4 (100.73.80.80) 공유 메모리 전달용"
+      ],
+      "domain": "Infrastructure_And_Cloud",
+      "id": "rule-lumabar-powershell-quote-error",
+      "invariants": [
+        "PowerShell 명령행 인자 전달 시 따옴표 파싱 에러(TerminatorExpectedAtEndOfString) 방지"
+      ],
+      "title": "Lumabar_PowerShell_Quote_Terminator_Error",
+      "triggers": {
+        "commands": [
+          "apply",
+          "bat",
+          "powershell"
+        ],
+        "keywords": [
+          "terminator",
+          "parsererror",
+          "missing the terminator",
+          "lumabar",
+          "quote"
+        ]
+      },
+      "lastVerified": "2026-11-04"
+    },
+    {
+      "actions": [
+        "원인 분석: cmd.exe가 배치 파일의 UTF-8 LF 줄바꿈 및 따옴표를 잘못 읽어 '-ExecutionPolicy' 앞부분을 잘라먹고 'Bypass'를 단독 명령어로 실행함",
+        "원인 분석: 한글 인코딩 깨짐('')으로 인해 깨진 바이트가 cmd.exe 명령어로 오작동함",
+        "해결 지침: 배치 파일은 한글을 0% 배제한 순수 7비트 ASCII 및 CRLF(\\r\\n)로 저장해야 함",
+        "해결 지침: 또는 저쪽 PC에서 apply_theme_and_layout.ps1 파일을 우클릭하여 'PowerShell에서 실행'으로 직접 실행하면 cmd.exe 버그를 100% 회피 가능함"
+      ],
+      "context": [
+        "발생 에러 원문:",
+        "'Bypass' is not recognized as an internal or external command,",
+        "operable program or batch file.",
+        "'' is not recognized as an internal or external command,",
+        "operable program or batch file.",
+        "전송 대상: desktop-cj15bv4 (100.73.80.80) 공유 메모리 전달"
+      ],
+      "domain": "Infrastructure_And_Cloud",
+      "id": "rule-루마바-배치-바이패스-파싱에러",
+      "invariants": [
+        "Windows cmd.exe 배치 파일은 UTF-8 LF 줄바꿈 시 오프셋이 밀려 명령어가 잘려 실행되므로 반드시 순수 ASCII + CRLF를 유지해야 한다."
+      ],
+      "title": "루마바_배치파일_바이패스_인코딩_파싱오류",
+      "triggers": {
+        "commands": [
+          "apply",
+          "bat",
+          "bypass"
+        ],
+        "keywords": [
+          "bypass",
+          "배치오류",
+          "루마바",
+          "인코딩",
+          "파싱에러"
+        ]
+      },
+      "lastVerified": "2026-11-04"
+    },
+    {
+      "id": "rule-powershell-startprocess-elevation-invariants",
+      "domain": "Infrastructure_And_Cloud",
+      "title": "PowerShell_StartProcess_UAC_Elevation_Invariants",
+      "triggers": {
+        "keywords": [
+          "Start-Process",
+          "Verb RunAs",
+          "UAC",
+          "관리자 권한",
+          "승격",
+          "파워쉘",
+          "PowerShell",
+          "꺼져버림",
+          "NoExit"
+        ],
+        "commands": [
+          "powershell",
+          "cmd",
+          "Start-Process"
+        ]
+      },
+      "invariants": [
+        "Start-Process -Verb RunAs 호출 시 작업 디렉터리가 C:\\Windows\\System32로 초기화되므로 반드시 -WorkingDirectory \"`\"$PSScriptRoot`\"\"를 명시해야 한다.",
+        "PowerShell 5.1의 Start-Process -ArgumentList 배열 결합 버그로 인해 공백 경로가 깨지므로 파일 경로는 반드시 `\"`\"$path`\"`\"(따옴표 중첩)로 감싸야 한다.",
+        "관리자 권한 승격 창이 에러나 작업 완료 시 즉시 닫히는(꺼져버림) 침묵 실패를 방지하기 위해 -NoExit 플래그와 try-catch / Read-Host 대기를 필수 적용해야 한다."
+      ],
+      "actions": [
+        "$ScriptDir = $PSScriptRoot",
+        "Start-Process powershell.exe -Verb RunAs -WorkingDirectory \"`\"$ScriptDir`\"\" -ArgumentList @(\"-NoExit\", \"-ExecutionPolicy\", \"Bypass\", \"-File\", \"`\"$PSCommandPath`\"\")",
+        "배치 파일(.bat) 호출부에서도 powershell.exe -NoExit 지정 및 스크립트 말미 pause 적용"
+      ],
+      "context": [
+        "현상: UAC 승인 누른 후 PowerShell 관리자 콘솔 창이 0.05초 만에 그냥 꺼져버리고 변경 사항이 적용되지 않음",
+        "원인 1 (-WorkingDirectory 누락): RunAs 승격 시 프로세스 시작 위치가 C:\\Windows\\System32로 초기화되어 상대 경로 에셋(바이너리, 레벨DB, JSON) 접근 실패",
+        "원인 2 (-ArgumentList 따옴표 누락): PowerShell 5.1에서 ArgumentList 배열 요소에 공백이 있으면 따옴표가 증발하여 -File 인자 쪼개짐 발생",
+        "원인 3 (-NoExit 누락): 작업 완료 또는 예외 발생 시 콘솔 창이 유지되지 않고 자동 종료되어 원인 파악 불가"
+      ]
+    },
+    {
+      "id": "rule-knowledge_base-서브pc-라이선스-점검",
+      "domain": "Knowledge_Base",
+      "title": "서브PC 라이선스 점검",
+      "entityType": "진단명령",
+      "triggers": {
+        "keywords": [
+          "서브pc 라이선스 점검"
+        ]
+      },
+      "invariants": [],
+      "actions": [],
+      "context": [
+        "서브PC(desktop-cj15bv4)에서 Lumabar 실행 후 PowerShell에 붙여넣기: $f=\"$env:APPDATA\\com.lumabar.dock\\license.json\"; Test-Path $f; if(Test-Path $f){$j=gc $f -Raw|ConvertFrom-Json; $j.customer_email; $j.machine_id; (Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Cryptography).MachineGuid; [bool]$j.sig}",
+        "False면 앱이 license.json을 지운 것(서명/머신ID 불일치), True면 sI() 프론트 응답 처리 수정 필요",
+        "증상: 설정 일반에 '이 PC에서 정품 활성화됨' 표시, 적용 스크립트에서는 인식"
+      ],
+      "lastVerified": "2026-11-05"
+    },
+    {
+      "id": "rule-biophys_research_and_architecture-biophys_grand_unified_spike_engine_master_plan",
+      "domain": "BioPhys_Research_And_Architecture",
+      "title": "BioPhys_Grand_Unified_Spike_Engine_Master_Plan",
+      "entityType": "ArchitecturePlan",
+      "triggers": {
+        "files": [
+          "biophys",
+          "whitepaper"
+        ],
+        "keywords": [
+          "biophys",
+          "connectome",
+          "시냅스신경망",
+          "퀀타이제이션",
+          "백서",
+          "아키텍처"
+        ]
+      },
+      "invariants": [],
+      "actions": [],
+      "context": [
+        "205M 생체 커넥톰(FlyWire 초파리 54.5M + Google H01 인간 150M + 가교 50만 시냅스)을 최상위 신경망 구조로 탑재",
+        "117종 원천 대수 연산기(사영 동차 좌표계 [N:D], 음수 사칙/쿨롱 척력, 70종 자율발굴 쌍대 연산기)를 결합하여 복합 기하/수학 연산 무부동소수점 처리",
+        "120B 가상 용량 대비 실제 물리 메모리 4B(8.14MB) 상주 MoE 가상 메모리 아키텍처 적용",
+        "100% 무부동소수점(FPU 0회) 가변소수점(Dynamic Fixed-Point 16뉴런 마이크로블록 시프트) 스파이크-LLM 자기회귀 언어 생성기(80,000+ TPS) 내장",
+        "Kimi K3 초압축 가중치(models/kimi_k3_800x_final.bpsnx 4.2GB, 497,220개 텐서 및 tiktoken 토크나이저)를 제로카피 memmap2로 스파이크 시냅스에 1:1 직결",
+        "TypeScript AST 정적 무결성 컴파일러 및 Causal Memory 2.0 자동 동기화 적용",
+        "CPU 점유율 50% 엄수(RAYON_NUM_THREADS=8) 및 가상 수치 조작 배제, 터미널 실행 실측 증거 중심 검증"
+      ],
+      "lastVerified": "2026-11-07"
+    },
+    {
+      "id": "rule-knowledge_base-kimi_k3_spike_bridge_architecture",
+      "domain": "Knowledge_Base",
+      "title": "Kimi_K3_Spike_Bridge_Architecture",
+      "entityType": "ComponentSpecification",
+      "triggers": {
+        "keywords": [
+          "kimi k3 spike bridge architecture"
+        ]
+      },
+      "invariants": [],
+      "actions": [],
+      "context": [
+        "models/kimi_k3_800x_final.bpsnx (4.2GB, 497,220개 텐서)의 8-State i8 정수 가중치를 GEMM 없이 정수 스파이크 덧셈 및 비트 시프트로 연산",
+        "models/kimi_k3_tokenizer의 tiktoken BPE를 통해 한국어 음절 및 형태소를 스파이크 펄스로 인코딩/디코딩",
+        "205M 커넥톰의 탈억제 신호가 Kimi MoE 라우팅 게이트를 직접 트리거",
+        "제로카피 memmap2를 통해 활성화된 MoE 전문가 페이지만 OS 가상 메모리로 수십 MB 단위 즉시 매핑"
+      ],
+      "lastVerified": "2026-11-07"
+    },
+    {
+      "actions": [
+        "KimiK3BpsnxLoader와 PureIntegerSpikeLlmEngine 직결 (i8 가중치 정수 스파이크 덧셈 및 비트 시프트)",
+        "205M 생체 커넥톰의 탈억제 스파이크 신호로 Kimi MoE 전문가 라우팅",
+        "117종 원천 대수 연산기로 사영 동차 좌표계 [N:D] 및 음수 척력 연산 처리",
+        "run_grand_unified_engine_bench 릴리즈 바이너리 실행으로 종단간 동작 실측 증명"
+      ],
+      "context": [
+        "models/kimi_k3_800x_final.bpsnx",
+        "models/kimi_k3_tokenizer",
+        "src/kimi_k3_moe_runtime.rs",
+        "src/biophys_human_fly_hybrid_brain.rs",
+        "src/uncharted_fundamental_operator_lab.rs",
+        "src/pure_integer_spike_llm_engine.rs",
+        "src/virtual_120b_sparse_snn_engine.rs"
+      ],
+      "domain": "biophys_unified_engine",
+      "id": "RULE_BIOPHYS_KIMI_GRAND_UNIFIED_PIPELINE",
+      "invariants": [
+        "부동소수점 곱셈(GEMM) 0회 엄수 (FPU 배제, 가변소수점 비트 시프트 및 정수 덧셈)",
+        "KV-Cache 0 Byte 엄수 (스파이크 막전위 누적)",
+        "CPU 점유율 50% 엄수 (RAYON_NUM_THREADS=8)",
+        "100% 한국어 출력 및 주석 엄수",
+        "터미널 실측 실행 로그 기반 증거 중심 완료 선언"
+      ],
+      "title": "Kimi 초압축 가중치 직결 바이오피직스 통합 스파이크 엔진 구현 및 검증 인과 규칙",
+      "triggers": {
+        "components": [
+          "kimi_k3_bpsnx",
+          "205m_connectome",
+          "117_algebraic_operators",
+          "pure_integer_snn",
+          "virtual_120b_moe"
+        ],
+        "phase": "grand_unification"
+      },
+      "lastVerified": "2026-11-07"
+    },
+    {
+      "id": "rule-synapse_kit-synapse_db_core",
+      "domain": "Architecture_And_Stack",
+      "title": "Synapse_DB_Universal_Markdown_Connectome",
+      "entityType": "Architecture",
+      "triggers": {
+        "files": [
+          "db/index.ts",
+          "db/engine.ts",
+          "db/connectome.ts",
+          "db/serializer.ts",
+          "db/migrator.ts"
+        ],
+        "keywords": [
+          "synapse-db",
+          "connectome",
+          "wikilink",
+          "markdown-db"
+        ]
+      },
+      "invariants": [
+        "YAML Frontmatter와 Markdown 본문은 무손실 라운드트립(64-bit Snowflake ID, 빈 배열 보존)을 보장해야 함",
+        "피참조 노드 업데이트/삭제 시 양방향 간선 대칭성(outgoing <=> incoming) 및 유령 토큰 0건을 유지해야 함",
+        "SQLite 마이그레이션 시 테이블 식별자 화이트리스트 정규식으로 SQL Injection을 원천 차단해야 함"
+      ],
+      "actions": [
+        "SynapseDB 컬렉션 CRUD, BM25 한국어 N-gram 검색, Obsidian .canvas 내보내기 활용"
+      ],
+      "context": [
+        "Synapse Kit v0.2.3 3대 코어(compiler, memory, db) 통합 완료"
+      ],
+      "lastVerified": "2026-11-08"
     }
   ],
   "relations": [
@@ -4653,9 +4988,34 @@
       "to": "rule-project_poe2_autofilter-poe2_autofilter_project"
     },
     {
-      "from": "테스트용 원격 동기화 규칙",
-      "to": "desktop-cj15bv4",
-      "relationType": "synced_to"
+      "from": "Tailscale_Mesh_Node_DESKTOP_CJ15BV4",
+      "relationType": "mesh_connected_to",
+      "to": "Synapse_Kit_Architecture"
+    },
+    {
+      "from": "Tailscale_Mesh_Node_DESKTOP_CJ15BV4",
+      "relationType": "syncs_causal_memory_with",
+      "to": "Oracle_Cloud_Always_Free_Instance"
+    },
+    {
+      "from": "Lumabar_PowerShell_Quote_Terminator_Error",
+      "relationType": "reported_to_peer",
+      "to": "Tailscale_Mesh_Node_DESKTOP_CJ15BV4"
+    },
+    {
+      "from": "루마바_배치파일_바이패스_인코딩_파싱오류",
+      "relationType": "reported_to_peer",
+      "to": "Tailscale_Mesh_Node_DESKTOP_CJ15BV4"
+    },
+    {
+      "from": "BioPhys_Grand_Unified_Spike_Engine_Master_Plan",
+      "relationType": "INTEGRATES_WEIGHT_ASSET",
+      "to": "Kimi_K3_Spike_Bridge_Architecture"
+    },
+    {
+      "from": "Kimi_K3_Spike_Bridge_Architecture",
+      "relationType": "DRIVES_ZERO_FLOAT_INFERENCE",
+      "to": "BioPhys_Grand_Unified_Spike_Engine_Master_Plan"
     }
   ]
 }
