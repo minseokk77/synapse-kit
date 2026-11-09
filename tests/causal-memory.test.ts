@@ -135,7 +135,7 @@ test('4. Live Local Daemon (Port 4242) & Ephemeral HTTP/MCP JSON-RPC Verificatio
     const initData = await initRes.json();
     expect(initData.result.serverInfo.name).toBe('synapse-causal-memory');
 
-    // MCP tools/list (12개 도구 노출 확인)
+    // MCP tools/list (21개 도구 노출 확인: 기본 12종 + 컨텍스트 3종 + 슈퍼코어 6종)
     const listRes = await fetch(`http://127.0.0.1:${testPort}/mcp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -146,7 +146,7 @@ test('4. Live Local Daemon (Port 4242) & Ephemeral HTTP/MCP JSON-RPC Verificatio
       }),
     });
     const listData = await listRes.json();
-    expect(listData.result.tools.length).toBe(12);
+    expect(listData.result.tools.length).toBe(21);
 
     // MCP tools/call read_graph 호출 검증
     const callRes = await fetch(`http://127.0.0.1:${testPort}/mcp`, {

@@ -19,6 +19,7 @@ export interface CausalRelation {
   readonly from: string;
   readonly to: string;
   readonly relationType: string;
+  readonly relation?: string;
 }
 
 /**
@@ -34,6 +35,12 @@ export interface CausalRule {
   readonly actions: readonly string[];
   readonly context: readonly string[];
   readonly lastVerified?: string;
+  readonly name?: string;
+  readonly confidence?: number;
+  readonly weight?: number;
+  readonly updatedAt?: string;
+  readonly description?: string;
+  readonly pattern?: string;
 }
 
 /**
@@ -518,7 +525,8 @@ export class CausalMemoryStore {
               checkedDirs.add(twoSeg);
               registerHits(this.exactFileIndex.get(twoSeg));
               const oneSeg = nf.slice(0, firstSlash);
-              if (oneSeg !== twoSeg && !checkedDirs.has(oneSeg)) {
+              const isDriveLetter = oneSeg.length === 2 && oneSeg.endsWith(':');
+              if (!isDriveLetter && oneSeg !== twoSeg && !checkedDirs.has(oneSeg)) {
                 checkedDirs.add(oneSeg);
                 registerHits(this.exactFileIndex.get(oneSeg));
               }
@@ -541,7 +549,11 @@ export class CausalMemoryStore {
           if (matchedRulesMap.has(entry.rule.id)) continue;
 
           for (const pattern of entry.cleanPatterns) {
-            if (prefixArr.some((p) => p.includes(pattern) || pattern.includes(p))) {
+            if (
+              prefixArr.some(
+                (p) => p.includes(pattern) || (p.length >= 4 && pattern.includes(p))
+              )
+            ) {
               matchedRulesMap.set(entry.rule.id, entry.rule);
               nonAlwaysMatchedTitles.add(entry.rule.title.toLowerCase());
               break;
@@ -661,8 +673,12 @@ export class CausalMemoryStore {
    * 신규 규칙 등록 또는 기존 규칙 갱신
    */
   public assertRule(rule: CausalRule, persistToDisk: boolean = true): void {
+    const targetTitle = (rule.title || (rule as any).name || '').toLowerCase();
     const existingIndex = this.database.rules.findIndex(
-      (r) => r.id === rule.id || r.title.toLowerCase() === rule.title.toLowerCase()
+      (r) =>
+        r.id === rule.id ||
+        (targetTitle.length > 0 &&
+          (r.title || (r as any).name || '').toLowerCase() === targetTitle)
     );
     const updatedRules = [...this.database.rules];
     const today = new Date().toISOString().split('T')[0];

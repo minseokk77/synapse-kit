@@ -1,6 +1,6 @@
 {
   "name": "synapse-db",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Universal Markdown-First & In-Memory Connectome Database with Wikilink Auto-Wiring, Korean N-gram BM25 & Obsidian Canvas Exporter",
   "type": "module",
   "main": "dist/index.js",

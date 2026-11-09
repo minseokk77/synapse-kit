@@ -42,4 +42,23 @@ export const CAUSAL_MEMORY_CONFIG = {
 
   /** 공명 쿼리 시 컨텍스트 최대 노출 줄 수 (토큰 절감 임계치) */
   MAX_CONTEXT_PREVIEW_LINES: parseInt(process.env.SYNAPSE_MEMORY_MAX_PREVIEW || '5', 10),
+
+  /** 전역 컨텍스트 스냅샷(Checkpoint) 저장소 기본 경로 */
+  CONTEXT_DB_PATH:
+    process.env.SYNAPSE_CONTEXT_PATH ||
+    resolve(homedir(), '.gemini', 'antigravity', 'causal_contexts.json'),
+
+  /** 패키지 내장 폴백 컨텍스트 스냅샷 경로 */
+  LOCAL_CONTEXT_DB_PATH: resolve(import.meta.dir, 'causal-contexts.json'),
+
+  /** 최대 보존 컨텍스트 체크포인트 개수 */
+  MAX_CHECKPOINTS_RETAINED: parseInt(process.env.SYNAPSE_MAX_CHECKPOINTS || '50', 10),
+
+  /** 옵시디언(Obsidian) 볼트 기본 연동 루트 경로 */
+  DEFAULT_OBSIDIAN_VAULT_PATH:
+    process.env.SYNAPSE_OBSIDIAN_VAULT ||
+    resolve(homedir(), 'Documents', 'Min', 'Min'),
+
+  /** 옵시디언 볼트 내부 인과율 렌즈 저장 서브디렉터리 */
+  OBSIDIAN_LENS_SUBDIR: process.env.SYNAPSE_LENS_SUBDIR || 'Synapse-Mental',
 } as const;

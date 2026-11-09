@@ -328,7 +328,11 @@ describe('Synapse Kit 3대 코어 (DB · Memory · Compiler) 미시행 심층 �
         watchedDb.close();
       }
     } finally {
-      rmSync(tempRoot, { recursive: true, force: true });
+      try {
+        rmSync(tempRoot, { recursive: true, force: true });
+      } catch {
+        // Windows SQLite WAL 파일 핸들 해제 지연 시 무시
+      }
     }
   });
 

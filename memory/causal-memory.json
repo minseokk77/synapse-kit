@@ -1,7 +1,7 @@
 {
   "version": "2.1.0",
-  "updatedAt": "2026-11-08T15:23:54.807Z",
-  "totalRules": 164,
+  "updatedAt": "2026-11-09T16:19:26.821Z",
+  "totalRules": 165,
   "totalRelations": 44,
   "rules": [
     {
@@ -4794,6 +4794,39 @@
         "Synapse Kit v0.2.3 3대 코어(compiler, memory, db) 통합 완료"
       ],
       "lastVerified": "2026-11-08"
+    },
+    {
+      "id": "ctx-active-session-snapshot",
+      "domain": "User_Preferences_And_Rules",
+      "title": "Active_Session_Context_Snapshot",
+      "entityType": "ContextCheckpoint",
+      "triggers": {
+        "alwaysActive": true,
+        "keywords": [
+          "context",
+          "checkpoint",
+          "resume",
+          "컨텍스트",
+          "이어서",
+          "default-session"
+        ]
+      },
+      "invariants": [
+        "[최근 작업 목표] core 영역의 기능을 확장하고 변경 사항을 무결하게 정합하는 작업",
+        "[다음 최우선 진행 과제] 추가/수정된 모듈에 대한 포괄적 통합 테스트 스위트 작성 및 회귀 방지"
+      ],
+      "actions": [
+        "추가/수정된 모듈에 대한 포괄적 통합 테스트 스위트 작성 및 회귀 방지",
+        "Bun 런타임 기반 빌드 검증 (`bun run build`) 및 무오류 확인",
+        "전역 컨텍스트 스냅샷 데이터베이스 동기화 및 기억 영속화"
+      ],
+      "context": [
+        "체크포인트 ID: ctx_20261110_005446_qw31 (세션: default-session, 시각: 2026-11-09T15:54:46.391Z)",
+        "제목: Synapse Kit v0.3.0 완료 - 6대 인지 슈퍼 코어 완비 및 31개 테스트 2022개 검증 100% 통과",
+        "완료 내역: 소스 코드 변경 및 모듈 구조 정비",
+        "핵심 결정: 하드코딩 배제 및 환경 변수/설정 모듈 중심의 설정 아키텍처 적용 | SOLID 단일 책임 원칙(SRP)을 준수한 독립 엔진 분리"
+      ],
+      "lastVerified": "2026-11-09"
     }
   ],
   "relations": [

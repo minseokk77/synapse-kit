@@ -5,6 +5,13 @@ import { runCausalQuery, formatResonanceForAgent } from './causal-query';
 import { startCausalServer, startCausalMcpStdioServer } from './causal-server';
 import { migrateLegacyMemoryGraph } from './causal-migrator';
 import { getTailscalePeers, pingPeer, syncWithPeer, queryRemotePeer } from './causal-peer';
+import { ContextCheckpointStore, type SaveCheckpointInput } from './causal-context';
+import { CausalTimeSeriesEngine } from './causal-timeseries';
+import { CausalGraveyardStore, type FailureHypothesis } from './causal-graveyard';
+import { CausalBranchStore } from './causal-branch';
+import { CausalPredictorEngine } from './causal-predictor';
+import { CausalSynthesizerEngine } from './causal-synthesizer';
+import { CausalObsidianLensEngine } from './causal-lens';
 
 export interface MemoryCliOptions {
   lang?: string;
@@ -35,6 +42,18 @@ ${BOLD}사용법:${RESET}
 
 ${BOLD}서브 명령어:${RESET}
   query       작업 파일/키워드에 매칭되는 인과 규칙 및 간선(Relations) 초경량 공명 조회 (기본값)
+  checkpoint  현재 작업 세션의 핵심 컨텍스트(목표, 완료, 할일, 아티팩트)를 스냅샷으로 영구 박제
+  resume      저장된 최신(또는 특정 ID) 컨텍스트 스냅샷을 0ms 만에 복원하여 새 채팅에 주입
+  checkpoints 저장된 컨텍스트 스냅샷(Checkpoint) 목록 조회 및 관리 (--delete <id>)
+  timeline    세션 진화 타임라인 및 시계열 체크포인트 이력 조회 (--limit 20)
+  diff        두 체크포인트 간 변경 사항(신규 완료 작업, 잔여 과제, 파일) 정밀 비교
+  rewind      과거 특정 체크포인트 시점으로 컨텍스트 즉시 되감기
+  graveyard   실패했던 안티패턴 함정 목록 조회 및 신규 실패 가설 등록
+  trap-check  수정 예정 파일/키워드가 과거 실패 패턴에 해당하는지 선제 검사
+  branch      작업 맥락 독립 분기(Fork), 전환(Switch), 병합(Merge), 폐기(Abandon) 관리
+  predict     수정 대상 파일 기반 다단계 인과 연쇄 파급 반경(Blast Radius) 분석
+  auto-checkpoint Git diff/상태를 분석하여 의도(Goal, Tasks) 자동 역합성 및 원클릭 박제
+  lens        옵시디언(Obsidian) 볼트와 인과율 지식/스냅샷/캔버스 양방향 동기화 (export|import|sync)
   list        등록된 도메인, 인과 규칙 및 인과 간선(Relations) 통계 확인
   audit       인과율 메모리 데이터베이스 무결성 및 토큰 절감 상태 감사
   assert      신규 인과율 규칙 등록 또는 갱신 (--json '<json>')
@@ -485,6 +504,496 @@ ${BOLD}${GREEN}🚀 [Causal Memory Daemon 가동 완료]${RESET}
 
     await new Promise(() => {});
     return 0;
+  }
+
+  // 9. 작업 컨텍스트 스냅샷 저장 (checkpoint | save-context)
+  if (subCommand === 'checkpoint' || subCommand === 'save-context') {
+    const contextStore = new ContextCheckpointStore();
+    const jsonIdx = subArgs.indexOf('--json');
+
+    let input: SaveCheckpointInput;
+    if (jsonIdx >= 0 && subArgs[jsonIdx + 1]) {
+      input = JSON.parse(subArgs[jsonIdx + 1]) as SaveCheckpointInput;
+    } else {
+      let title = '';
+      let sessionId = 'default-session';
+      let goal = '';
+      const completedSteps: string[] = [];
+      const pendingTasks: string[] = [];
+      const keyDecisions: string[] = [];
+      const activeFiles: string[] = [];
+      const artifacts: string[] = [];
+
+      const positional = subArgs.filter(
+        (a) => a !== 'checkpoint' && a !== 'save-context' && !a.startsWith('-')
+      );
+      if (positional.length > 0) {
+        title = positional[0];
+      }
+
+      for (let i = 0; i < subArgs.length; i++) {
+        const arg = subArgs[i];
+        if (arg === '--title' && subArgs[i + 1]) {
+          title = subArgs[++i];
+        } else if (arg === '--session' && subArgs[i + 1]) {
+          sessionId = subArgs[++i];
+        } else if (arg === '--goal' && subArgs[i + 1]) {
+          goal = subArgs[++i];
+        } else if (arg === '--completed' && subArgs[i + 1]) {
+          completedSteps.push(subArgs[++i]);
+        } else if (arg === '--pending' && subArgs[i + 1]) {
+          pendingTasks.push(subArgs[++i]);
+        } else if (arg === '--decision' && subArgs[i + 1]) {
+          keyDecisions.push(subArgs[++i]);
+        } else if (arg === '--file' && subArgs[i + 1]) {
+          activeFiles.push(subArgs[++i]);
+        } else if (arg === '--artifact' && subArgs[i + 1]) {
+          artifacts.push(subArgs[++i]);
+        }
+      }
+
+      if (!title) {
+        title = `Context Snapshot (${new Date().toISOString().slice(0, 16).replace('T', ' ')})`;
+      }
+
+      input = {
+        title,
+        sessionId,
+        goal: goal || title,
+        completedSteps: completedSteps.length > 0 ? completedSteps : undefined,
+        pendingTasks: pendingTasks.length > 0 ? pendingTasks : undefined,
+        keyDecisions: keyDecisions.length > 0 ? keyDecisions : undefined,
+        activeFiles: activeFiles.length > 0 ? activeFiles : undefined,
+        artifacts: artifacts.length > 0 ? artifacts : undefined,
+      };
+    }
+
+    const saved = await contextStore.saveCheckpoint(input);
+
+    if (options?.agentMode || options?.compact) {
+      process.stdout.write(JSON.stringify({ ok: true, checkpoint: saved }) + '\n');
+    } else {
+      process.stdout.write(
+        `\n${BOLD}${GREEN}✨ [Context Checkpoint 박제 완료]${RESET}\n` +
+          `  • ID          : ${BOLD}${CYAN}${saved.id}${RESET}\n` +
+          `  • 세션        : ${saved.sessionId}\n` +
+          `  • 제목        : ${BOLD}${saved.title}${RESET}\n` +
+          `  • 목표(Goal)  : ${saved.goal}\n` +
+          `  • 변경 파일   : ${saved.modifiedFiles.length}개 감지\n` +
+          `  • 다음 할 일  : ${saved.pendingTasks.length}건 보존\n` +
+          `  • 복원 명령어 : ${YELLOW}synapse memory resume ${saved.id}${RESET}\n\n`
+      );
+    }
+    return 0;
+  }
+
+  // 10. 저장된 컨텍스트 스냅샷 복원 (resume | load-context | restore)
+  if (subCommand === 'resume' || subCommand === 'load-context' || subCommand === 'restore') {
+    const contextStore = new ContextCheckpointStore();
+    let targetId = 'latest';
+    let sessionId: string | undefined;
+
+    for (let i = 0; i < subArgs.length; i++) {
+      const arg = subArgs[i];
+      if (arg === '--session' && subArgs[i + 1]) {
+        sessionId = subArgs[++i];
+      } else if (arg === '--id' && subArgs[i + 1]) {
+        targetId = subArgs[++i];
+      } else if (
+        arg !== 'resume' &&
+        arg !== 'load-context' &&
+        arg !== 'restore' &&
+        !arg.startsWith('-')
+      ) {
+        targetId = arg;
+      }
+    }
+
+    const checkpoint = contextStore.getCheckpoint(targetId, sessionId);
+    if (!checkpoint) {
+      if (options?.agentMode || options?.compact) {
+        process.stdout.write(
+          JSON.stringify({ ok: false, error: '저장된 컨텍스트 체크포인트가 없습니다.' }) + '\n'
+        );
+      } else {
+        process.stderr.write(`${YELLOW}⚠️ 복원할 컨텍스트 체크포인트를 찾을 수 없습니다.${RESET}\n`);
+      }
+      return 1;
+    }
+
+    if (options?.compact) {
+      process.stdout.write(ContextCheckpointStore.formatForAgentResume(checkpoint, true) + '\n');
+    } else if (options?.agentMode && subArgs.includes('--json')) {
+      process.stdout.write(JSON.stringify({ ok: true, checkpoint }, null, 2) + '\n');
+    } else {
+      process.stdout.write('\n' + ContextCheckpointStore.formatForAgentResume(checkpoint, false) + '\n\n');
+    }
+    return 0;
+  }
+
+  // 11. 컨텍스트 체크포인트 목록 및 삭제 (checkpoints | list-checkpoints)
+  if (subCommand === 'checkpoints' || subCommand === 'list-checkpoints') {
+    const contextStore = new ContextCheckpointStore();
+    let sessionId: string | undefined;
+    let limit = 20;
+    let deleteId: string | undefined;
+
+    for (let i = 0; i < subArgs.length; i++) {
+      if (subArgs[i] === '--session' && subArgs[i + 1]) {
+        sessionId = subArgs[++i];
+      } else if (subArgs[i] === '--limit' && subArgs[i + 1]) {
+        limit = parseInt(subArgs[++i], 10);
+      } else if (subArgs[i] === '--delete' && subArgs[i + 1]) {
+        deleteId = subArgs[++i];
+      }
+    }
+
+    if (deleteId) {
+      const deleted = contextStore.deleteCheckpoint(deleteId);
+      if (options?.agentMode) {
+        process.stdout.write(JSON.stringify({ ok: deleted, deletedId: deleteId }) + '\n');
+      } else if (deleted) {
+        process.stdout.write(`${GREEN}✅ 체크포인트 삭제 완료: ${deleteId}${RESET}\n`);
+      } else {
+        process.stderr.write(`${RED}❌ 해당 ID의 체크포인트를 찾을 수 없습니다: ${deleteId}${RESET}\n`);
+      }
+      return deleted ? 0 : 1;
+    }
+
+    const list = contextStore.listCheckpoints({ sessionId, limit });
+    if (options?.agentMode || options?.compact) {
+      process.stdout.write(JSON.stringify({ ok: true, total: list.length, checkpoints: list }) + '\n');
+      return 0;
+    }
+
+    process.stdout.write(`\n${BOLD}${CYAN}📌 [Causal Memory] 컨텍스트 체크포인트 목록 (${list.length}개)${RESET}\n\n`);
+    if (list.length === 0) {
+      process.stdout.write(`  저장된 체크포인트가 없습니다. 'synapse memory checkpoint "<제목>"'으로 생성하세요.\n\n`);
+      return 0;
+    }
+
+    for (const c of list) {
+      process.stdout.write(
+        `  • ${BOLD}${GREEN}${c.id}${RESET} ${CYAN}[${c.sessionId}]${RESET} ${BOLD}${c.title}${RESET}\n` +
+          `    ${GRAY}생성: ${c.createdAt} | 완료: ${c.completedSteps.length}건 | 다음 할일: ${c.pendingTasks.length}건${RESET}\n`
+      );
+    }
+    process.stdout.write('\n');
+    return 0;
+  }
+
+  // 12. 세션 진화 타임라인 (timeline)
+  if (subCommand === 'timeline') {
+    const contextStore = new ContextCheckpointStore();
+    const timeSeries = new CausalTimeSeriesEngine(contextStore);
+    let limit = 20;
+    for (let i = 0; i < subArgs.length; i++) {
+      if (subArgs[i] === '--limit' && subArgs[i + 1]) {
+        limit = parseInt(subArgs[++i], 10);
+      }
+    }
+    const tl = timeSeries.generateTimeline(limit);
+    if (options?.agentMode || options?.compact) {
+      process.stdout.write(JSON.stringify(tl) + '\n');
+    } else {
+      process.stdout.write(
+        `\n${BOLD}${CYAN}⏳ [Causal Timeline] 세션 진화 타임라인 (총 ${tl.length}개)${RESET}\n\n`
+      );
+      for (const ev of tl) {
+        process.stdout.write(
+          `  • ${BOLD}${GREEN}${ev.checkpointId || ev.id}${RESET} (${ev.timestamp}) - ${BOLD}${ev.title}${RESET}\n    ${GRAY}${ev.summary}${RESET}\n`
+        );
+      }
+      process.stdout.write('\n');
+    }
+    return 0;
+  }
+
+  // 13. 체크포인트 간 정밀 diff 비교 (diff)
+  if (subCommand === 'diff') {
+    const positional = subArgs.filter((a) => a !== 'diff' && !a.startsWith('-'));
+    const fromId = positional[0];
+    const toId = positional[1];
+    if (!fromId || !toId) {
+      process.stderr.write(
+        `${RED}❌ 두 개의 체크포인트 ID가 필요합니다. (예: synapse memory diff <fromId> <toId>)${RESET}\n`
+      );
+      return 1;
+    }
+    const timeSeries = new CausalTimeSeriesEngine();
+    const diff = timeSeries.diffCheckpoints(fromId, toId);
+    if (!diff) {
+      process.stderr.write(`${RED}❌ 비교 대상 체크포인트를 찾을 수 없습니다.${RESET}\n`);
+      return 1;
+    }
+    if (options?.agentMode || options?.compact) {
+      process.stdout.write(JSON.stringify(diff, null, 2) + '\n');
+    } else {
+      process.stdout.write(
+        `\n${BOLD}${CYAN}📊 [Causal Diff] ${diff.fromCheckpointId} ➔ ${diff.toCheckpointId}${RESET}\n\n` +
+          `  • 신규 완료 단계   : ${diff.newCompletedSteps.length}건\n`
+      );
+      for (const s of diff.newCompletedSteps) {
+        process.stdout.write(`    + ${s}\n`);
+      }
+      process.stdout.write(
+        `  • 해결된 잔여과제 : ${diff.resolvedTasks.length}건\n` +
+          `  • 새로 수정된 파일 : ${diff.modifiedFilesDelta.added.length}개\n\n`
+      );
+    }
+    return 0;
+  }
+
+  // 14. 특정 체크포인트 시점으로 리와인드 (rewind)
+  if (subCommand === 'rewind') {
+    const positional = subArgs.filter((a) => a !== 'rewind' && !a.startsWith('-'));
+    const targetId = positional[0];
+    if (!targetId) {
+      process.stderr.write(
+        `${RED}❌ 되감기할 체크포인트 ID가 필요합니다. (예: synapse memory rewind <id>)${RESET}\n`
+      );
+      return 1;
+    }
+    const timeSeries = new CausalTimeSeriesEngine();
+    const res = await timeSeries.rewindToCheckpoint(targetId);
+    if (options?.agentMode || options?.compact) {
+      process.stdout.write(JSON.stringify(res) + '\n');
+    } else if (res && res.id) {
+      process.stdout.write(
+        `\n${BOLD}${GREEN}⏪ [Causal Rewind 성공] ${targetId} 시점으로 복원되었습니다: ${res.id}${RESET}\n\n`
+      );
+    } else {
+      process.stderr.write(
+        `\n${BOLD}${RED}🚨 [Causal Rewind 실패] 복원 대상 체크포인트를 찾을 수 없습니다.${RESET}\n\n`
+      );
+    }
+    return res && res.id ? 0 : 1;
+  }
+
+  // 15. 실패 및 안티패턴 함정 관리 (graveyard)
+  if (subCommand === 'graveyard') {
+    const graveyard = new CausalGraveyardStore();
+    const jsonIdx = subArgs.indexOf('--assert');
+    if (jsonIdx >= 0 && subArgs[jsonIdx + 1]) {
+      const trapInput = JSON.parse(subArgs[jsonIdx + 1]) as FailureHypothesis;
+      const trap = graveyard.assertTrap(trapInput);
+      process.stdout.write(`${GREEN}✅ 실패 안티패턴 함정 등록 완료: ${trap.id}${RESET}\n`);
+      return 0;
+    }
+    const traps = graveyard.getAllTraps();
+    if (options?.agentMode || options?.compact) {
+      process.stdout.write(JSON.stringify({ ok: true, total: traps.length, traps }) + '\n');
+    } else {
+      process.stdout.write(
+        `\n${BOLD}${RED}🪦 [Causal Graveyard] 실패 및 안티패턴 함정 보관소 (${traps.length}개)${RESET}\n\n`
+      );
+      for (const t of traps) {
+        process.stdout.write(
+          `  • [${t.severity}] ${BOLD}${t.trapPattern}${RESET} (${t.domain})\n    원인: ${t.reason}\n    대안: ${t.safeAlternative}\n`
+        );
+      }
+      process.stdout.write('\n');
+    }
+    return 0;
+  }
+
+  // 16. 함정 사전 스캔 (trap-check)
+  if (subCommand === 'trap-check') {
+    const files: string[] = [];
+    const keywords: string[] = [];
+    for (let i = 0; i < subArgs.length; i++) {
+      if (subArgs[i] === '--files' || subArgs[i] === '-f') {
+        let j = i + 1;
+        while (j < subArgs.length && !subArgs[j].startsWith('-')) {
+          files.push(subArgs[j++]);
+        }
+        i = j - 1;
+      } else if (subArgs[i] === '--keywords' || subArgs[i] === '-k') {
+        let j = i + 1;
+        while (j < subArgs.length && !subArgs[j].startsWith('-')) {
+          keywords.push(subArgs[j++]);
+        }
+        i = j - 1;
+      }
+    }
+    const graveyard = new CausalGraveyardStore();
+    const scan = graveyard.scanTraps({
+      files: files.length > 0 ? files : undefined,
+      keywords: keywords.length > 0 ? keywords : undefined,
+    });
+    if (options?.agentMode || options?.compact) {
+      process.stdout.write(JSON.stringify(scan, null, 2) + '\n');
+    } else {
+      process.stdout.write('\n' + CausalGraveyardStore.formatTrapWarnings(scan) + '\n\n');
+    }
+    return scan.trapped ? 1 : 0;
+  }
+
+  // 17. 컨텍스트 브랜치 관리 (branch)
+  if (subCommand === 'branch') {
+    const branchAction = subArgs.find((a) => a !== 'branch' && !a.startsWith('-')) || 'list';
+    const branchStore = new CausalBranchStore();
+    if (branchAction === 'list') {
+      const branches = branchStore.listBranches();
+      const current = branchStore.getCurrentBranch();
+      if (options?.agentMode || options?.compact) {
+        process.stdout.write(JSON.stringify({ ok: true, current, branches }) + '\n');
+      } else {
+        process.stdout.write(
+          `\n${BOLD}${CYAN}🌿 [Causal Branch] 인과 맥락 브랜치 목록${RESET}\n\n`
+        );
+        for (const b of branches) {
+          const prefix =
+            b.name === current.name ? `${BOLD}${GREEN}* ${b.name}${RESET}` : `  ${b.name}`;
+          process.stdout.write(
+            `${prefix} (${b.status}) - ${b.description || '설명 없음'}\n`
+          );
+        }
+        process.stdout.write('\n');
+      }
+      return 0;
+    }
+    if (branchAction === 'create') {
+      const name = subArgs.filter(
+        (a) => a !== 'branch' && a !== 'create' && !a.startsWith('-')
+      )[0];
+      if (!name) {
+        process.stderr.write(
+          `${RED}❌ 브랜치 이름이 필요합니다. (예: synapse memory branch create feat/test)${RESET}\n`
+        );
+        return 1;
+      }
+      const b = await branchStore.createBranch(name);
+      process.stdout.write(`${GREEN}✅ 브랜치 생성 완료: ${b.name}${RESET}\n`);
+      return 0;
+    }
+    if (branchAction === 'switch') {
+      const name = subArgs.filter(
+        (a) => a !== 'branch' && a !== 'switch' && !a.startsWith('-')
+      )[0];
+      if (!name) {
+        process.stderr.write(`${RED}❌ 전환할 브랜치 이름이 필요합니다.${RESET}\n`);
+        return 1;
+      }
+      const b = branchStore.switchBranch(name);
+      process.stdout.write(`${GREEN}✅ 브랜치 전환 완료: ${b.name}${RESET}\n`);
+      return 0;
+    }
+    if (branchAction === 'merge') {
+      const name = subArgs.filter(
+        (a) => a !== 'branch' && a !== 'merge' && !a.startsWith('-')
+      )[0];
+      if (!name) {
+        process.stderr.write(`${RED}❌ 병합할 브랜치 이름이 필요합니다.${RESET}\n`);
+        return 1;
+      }
+      const res = await branchStore.mergeBranch(name);
+      if (res && res.resultingCheckpoint) {
+        process.stdout.write(`${GREEN}✅ 브랜치 병합 성공: ${name}${RESET}\n`);
+      } else {
+        process.stderr.write(`${RED}❌ 브랜치 병합 실패: ${name}${RESET}\n`);
+      }
+      return res ? 0 : 1;
+    }
+    if (branchAction === 'abandon') {
+      const name = subArgs.filter(
+        (a) => a !== 'branch' && a !== 'abandon' && !a.startsWith('-')
+      )[0];
+      if (!name) {
+        process.stderr.write(`${RED}❌ 폐기할 브랜치 이름이 필요합니다.${RESET}\n`);
+        return 1;
+      }
+      const res = branchStore.abandonBranch(name, '사용자 명령으로 폐기됨');
+      process.stdout.write(
+        `${YELLOW}⚠️ 브랜치 폐기 및 Graveyard 함정 이관 완료: ${name}${RESET}\n`
+      );
+      return res.branch ? 0 : 1;
+    }
+    process.stderr.write(`${RED}❌ 알 수 없는 branch 서브커맨드: ${branchAction}${RESET}\n`);
+    return 1;
+  }
+
+  // 18. 연쇄 파급 영향 분석 (predict)
+  if (subCommand === 'predict') {
+    const files: string[] = [];
+    let maxHops = 3;
+    for (let i = 0; i < subArgs.length; i++) {
+      if (subArgs[i] === '--hops' && subArgs[i + 1]) {
+        maxHops = parseInt(subArgs[++i], 10);
+      } else if (subArgs[i] !== 'predict' && !subArgs[i].startsWith('-')) {
+        files.push(subArgs[i]);
+      }
+    }
+    const predictor = new CausalPredictorEngine();
+    const report = predictor.analyzeBlastRadius(files, maxHops);
+    if (options?.agentMode || options?.compact) {
+      process.stdout.write(JSON.stringify(report, null, 2) + '\n');
+    } else {
+      process.stdout.write(
+        `\n${BOLD}${CYAN}💥 [Blast Radius Report] 위험도: ${report.overallRisk} (최대 점수: ${report.maxRiskScore})${RESET}\n\n` +
+          `  • 파급 노드 수     : ${report.affectedNodes.length}개\n`
+      );
+      for (const n of report.affectedNodes) {
+        process.stdout.write(
+          `    [H${n.hopLevel}] ${BOLD}${n.name}${RESET} (위험도: ${n.riskScore}) - ${n.riskReason}\n`
+        );
+      }
+      process.stdout.write(
+        `  • 사전 페치 불변식 : ${report.prefetchedInvariants.length}건\n\n`
+      );
+    }
+    return 0;
+  }
+
+  // 19. Git diff 기반 의도 자동 역합성 체크포인트 (auto-checkpoint)
+  if (subCommand === 'auto-checkpoint') {
+    let title: string | undefined;
+    for (let i = 0; i < subArgs.length; i++) {
+      if (subArgs[i] === '--title' && subArgs[i + 1]) {
+        title = subArgs[++i];
+      }
+    }
+    const synthesizer = new CausalSynthesizerEngine();
+    const cp = await synthesizer.autoCheckpoint(process.cwd(), { title });
+    if (options?.agentMode || options?.compact) {
+      process.stdout.write(JSON.stringify({ ok: true, checkpoint: cp }) + '\n');
+    } else {
+      process.stdout.write(
+        `\n${BOLD}${GREEN}✨ [Git 의도 역합성 ➔ 자동 체크포인트 박제 완료]${RESET}\n` +
+          `  • ID         : ${BOLD}${CYAN}${cp.id}${RESET}\n` +
+          `  • 제목       : ${BOLD}${cp.title}${RESET}\n` +
+          `  • 목표       : ${cp.goal}\n` +
+          `  • 완료 단계  : ${cp.completedSteps.length}건 자동 추출\n` +
+          `  • 다음 과제  : ${cp.pendingTasks.length}건 역합성\n\n`
+      );
+    }
+    return 0;
+  }
+
+  // 20. 옵시디언 볼트 동기화 (lens)
+  if (subCommand === 'lens') {
+    const lensAction =
+      subArgs.find((a) => a !== 'lens' && !a.startsWith('-')) || 'sync';
+    let vaultPath: string | undefined;
+    for (let i = 0; i < subArgs.length; i++) {
+      if (subArgs[i] === '--vault' && subArgs[i + 1]) {
+        vaultPath = subArgs[++i];
+      }
+    }
+    const lens = new CausalObsidianLensEngine();
+    if (lensAction === 'export') {
+      const res = await lens.exportToVault(vaultPath);
+      process.stdout.write(JSON.stringify(res, null, 2) + '\n');
+      return res.success ? 0 : 1;
+    }
+    if (lensAction === 'import') {
+      const res = await lens.importFromVault(vaultPath);
+      process.stdout.write(JSON.stringify(res, null, 2) + '\n');
+      return res.success ? 0 : 1;
+    }
+    const syncRes = await lens.syncWithVault(vaultPath);
+    process.stdout.write(JSON.stringify(syncRes, null, 2) + '\n');
+    return syncRes.success ? 0 : 1;
   }
 
   process.stderr.write(`${RED}❌ 알 수 없는 memory 서브 명령어: '${subCommand}'${RESET}\n`);
