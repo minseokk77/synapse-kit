@@ -2,6 +2,7 @@
  * 범용 마크다운 시냅스 데이터베이스 타입 규격 (Synapse-DB Type Specifications)
  * SOLID 원칙 준수: 단일 책임 원칙(SRP)에 따른 타입 정의 분리
  */
+import type { CausalWalConfig } from "./wal/config";
 
 /** 시냅스 위키링크 규격 ([[collection/id|alias]]) */
 export interface SynapseWikilink {
@@ -59,6 +60,7 @@ export interface SynapseDBConfig {
   readonly vaultDir: string;
   readonly autoWatch?: boolean;
   readonly persistDebounceMs?: number;
+  readonly wal?: CausalWalConfig;
 }
 
 /** 시냅스 데이터베이스 전체 통계 요약 */

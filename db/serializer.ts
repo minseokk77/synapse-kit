@@ -13,39 +13,111 @@ export interface RawParsedMarkdown<T = Record<string, any>> {
   readonly wikilinks: readonly SynapseWikilink[];
 }
 
+const EMPTY_WIKILINKS: SynapseWikilink[] = [];
+
 /**
  * 텍스트에서 옵시디언 위키링크([[target|alias]] 또는 [[target]]) 자동 추출
+ * 초고속 Zero-Regex 인덱스 스캐너: 정규식 엔진 생성/컴파일/exec 배열 할당 없이 indexOf 슬라이싱으로 추출
  */
 export function extractWikilinks(text: string, defaultCollection = ""): SynapseWikilink[] {
-  const regex = /\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g;
+  if (!text) return EMPTY_WIKILINKS;
+  let openIdx = text.indexOf("[[");
+  if (openIdx === -1) return EMPTY_WIKILINKS;
+
   const links: SynapseWikilink[] = [];
-  let match: RegExpExecArray | null;
+  const textLen = text.length;
 
-  while ((match = regex.exec(text)) !== null) {
-    const rawTarget = match[1].trim();
-    if (!rawTarget) continue;
-    const alias = match[2]?.trim();
+  while (openIdx !== -1 && openIdx + 4 <= textLen) {
+    const closeIdx = text.indexOf("]]", openIdx + 2);
+    if (closeIdx === -1) break;
 
-    let targetCollection = defaultCollection;
-    let targetId = rawTarget;
-
-    if (rawTarget.includes("/")) {
-      const parts = rawTarget.split("/");
-      targetCollection = parts[0].trim();
-      targetId = parts.slice(1).join("/").trim();
+    const inner = text.slice(openIdx + 2, closeIdx);
+    // 내부에 중첩된 "[["가 있는 비정상 토큰은 건너뛰기
+    const nestedOpen = inner.indexOf("[[");
+    if (nestedOpen !== -1) {
+      openIdx = openIdx + 2 + nestedOpen;
+      continue;
     }
 
-    if (!targetId) continue;
+    let rawTarget = inner;
+    let alias: string | undefined;
 
-    links.push({
-      raw: match[0],
-      targetCollection,
-      targetId,
-      alias,
-    });
+    const pipeIdx = inner.indexOf("|");
+    if (pipeIdx !== -1) {
+      rawTarget = inner.slice(0, pipeIdx).trim();
+      const rawAlias = inner.slice(pipeIdx + 1).trim();
+      if (rawAlias.length > 0) alias = rawAlias;
+    } else {
+      rawTarget = inner.trim();
+    }
+
+    if (rawTarget.length > 0) {
+      let targetCollection = defaultCollection;
+      let targetId = rawTarget;
+
+      const slashIdx = rawTarget.indexOf("/");
+      if (slashIdx !== -1) {
+        targetCollection = rawTarget.slice(0, slashIdx).trim();
+        targetId = rawTarget.slice(slashIdx + 1).trim();
+      }
+
+      if (targetId.length > 0) {
+        links.push({
+          raw: text.slice(openIdx, closeIdx + 2),
+          targetCollection,
+          targetId,
+          alias,
+        });
+      }
+    }
+
+    openIdx = text.indexOf("[[", closeIdx + 2);
   }
 
-  return links;
+  return links.length > 0 ? links : EMPTY_WIKILINKS;
+}
+
+/**
+ * 직렬화/파싱 왕복 없이 메모리 객체(data)와 본문(body)에서 직접 위키링크를 초고속 추출
+ */
+export function extractWikilinksFromDataAndBody(
+  data: Record<string, any> | undefined | null,
+  body: string,
+  defaultCollection = ""
+): SynapseWikilink[] {
+  let result: SynapseWikilink[] | null = null;
+
+  if (data && typeof data === "object") {
+    for (const key in data) {
+      const val = data[key];
+      if (typeof val === "string" && val.includes("[[")) {
+        const extracted = extractWikilinks(val, defaultCollection);
+        if (extracted.length > 0) {
+          if (!result) result = [];
+          for (let i = 0; i < extracted.length; i++) result.push(extracted[i]);
+        }
+      } else if (typeof val === "object" && val !== null) {
+        const jsonStr = JSON.stringify(val);
+        if (jsonStr.includes("[[")) {
+          const extracted = extractWikilinks(jsonStr, defaultCollection);
+          if (extracted.length > 0) {
+            if (!result) result = [];
+            for (let i = 0; i < extracted.length; i++) result.push(extracted[i]);
+          }
+        }
+      }
+    }
+  }
+
+  if (body && body.includes("[[")) {
+    const bodyLinks = extractWikilinks(body, defaultCollection);
+    if (bodyLinks.length > 0) {
+      if (!result) return bodyLinks;
+      for (let i = 0; i < bodyLinks.length; i++) result.push(bodyLinks[i]);
+    }
+  }
+
+  return result ?? EMPTY_WIKILINKS;
 }
 
 /**

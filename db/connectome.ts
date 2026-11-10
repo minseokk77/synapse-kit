@@ -28,6 +28,8 @@ export class SynapseConnectome {
   // 4. 초경량 인메모리 전문 검색 토큰 역색인 (Token ➔ Set<NodeId>) 및 문서별 토큰 추적기
   private readonly tokenInvertedIndex = new Map<string, Set<string>>();
   private readonly documentTokens = new Map<string, Set<string>>();
+  // 쓰기 핫패스 병목 제거를 위한 지연 역색인 대기열 (Dirty-Flag Lazy Indexing)
+  private readonly dirtySearchNodes = new Set<string>();
 
   constructor() {}
 
@@ -49,6 +51,7 @@ export class SynapseConnectome {
     this.edgeMeta.clear();
     this.tokenInvertedIndex.clear();
     this.documentTokens.clear();
+    this.dirtySearchNodes.clear();
   }
 
   /**
@@ -57,9 +60,31 @@ export class SynapseConnectome {
   public putDocument(doc: SynapseDocument): void {
     const nodeId = SynapseConnectome.makeNodeId(doc.collection, doc.id);
 
-    // 기존 문서가 있다면 이 문서에서 출발하던 이전 간선 및 이전 검색 토큰만 정확히 정리
-    // (다른 문서에서 이 문서로 들어오는 incomingEdges는 보존하여 피참조 문서 수정 시 시냅스 단절 방지)
-    this.removeDocumentOwnedIndices(nodeId);
+    // 기존 나가는 간선이 존재할 때만 선택적으로 정리 (피참조 incomingEdges는 보존)
+    const links = doc.wikilinks;
+    const linksLen = links.length;
+    const existingOutSet = this.outgoingEdges.get(nodeId);
+
+    // 단일 위키링크가 이전과 100% 동일한 경우 간선 Set 삭제/재생성 생략 (Zero-Churn Fast-Path)
+    let skipEdgeRebuild = false;
+    if (existingOutSet && existingOutSet.size === 1 && linksLen === 1) {
+      const link = links[0];
+      const targetNodeId = SynapseConnectome.makeNodeId(
+        link.targetCollection || doc.collection,
+        link.targetId
+      );
+      if (existingOutSet.has(targetNodeId)) {
+        const metaKey = `${nodeId}->${targetNodeId}`;
+        const existingMeta = this.edgeMeta.get(metaKey);
+        if (existingMeta && existingMeta.alias === link.alias) {
+          skipEdgeRebuild = true;
+        }
+      }
+    }
+
+    if (!skipEdgeRebuild && existingOutSet) {
+      this.removeDocumentOutgoingEdges(nodeId);
+    }
 
     // 1. 문서 저장
     this.documents.set(nodeId, doc);
@@ -72,39 +97,40 @@ export class SynapseConnectome {
     }
     colSet.add(doc.id);
 
-    // 3. 위키링크 기반 시냅스 간선 형성
-    for (const link of doc.wikilinks) {
-      const targetNodeId = SynapseConnectome.makeNodeId(
-        link.targetCollection || doc.collection,
-        link.targetId
-      );
-
-      // 나가는 간선
+    // 3. 위키링크 기반 시냅스 간선 형성 (위키링크가 존재하고 변경이 있을 때만 루프 진입)
+    if (!skipEdgeRebuild && linksLen > 0) {
       let outSet = this.outgoingEdges.get(nodeId);
       if (!outSet) {
         outSet = new Set<string>();
         this.outgoingEdges.set(nodeId, outSet);
       }
-      outSet.add(targetNodeId);
 
-      // 들어오는 간선 (역색인)
-      let inSet = this.incomingEdges.get(targetNodeId);
-      if (!inSet) {
-        inSet = new Set<string>();
-        this.incomingEdges.set(targetNodeId, inSet);
+      for (let i = 0; i < linksLen; i++) {
+        const link = links[i];
+        const targetNodeId = SynapseConnectome.makeNodeId(
+          link.targetCollection || doc.collection,
+          link.targetId
+        );
+
+        outSet.add(targetNodeId);
+
+        let inSet = this.incomingEdges.get(targetNodeId);
+        if (!inSet) {
+          inSet = new Set<string>();
+          this.incomingEdges.set(targetNodeId, inSet);
+        }
+        inSet.add(nodeId);
+
+        this.edgeMeta.set(`${nodeId}->${targetNodeId}`, {
+          fromNodeId: nodeId,
+          toNodeId: targetNodeId,
+          alias: link.alias,
+        });
       }
-      inSet.add(nodeId);
-
-      const edgeKey = `${nodeId}->${targetNodeId}`;
-      this.edgeMeta.set(edgeKey, {
-        fromNodeId: nodeId,
-        toNodeId: targetNodeId,
-        alias: link.alias,
-      });
     }
 
-    // 4. 전문 검색 역색인 토큰 등록
-    this.indexDocumentText(nodeId, doc);
+    // 4. 전문 검색 역색인은 지연 평가(Lazy Evaluation) 플래그만 O(1)로 마킹하여 쓰기 지연 제거
+    this.dirtySearchNodes.add(nodeId);
   }
 
   /**
@@ -114,7 +140,11 @@ export class SynapseConnectome {
     const nodeId = SynapseConnectome.makeNodeId(collection, id);
     if (!this.documents.has(nodeId)) return false;
 
-    this.removeDocumentOwnedIndices(nodeId);
+    this.dirtySearchNodes.delete(nodeId);
+    if (this.outgoingEdges.has(nodeId)) {
+      this.removeDocumentOutgoingEdges(nodeId);
+    }
+    this.removeDocumentSearchTokens(nodeId);
     this.documents.delete(nodeId);
 
     const colSet = this.collectionDocIds.get(collection);
@@ -129,39 +159,55 @@ export class SynapseConnectome {
   }
 
   /**
-   * 해당 문서가 소유한 나가는 간선(Outgoing Edges)과 검색 역색인 토큰만 정리
+   * 해당 문서에서 출발하는 나가는 간선(Outgoing Edges)만 정리
    */
-  private removeDocumentOwnedIndices(nodeId: string): void {
-    // 1. 이 문서에서 나가는 간선 정리
+  private removeDocumentOutgoingEdges(nodeId: string): void {
     const outSet = this.outgoingEdges.get(nodeId);
-    if (outSet) {
-      for (const targetNodeId of outSet) {
-        const inSet = this.incomingEdges.get(targetNodeId);
-        if (inSet) {
-          inSet.delete(nodeId);
-          if (inSet.size === 0) {
-            this.incomingEdges.delete(targetNodeId);
-          }
+    if (!outSet) return;
+    for (const targetNodeId of outSet) {
+      const inSet = this.incomingEdges.get(targetNodeId);
+      if (inSet) {
+        inSet.delete(nodeId);
+        if (inSet.size === 0) {
+          this.incomingEdges.delete(targetNodeId);
         }
-        this.edgeMeta.delete(`${nodeId}->${targetNodeId}`);
       }
-      this.outgoingEdges.delete(nodeId);
+      this.edgeMeta.delete(`${nodeId}->${targetNodeId}`);
     }
+    this.outgoingEdges.delete(nodeId);
+  }
 
-    // 2. 이 문서의 기존 전문 검색 토큰 역색인 정리 (유령 토큰 원천 차단)
+  /**
+   * 해당 문서의 기존 전문 검색 토큰 역색인 정리 (유령 토큰 원천 차단)
+   */
+  private removeDocumentSearchTokens(nodeId: string): void {
     const oldTokens = this.documentTokens.get(nodeId);
-    if (oldTokens) {
-      for (const token of oldTokens) {
-        const nodeSet = this.tokenInvertedIndex.get(token);
-        if (nodeSet) {
-          nodeSet.delete(nodeId);
-          if (nodeSet.size === 0) {
-            this.tokenInvertedIndex.delete(token);
-          }
+    if (!oldTokens) return;
+    for (const token of oldTokens) {
+      const nodeSet = this.tokenInvertedIndex.get(token);
+      if (nodeSet) {
+        nodeSet.delete(nodeId);
+        if (nodeSet.size === 0) {
+          this.tokenInvertedIndex.delete(token);
         }
       }
-      this.documentTokens.delete(nodeId);
     }
+    this.documentTokens.delete(nodeId);
+  }
+
+  /**
+   * 대기 중인 변경 문서들의 검색 역색인을 일괄 동기화 (검색 또는 무결성 검증 시 자동 호출)
+   */
+  private flushDirtySearchIndex(): void {
+    if (this.dirtySearchNodes.size === 0) return;
+    for (const nodeId of this.dirtySearchNodes) {
+      this.removeDocumentSearchTokens(nodeId);
+      const doc = this.documents.get(nodeId);
+      if (doc) {
+        this.indexDocumentText(nodeId, doc);
+      }
+    }
+    this.dirtySearchNodes.clear();
   }
 
   /**
@@ -228,6 +274,7 @@ export class SynapseConnectome {
     readonly brokenIncoming: string[];
     readonly ghostTokens: string[];
   } {
+    this.flushDirtySearchIndex();
     const brokenOutgoing: string[] = [];
     const brokenIncoming: string[] = [];
     const ghostTokens: string[] = [];
@@ -315,6 +362,7 @@ export class SynapseConnectome {
    * 초경량 한국어/영어 전문 검색 (BM25 간이 스코어링)
    */
   public search<TData = any>(query: string, collectionFilter?: string): SynapseSearchResult<TData>[] {
+    this.flushDirtySearchIndex();
     const tokens = this.tokenize(query);
     if (tokens.length === 0) return [];
 

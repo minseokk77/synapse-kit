@@ -5,8 +5,15 @@
 import { SynapseEngine } from "./engine";
 import { SynapseCollection } from "./collection";
 import { SynapseMigrator } from "./migrator";
+import { SynapseConnectome } from "./connectome";
 import { exportToObsidianCanvas, type CanvasData } from "./canvasExporter";
 import type { SynapseDBConfig, SynapseDBStats } from "./types";
+import type {
+  CausalTimelineDiff,
+  CausalWalEntry,
+  CausalWalUnifiedStats,
+  CompilerTemporalMetric,
+} from "./wal";
 
 export class SynapseDB {
   public readonly engine: SynapseEngine;
@@ -64,6 +71,50 @@ export class SynapseDB {
   }
 
   /**
+   * 아레나 할당기 기반 원자적 트랜잭션 실행 (예외 발생 시 0ns 롤백)
+   */
+  public async transaction<TResult>(
+    fn: () => Promise<TResult> | TResult
+  ): Promise<TResult> {
+    return this.engine.executeTransaction(fn);
+  }
+
+  /**
+   * 특정 LSN 시점의 시냅스 커넥톰을 즉시 복원 (Time-Travel)
+   */
+  public asOfLsn(targetLsn: number): SynapseConnectome {
+    return this.engine.wal.asOfLsn(this.engine.connectome, targetLsn);
+  }
+
+  /**
+   * 특정 타임스탬프(밀리초 또는 ISO 문자열) 시점의 시냅스 커넥톰 즉시 복원 (Time-Travel)
+   */
+  public asOf(timestampMsOrIso: number | string): SynapseConnectome {
+    return this.engine.wal.asOf(this.engine.connectome, timestampMsOrIso);
+  }
+
+  /**
+   * 두 LSN 시점 사이의 문서 생성·수정·삭제 및 위키링크 변화 차분(Diff) 조회
+   */
+  public diffBetweenLsn(fromLsn: number, toLsn: number): CausalTimelineDiff {
+    return this.engine.wal.diffBetweenLsn(fromLsn, toLsn);
+  }
+
+  /**
+   * 컴파일러 빌드 지연시간 및 바이너리 크기 시계열 메트릭 기록
+   */
+  public recordCompilerMetric(metric: CompilerTemporalMetric): CausalWalEntry {
+    return this.engine.wal.recordCompilerMetric(metric);
+  }
+
+  /**
+   * Causal-WAL (링 버퍼, 아레나, SQLite WAL) 통합 상태 통계
+   */
+  public walStats(): CausalWalUnifiedStats {
+    return this.engine.wal.getStats();
+  }
+
+  /**
    * 데이터베이스 종료 및 워처 해제
    */
   public close(): void {
@@ -79,3 +130,4 @@ export * from "./serializer";
 export * from "./engine";
 export * from "./migrator";
 export * from "./canvasExporter";
+export * from "./wal";
