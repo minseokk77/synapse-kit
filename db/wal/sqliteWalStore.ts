@@ -30,6 +30,7 @@ export class SqliteCausalWalStore {
   private sqlite: Database | null = null;
   private insertStmt: ReturnType<Database["prepare"]> | null = null;
   private batchTx: ((items: readonly CausalWalEntry[]) => number) | null = null;
+  private totalFlushedSinceCheckpoint = 0;
   private lastFlushedLsn = 0;
 
   constructor(
@@ -128,11 +129,29 @@ export class SqliteCausalWalStore {
     if (!this.sqlite || !this.batchTx || entries.length === 0) return 0;
 
     try {
-      return this.batchTx(entries);
+      const written = this.batchTx(entries);
+      this.totalFlushedSinceCheckpoint += written;
+      if (this.totalFlushedSinceCheckpoint >= 1000) {
+        this.checkpoint('TRUNCATE');
+      }
+      return written;
     } catch (err: any) {
       throw new Error(
         `[SqliteCausalWalStore] WAL 엔트리 배치 플러시 실패: ${err?.message || err}`
       );
+    }
+  }
+
+  /**
+   * SQLite WAL 체크포인트 수동 또는 자동 실행 (TRUNCATE 모드로 WAL 파일 0바이트 회수)
+   */
+  public checkpoint(mode: 'PASSIVE' | 'FULL' | 'RESTART' | 'TRUNCATE' = 'TRUNCATE'): void {
+    if (!this.sqlite) return;
+    try {
+      this.sqlite.exec(`PRAGMA wal_checkpoint(${mode});`);
+      this.totalFlushedSinceCheckpoint = 0;
+    } catch {
+      // 체크포인트 실패가 메인 파이프라인을 방해하지 않도록 보호
     }
   }
 

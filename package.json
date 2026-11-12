@@ -1,6 +1,6 @@
 {
   "name": "synapse-kit",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": false,
   "publishConfig": {
     "access": "public"
@@ -12,7 +12,9 @@
   "bin": {
     "synapse": "./dist/compiler/cli.js",
     "synapse-kit": "./dist/compiler/cli.js",
-    "synapse-memory": "./dist/memory/cli.js"
+    "synapse-axon": "./dist/compiler/cli.js",
+    "synapse-memory": "./dist/memory/cli.js",
+    "synapse-runner": "./dist/runner/cli.js"
   },
   "exports": {
     ".": {
@@ -30,12 +32,47 @@
     "./db": {
       "types": "./dist/db/index.d.ts",
       "import": "./dist/db/index.js"
+    },
+    "./bus": {
+      "types": "./dist/bus/index.d.ts",
+      "import": "./dist/bus/index.js"
+    },
+    "./runner": {
+      "types": "./dist/runner/index.d.ts",
+      "import": "./dist/runner/index.js"
+    },
+    "./mesh": {
+      "types": "./dist/mesh/index.d.ts",
+      "import": "./dist/mesh/index.js"
+    },
+    "./guard": {
+      "types": "./dist/guard/index.d.ts",
+      "import": "./dist/guard/index.js"
+    },
+    "./verifier": {
+      "types": "./dist/verifier/index.d.ts",
+      "import": "./dist/verifier/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
+    "./optic": {
+      "types": "./dist/optic/index.d.ts",
+      "import": "./dist/optic/index.js"
     }
   },
   "workspaces": [
     "compiler",
     "memory",
-    "db"
+    "db",
+    "bus",
+    "runner",
+    "mesh",
+    "guard",
+    "verifier",
+    "runtime",
+    "optic"
   ],
   "files": [
     "dist",
@@ -47,12 +84,28 @@
     "build:compiler": "cd compiler && bun run build",
     "build:memory": "cd memory && bun run build",
     "build:db": "cd db && bun run build",
-    "build:root": "bun build compiler/cli.ts --outfile dist/compiler/cli.js --target bun && bun build memory/cli.ts --outfile dist/memory/cli.js --target bun && bun build index.ts --outfile dist/index.js --target bun && bun build compiler/index.ts --outfile dist/compiler/index.js --target bun && bun build memory/index.ts --outfile dist/memory/index.js --target bun && bun build db/index.ts --outfile dist/db/index.js --target bun && tsc -p tsconfig.build.json",
-    "build": "bun run build:root && bun run build:compiler && bun run build:memory && bun run build:db",
+    "build:bus": "cd bus && bun run build",
+    "build:runner": "cd runner && bun run build",
+    "build:mesh": "cd mesh && bun run build",
+    "build:guard": "cd guard && bun run build",
+    "build:verifier": "cd verifier && bun run build",
+    "build:runtime": "cd runtime && bun run build",
+    "build:optic": "cd optic && bun run build",
+    "build:root": "bun build compiler/cli.ts --outfile dist/compiler/cli.js --target bun && bun build memory/cli.ts --outfile dist/memory/cli.js --target bun && bun build runner/cli.ts --outfile dist/runner/cli.js --target bun && bun build index.ts --outfile dist/index.js --target bun && bun build compiler/index.ts --outfile dist/compiler/index.js --target bun && bun build memory/index.ts --outfile dist/memory/index.js --target bun && bun build db/index.ts --outfile dist/db/index.js --target bun && bun build bus/index.ts --outfile dist/bus/index.js --target bun && bun build runner/index.ts --outfile dist/runner/index.js --target bun && bun build mesh/index.ts --outfile dist/mesh/index.js --target bun && bun build guard/index.ts --outfile dist/guard/index.js --target bun && bun build verifier/index.ts --outfile dist/verifier/index.js --target bun && bun build runtime/index.ts --outfile dist/runtime/index.js --target bun && bun build optic/index.ts --outfile dist/optic/index.js --target bun && tsc -p tsconfig.build.json",
+    "build": "bun run build:root && bun run build:compiler && bun run build:memory && bun run build:db && bun run build:bus && bun run build:runner && bun run build:mesh && bun run build:guard && bun run build:verifier && bun run build:runtime && bun run build:optic",
     "prepublishOnly": "bun run build",
     "start": "bun run compiler/cli.ts",
     "check": "bun run compiler/cli.ts check",
     "test": "bun test",
+    "optic": "bun run compiler/cli.ts optic",
+    "axon": "bun run compiler/cli.ts axon",
+    "axon:compact": "bun run compiler/cli.ts axon --compact",
+    "axon:dry": "bun run compiler/cli.ts axon --dry-run",
+    "release": "bun run compiler/cli.ts release",
+    "release:compact": "bun run compiler/cli.ts release --compact",
+    "release:dry": "bun run compiler/cli.ts release --dry-run",
+    "deploy": "bun run compiler/cli.ts deploy",
+    "deploy:compact": "bun run compiler/cli.ts deploy --compact",
     "memory": "bun run memory/cli.ts",
     "memory:query": "bun run memory/cli.ts query",
     "memory:list": "bun run memory/cli.ts list",

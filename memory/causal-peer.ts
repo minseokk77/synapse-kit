@@ -125,7 +125,7 @@ export async function pingPeer(
       };
     }
 
-    const data = await res.json();
+    const data: any = await res.json();
     return {
       host,
       port,
@@ -170,7 +170,7 @@ export async function queryRemotePeer(
     throw new Error(`원격 인과율 쿼리 실패: HTTP ${res.status} ${res.statusText}`);
   }
 
-  return await res.json();
+  return (await res.json()) as CausalResonanceResult;
 }
 
 /**
@@ -202,7 +202,7 @@ export async function syncWithPeer(
         throw new Error(`원격 데이터 가져오기 실패: HTTP ${res.status}`);
       }
 
-      const remoteDb = await res.json();
+      const remoteDb: any = await res.json();
       const rules: CausalRule[] = Array.isArray(remoteDb.rules) ? remoteDb.rules : [];
       const relations: CausalRelation[] = Array.isArray(remoteDb.relations) ? remoteDb.relations : [];
 
@@ -234,7 +234,7 @@ export async function syncWithPeer(
         throw new Error(`원격 데이터 푸시 실패: HTTP ${res.status}`);
       }
 
-      const pushResult = await res.json();
+      const pushResult: any = await res.json();
       const durationMs = Math.round((performance.now() - startTime) * 100) / 100;
 
       return {

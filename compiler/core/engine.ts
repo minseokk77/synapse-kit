@@ -1,5 +1,5 @@
 import { spawn } from 'bun';
-import { existsSync, readdirSync, watch } from 'node:fs';
+import { existsSync, readdirSync, statSync, watch } from 'node:fs';
 import { resolve } from 'node:path';
 import type { CheckResult, CheckerPlugin, SynapseConfig, SynapseOptions } from '../types';
 import { analyzeCausalGraph } from '../causal-graph';
@@ -372,9 +372,12 @@ export async function executeSign(
 
     for (const dir of candidates) {
       if (existsSync(dir)) {
-        const files = readdirSync(dir).filter((f) => f.endsWith('.exe') && !f.endsWith('.sig'));
+        const files = readdirSync(dir)
+          .filter((f) => f.endsWith('.exe') && !f.endsWith('.sig'))
+          .map((f) => ({ name: f, time: statSync(resolve(dir, f)).mtimeMs }))
+          .sort((a, b) => b.time - a.time);
         if (files.length > 0) {
-          installerPath = resolve(dir, files[0]);
+          installerPath = resolve(dir, files[0].name);
           break;
         }
       }

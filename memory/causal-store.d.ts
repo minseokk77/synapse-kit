@@ -14,6 +14,7 @@ export interface CausalRelation {
     readonly from: string;
     readonly to: string;
     readonly relationType: string;
+    readonly relation?: string;
 }
 /**
  * 인과율 규칙(Node) 규격
@@ -28,6 +29,12 @@ export interface CausalRule {
     readonly actions: readonly string[];
     readonly context: readonly string[];
     readonly lastVerified?: string;
+    readonly name?: string;
+    readonly confidence?: number;
+    readonly weight?: number;
+    readonly updatedAt?: string;
+    readonly description?: string;
+    readonly pattern?: string;
 }
 /**
  * 인과율 메모리 데이터베이스 규격
@@ -105,6 +112,14 @@ export declare class CausalMemoryStore {
      */
     private rebuildIndices;
     /**
+     * 동일 제목(title) 규칙 중복 시 도메인 우선순위 점수 산출
+     */
+    private static getRuleDomainPriority;
+    /**
+     * 규칙 배열에서 동일 제목(title) 중복 제거 및 정규화
+     */
+    private static deduplicateRulesByTitle;
+    /**
      * 데이터베이스 로드
      */
     private loadDatabase;
@@ -134,7 +149,11 @@ export declare class CausalMemoryStore {
     /**
      * 신규 규칙 등록 또는 기존 규칙 갱신
      */
-    assertRule(rule: CausalRule, persistToDisk?: boolean): void;
+    assertRule(rawRule: CausalRule | any, persistToDisk?: boolean): void;
+    /**
+     * 단일 인과율 간선(Relation) 추가 또는 갱신
+     */
+    assertRelation(relation: CausalRelation, persistToDisk?: boolean): void;
     /**
      * 구형 memory MCP 호환: read_graph 대체 (초경량 인과 공명 요약 반환)
      */
@@ -216,6 +235,10 @@ export declare class CausalMemoryStore {
      */
     createRelations(relations: readonly CausalRelation[], persistToDisk?: boolean): CausalRelation[];
     /**
+     * 단일 인과 규칙 삭제 (연결된 고아 인과 간선 동시 정리)
+     */
+    deleteRule(ruleId: string, persistToDisk?: boolean): boolean;
+    /**
      * 구형 memory MCP 호환: delete_entities
      */
     deleteEntities(entityNames: readonly string[], persistToDisk?: boolean): void;
@@ -243,5 +266,19 @@ export declare class CausalMemoryStore {
         totalRelations: number;
         alwaysActiveCount: number;
         issues: string[];
+    };
+    /**
+     * 원시 데이터베이스 객체 반환 (백업 및 피어 동기화용)
+     */
+    getRawDatabase(): CausalMemoryDatabase;
+    /**
+     * 원격 피어 데이터베이스와 로컬 데이터베이스 양방향 무손실 병합 (Sync)
+     */
+    mergeDatabase(incomingRules: readonly CausalRule[], incomingRelations?: readonly CausalRelation[]): {
+        addedRules: number;
+        updatedRules: number;
+        addedRelations: number;
+        totalRules: number;
+        totalRelations: number;
     };
 }

@@ -1,0 +1,40 @@
+{
+  "name": "synapse-mesh",
+  "version": "0.4.0",
+  "description": "Zero-Config Distributed P2P Mesh & Cloudflare Secure Tunnel Bridge for Synapse Vaults",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun build index.ts --outfile dist/index.js --target bun && tsc -p tsconfig.build.json",
+    "prepublishOnly": "bun run build",
+    "test": "bun test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minseokk77/synapse-kit.git",
+    "directory": "mesh"
+  },
+  "keywords": [
+    "p2p",
+    "mesh",
+    "vault-sync",
+    "cloudflare-tunnel",
+    "synapse-kit",
+    "bun"
+  ],
+  "author": "Vesper",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "typescript": "^5.6.3"
+  }
+}

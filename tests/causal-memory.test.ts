@@ -132,7 +132,7 @@ test('4. Live Local Daemon (Port 4242) & Ephemeral HTTP/MCP JSON-RPC Verificatio
         params: { protocolVersion: '2024-11-05' },
       }),
     });
-    const initData = await initRes.json();
+    const initData: any = await initRes.json();
     expect(initData.result.serverInfo.name).toBe('synapse-causal-memory');
 
     // MCP tools/list (21개 도구 노출 확인: 기본 12종 + 컨텍스트 3종 + 슈퍼코어 6종)
@@ -145,7 +145,7 @@ test('4. Live Local Daemon (Port 4242) & Ephemeral HTTP/MCP JSON-RPC Verificatio
         method: 'tools/list',
       }),
     });
-    const listData = await listRes.json();
+    const listData: any = await listRes.json();
     expect(listData.result.tools.length).toBe(21);
 
     // MCP tools/call read_graph 호출 검증
@@ -159,7 +159,7 @@ test('4. Live Local Daemon (Port 4242) & Ephemeral HTTP/MCP JSON-RPC Verificatio
         params: { name: 'read_graph', arguments: {} },
       }),
     });
-    const callData = await callRes.json();
+    const callData: any = await callRes.json();
     const parsedGraph = JSON.parse(callData.result.content[0].text);
     expect(parsedGraph.totalIndexedRules).toBeGreaterThanOrEqual(152);
   } finally {
@@ -215,4 +215,22 @@ test('5. MCP Stdio Server E2E Subprocess Pipe Verification', async () => {
   } finally {
     proc.kill();
   }
+});
+
+test('6. Null-Safety & Malformed Rule Resilience (domain/title 누락 및 객체 래핑 방어)', () => {
+  const store = new CausalMemoryStore();
+  
+  // 1) domain, title이 없는 비정형 규칙 등록
+  expect(() => {
+    store.assertRule({ id: 'malformed_test_1' } as any, false);
+  }).not.toThrow();
+
+  // 2) 빈 객체 등록 시에도 크래시 없음
+  expect(() => {
+    store.assertRule({} as any, false);
+  }).not.toThrow();
+
+  // 3) 도메인/키워드 공명 쿼리 시 Null-Safety 확인
+  const res = store.queryResonance({ domain: 'non_existent_domain', keywords: ['test'] });
+  expect(res.resonanceRules).toBeDefined();
 });

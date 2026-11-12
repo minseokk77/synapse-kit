@@ -480,7 +480,7 @@ describe('🔥 Synapse 6대 인지 슈퍼 코어 - 극한 스트레스·퍼징·
       const totalElapsed = performance.now() - t0;
 
       expect(responses.length).toBe(50);
-      for (const res of responses) {
+      for (const res of responses as any[]) {
         expect(res).toBeDefined();
         expect(res.error).toBeUndefined();
       }

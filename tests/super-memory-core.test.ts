@@ -209,7 +209,7 @@ describe('6대 인지 슈퍼 코어 (Super Cognitive Cores) 정밀 검증 스위
     });
 
     memoryStore.createRelations([
-      { from: 'AuthCore', to: 'SessionGuard', relation: 'requires' },
+      { from: 'AuthCore', to: 'SessionGuard', relationType: 'requires' },
     ]);
 
     // Blast Radius 분석
@@ -295,7 +295,7 @@ describe('6대 인지 슈퍼 코어 (Super Cognitive Cores) 정밀 검증 스위
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ jsonrpc: '2.0', id: 100, method: 'tools/list' }),
       });
-      const listData = await listRes.json();
+      const listData: any = await listRes.json();
       expect(listData.result.tools.length).toBe(21);
 
       // 7-2. MCP tools/call predict_blast_radius
@@ -312,7 +312,7 @@ describe('6대 인지 슈퍼 코어 (Super Cognitive Cores) 정밀 검증 스위
           },
         }),
       });
-      const predictData = await predictRes.json();
+      const predictData: any = await predictRes.json();
       const predictReport = JSON.parse(predictData.result.content[0].text);
       expect(predictReport.overallRisk).toBeDefined();
 
@@ -330,18 +330,18 @@ describe('6대 인지 슈퍼 코어 (Super Cognitive Cores) 정밀 검증 스위
           },
         }),
       });
-      const scanData = await scanRes.json();
+      const scanData: any = await scanRes.json();
       expect(scanData.result.content[0].text).toBeDefined();
 
       // 7-4. HTTP REST /timeline
       const tlRes = await fetch(`http://127.0.0.1:${testPort}/timeline?limit=5`);
-      const tlData = await tlRes.json();
+      const tlData: any = await tlRes.json();
       expect(tlData.ok).toBe(true);
       expect(tlData.timeline).toBeDefined();
 
       // 7-5. HTTP REST /branch
       const branchRes = await fetch(`http://127.0.0.1:${testPort}/branch`);
-      const branchData = await branchRes.json();
+      const branchData: any = await branchRes.json();
       expect(branchData.ok).toBe(true);
       expect(branchData.current.name).toBe('main');
     } finally {

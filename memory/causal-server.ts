@@ -529,11 +529,13 @@ export async function handleMcpJsonRpcRequest(
         }
 
         case 'assert_causal_rule': {
-          store.assertRule(args as CausalRule);
+          const ruleInput = args.rule || args;
+          store.assertRule(ruleInput as CausalRule);
+          const effectiveId = ruleInput.id || 'rule';
           payloadText = JSON.stringify({
             ok: true,
-            message: `인과율 규칙 등록/갱신 완료: ${args.id}`,
-            id: args.id,
+            message: `인과율 규칙 등록/갱신 완료: ${effectiveId}`,
+            id: effectiveId,
           });
           break;
         }
@@ -876,7 +878,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 3. 공명 쿼리 엔드포인트 (POST /query)
         if (url.pathname === '/query' && req.method === 'POST') {
           store.reloadIfNeeded();
-          const body = await req.json();
+          const body: any = await req.json();
           let files: string[] = Array.isArray(body.files) ? body.files : [];
           if (body.autoGit === true && files.length === 0) {
             files = await detectModifiedFiles(body.cwd);
@@ -907,7 +909,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 4. 인과 규칙 등록/갱신 (POST /assert)
         if (url.pathname === '/assert' && req.method === 'POST') {
           store.reloadIfNeeded();
-          const body: CausalRule = await req.json();
+          const body = (await req.json()) as CausalRule;
           store.assertRule(body);
           return new Response(JSON.stringify({ ok: true, id: body.id }), { headers });
         }
@@ -927,7 +929,7 @@ export function startCausalServer(options: ServerOptions = {}) {
 
         // 5-3. 피어 간 인과율 동기화 병합 (POST /sync)
         if (url.pathname === '/sync' && req.method === 'POST') {
-          const body = await req.json();
+          const body: any = await req.json();
           const incomingRules = Array.isArray(body.rules) ? body.rules : [];
           const incomingRelations = Array.isArray(body.relations) ? body.relations : [];
           const mergeResult = store.mergeDatabase(incomingRules, incomingRelations);
@@ -952,7 +954,7 @@ export function startCausalServer(options: ServerOptions = {}) {
 
         // 5-5. 컨텍스트 체크포인트 저장 (POST /context)
         if (url.pathname === '/context' && req.method === 'POST') {
-          const body: SaveCheckpointInput = await req.json();
+          const body = (await req.json()) as SaveCheckpointInput;
           const saved = await contextStore.saveCheckpoint(body);
           return new Response(JSON.stringify({ ok: true, checkpoint: saved }), { headers });
         }
@@ -973,7 +975,7 @@ export function startCausalServer(options: ServerOptions = {}) {
             return new Response(JSON.stringify({ ok: true, traps: list }), { headers });
           }
           if (req.method === 'POST') {
-            const body = await req.json();
+            const body: any = await req.json();
             if (body.action === 'scan') {
               const scanRes = graveyard.scanTraps({
                 files: body.files,
@@ -1000,7 +1002,7 @@ export function startCausalServer(options: ServerOptions = {}) {
             );
           }
           if (req.method === 'POST') {
-            const body = await req.json();
+            const body: any = await req.json();
             if (body.action === 'create') {
               const b = await branchStore.createBranch(body.name, {
                 description: body.fromBranch,
@@ -1029,7 +1031,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 5-9. 파급 영향 예측 (POST /predict)
         if (url.pathname === '/predict' && req.method === 'POST') {
           const predictor = new CausalPredictorEngine(store, contextStore);
-          const body = await req.json();
+          const body: any = await req.json();
           const files = Array.isArray(body.files) ? body.files : [];
           const maxHops = typeof body.maxHops === 'number' ? body.maxHops : 3;
           const report = predictor.analyzeBlastRadius(files, maxHops);
@@ -1039,7 +1041,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 5-10. 자동 역합성 (POST /synthesize)
         if (url.pathname === '/synthesize' && req.method === 'POST') {
           const synthesizer = new CausalSynthesizerEngine(contextStore, store);
-          const body = await req.json();
+          const body: any = await req.json();
           const cwd = typeof body.cwd === 'string' ? body.cwd : process.cwd();
           if (body.autoCheckpoint === false) {
             const summary = await synthesizer.inspectGitChanges(cwd);
@@ -1053,7 +1055,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 5-11. 옵시디언 렌즈 (POST /lens)
         if (url.pathname === '/lens' && req.method === 'POST') {
           const lens = new CausalObsidianLensEngine(store, contextStore);
-          const body = await req.json();
+          const body: any = await req.json();
           const vaultPath = typeof body.vaultPath === 'string' ? body.vaultPath : undefined;
           if (body.action === 'export') {
             const res = await lens.exportToVault(vaultPath);
@@ -1069,7 +1071,7 @@ export function startCausalServer(options: ServerOptions = {}) {
 
         // 6. MCP 호환 JSON-RPC 엔드포인트 (POST /mcp)
         if (url.pathname === '/mcp' && req.method === 'POST') {
-          const rpc: JsonRpcRequest = await req.json();
+          const rpc = (await req.json()) as JsonRpcRequest;
           const responseObj = await handleMcpJsonRpcRequest(
             rpc,
             store,
@@ -1139,7 +1141,7 @@ export async function startCausalMcpStdioServer(dbPath?: string, remoteUrl?: str
             signal: AbortSignal.timeout(timeoutMs),
           });
           if (daemonRes.ok) {
-            responseObj = await daemonRes.json();
+            responseObj = (await daemonRes.json()) as Record<string, any>;
           }
         } catch {
           // 데몬 미실행 또는 통신 타임아웃 시 자체 인메모리 스토어로 폴백

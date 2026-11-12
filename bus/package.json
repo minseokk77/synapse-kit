@@ -1,0 +1,41 @@
+{
+  "name": "synapse-bus",
+  "version": "0.4.0",
+  "description": "Ultra-Low Latency Neural Event Bus & Type-Safe RPC Fabric for Synapse Monorepo",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun build index.ts --outfile dist/index.js --target bun && tsc -p tsconfig.build.json",
+    "prepublishOnly": "bun run build",
+    "test": "bun test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minseokk77/synapse-kit.git",
+    "directory": "bus"
+  },
+  "keywords": [
+    "ipc",
+    "rpc",
+    "event-bus",
+    "pubsub",
+    "zero-copy",
+    "synapse-kit",
+    "bun"
+  ],
+  "author": "Vesper",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "typescript": "^5.6.3"
+  }
+}

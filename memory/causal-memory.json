@@ -1,8 +1,8 @@
 {
   "version": "2.1.0",
-  "updatedAt": "2026-11-10T07:38:36.691Z",
-  "totalRules": 165,
-  "totalRelations": 44,
+  "updatedAt": "2026-11-12T01:21:08.306Z",
+  "totalRules": 169,
+  "totalRelations": 48,
   "rules": [
     {
       "id": "rule-knowledge_base-qylock-network-issue",
@@ -4791,9 +4791,11 @@
         "SynapseDB 컬렉션 CRUD, BM25 한국어 N-gram 검색, Obsidian .canvas 내보내기 활용"
       ],
       "context": [
-        "Synapse Kit v0.2.3 3대 코어(compiler, memory, db) 통합 완료"
+        "Synapse Kit v0.2.3 3대 코어(compiler, memory, db) 통합 완료",
+        "Synapse 3.0 Causal-WAL 타임라인 엔진 완비: asOf, asOfLsn, diffBetweenLsn으로 임의 시점 과거 상태 복원 및 감사 지원",
+        "디스코드 봇 실전 볼트 연동 완료: SQLite 데이터를 볼트로 자동 승격 및 Obsidian 위키링크([[streamers/id]], [[categories/id]], [[makers/id]]) 자동 형성"
       ],
-      "lastVerified": "2026-11-08"
+      "lastVerified": "2026-11-11"
     },
     {
       "id": "ctx-active-session-snapshot",
@@ -4808,25 +4810,177 @@
           "resume",
           "컨텍스트",
           "이어서",
-          "default-session"
+          "synapse-kit"
         ]
       },
       "invariants": [
-        "[최근 작업 목표] core 영역의 기능을 확장하고 변경 사항을 무결하게 정합하는 작업",
-        "[다음 최우선 진행 과제] 추가/수정된 모듈에 대한 포괄적 통합 테스트 스위트 작성 및 회귀 방지"
+        "[최근 작업 목표] Synapse 3.0 마스터 아키텍처 완성 및 실제 디스코드 봇 탑재 검증, 인과율 메모리 영구 기록",
+        "[다음 최우선 진행 과제] Synapse 3.0 공식 npm 배포 준비 또는 v0.3.2 태깅"
       ],
       "actions": [
-        "추가/수정된 모듈에 대한 포괄적 통합 테스트 스위트 작성 및 회귀 방지",
-        "Bun 런타임 기반 빌드 검증 (`bun run build`) 및 무오류 확인",
-        "전역 컨텍스트 스냅샷 데이터베이스 동기화 및 기억 영속화"
+        "Synapse 3.0 공식 npm 배포 준비 또는 v0.3.2 태깅",
+        "오라클 클라우드 VM 배포 스크립트에 Synapse 3.0 볼트 백업 미러링(Mesh) 연동 옵션 검토",
+        "대시보드 프론트엔드에 Synapse 3.0 실시간 비주얼 캔버스/토폴로지 위젯 탑재 검토"
       ],
       "context": [
-        "체크포인트 ID: ctx_20261110_005446_qw31 (세션: default-session, 시각: 2026-11-09T15:54:46.391Z)",
-        "제목: Synapse Kit v0.3.0 완료 - 6대 인지 슈퍼 코어 완비 및 31개 테스트 2022개 검증 100% 통과",
-        "완료 내역: 소스 코드 변경 및 모듈 구조 정비",
-        "핵심 결정: 하드코딩 배제 및 환경 변수/설정 모듈 중심의 설정 아키텍처 적용 | SOLID 단일 책임 원칙(SRP)을 준수한 독립 엔진 분리"
+        "체크포인트 ID: ctx_20261111_103212_7g0d (세션: synapse-kit, 시각: 2026-11-11T01:32:12.760Z)",
+        "제목: Synapse 3.0 9대 코어 완성 & 실제 디스코드 봇 실전 탑재 및 통합 검증 완료 스냅샷",
+        "완료 내역: Synapse 3.0 전역 9대 코어(compiler, memory, db, bus, runner, mesh, guard, verifier, runtime) 전면 구현 및 빌드 완료 | D:/synapse 모노레포 전체 18개 테스트 파일, 93개 스위트, 3,427개 단언문 100% 통과 (0 fail) | 아르곤(Argon / Deep Reasoning) 관점 아키텍처·성능·보안·무결성 심층 검토 보고서 작성 완료 | 실제 운영 디스코드 봇(chzzk-discord-clip-bot)에 Synapse 3.0 패키지 연결 및 src/synapse 전용 계층 구축 완료 | 디스코드 봇 실전 통합 테스트(8대 스위트, 40개 단언문) 100% 통과 (260ms 무결성 입증) | 인과율 메모리(지식 그래프, 규칙, 엔티티, 관계) 영구 기록 및 컨텍스트 체크포인트 저장",
+        "핵심 결정: SOLID SRP/OCP 준수: 모든 코어와 봇 연동 계층을 독립된 파사드와 모듈로 격리 | SecretShield: Discord Bot 토큰 및 터널 토큰, 비밀번호 노출 0초 차단 및 마스킹 | RingBufferBus: 0.3µs 비동기 순환 링버퍼 이벤트 버스로 클립 감지/게시/삭제/조회수 갱신 디커플링 | 마크다운 볼트 & Causal-WAL: 클립 데이터 및 설정을 옵시디언 위키링크 노드로 저장하고 시계열 타임라인에 무손실 기록 | 기존 SQLite(chzzk_clips.db)와의 실시간 양방향 동기화 유지",
+        "설계 아티팩트: synapse_3_0_full_implementation_argon_review.md, synapse_3_0_execution_plan.md"
       ],
-      "lastVerified": "2026-11-09"
+      "lastVerified": "2026-11-11"
+    },
+    {
+      "id": "rule-project_synapse_kit-synapse_3_0_master_architecture",
+      "domain": "Project_Synapse_Kit",
+      "title": "Synapse_3_0_Master_Architecture",
+      "entityType": "Architecture",
+      "triggers": {
+        "files": [
+          "synapse",
+          "synapse.config.ts"
+        ],
+        "keywords": [
+          "synapse",
+          "synapse-kit",
+          "시냅스",
+          "인과율",
+          "causal",
+          "컴파일러",
+          "체커"
+        ],
+        "commands": [
+          "check",
+          "build",
+          "package",
+          "sign",
+          "init",
+          "memory"
+        ]
+      },
+      "invariants": [],
+      "actions": [],
+      "context": [
+        "Synapse 3.0 9대 코어 완비: compiler, memory, db, bus, runner, mesh, guard, verifier, runtime",
+        "compiler: 10대 언어 인과율 병렬 컴파일러 및 --compact 모드 (토큰 99.8% 절감)",
+        "memory: 0-Token 인과 메모리 & 6대 인지 슈퍼코어 (E-Greedy, Spiking, Topological, Holographic, Predictive, Resonant)",
+        "db: 마크다운 커넥톰 & Causal-WAL 시계열 Time-Travel DB (asOf, asOfLsn, diffBetweenLsn)",
+        "bus: 0.30µs Zero-GC 순환 링버퍼 이벤트 버스 & 타입세이프 RPC",
+        "runner: 자가치유 프로세스 슈퍼바이저 & 0.05초 무중단 핫스왑 데몬",
+        "mesh: 분산 볼트 P2P LWW 실시간 미러링, 페일오버 라우터, Cloudflare 터널 오케스트레이터",
+        "guard: AST 보안 방화벽, Secret Shield (Discord/npm/SSH 토큰 0초 차단), VaultSanitizer XSS 정화",
+        "verifier: 인과 불변식 정적 검증기, 그래프 대칭성 100% 증명, 한국어 진단 보고서",
+        "runtime: 초경량 마이크로 샌드박스 VM, 무한루프 타임아웃 가드, 호스트 격리",
+        "검증 실측치: 18개 테스트 파일, 93개 스위트, 3,427개 expect() 단언문 100% 통과 (0 fail), 전역 번들 빌드 에러 0건"
+      ],
+      "lastVerified": "2026-11-11"
+    },
+    {
+      "id": "rule-project_synapse_kit-chzzk_discord_clip_bot_synapse_integration",
+      "domain": "Project_Synapse_Kit",
+      "title": "Chzzk_Discord_Clip_Bot_Synapse_Integration",
+      "entityType": "ProductionDeployment",
+      "triggers": {
+        "files": [
+          "synapse",
+          "synapse.config.ts"
+        ],
+        "keywords": [
+          "synapse",
+          "synapse-kit",
+          "시냅스",
+          "인과율",
+          "causal",
+          "컴파일러",
+          "체커"
+        ],
+        "commands": [
+          "check",
+          "build",
+          "package",
+          "sign",
+          "init",
+          "memory"
+        ]
+      },
+      "invariants": [],
+      "actions": [],
+      "context": [
+        "위치: C:\\Users\\minse\\.gemini\\antigravity\\scratch\\chzzk-discord-clip-bot",
+        "Synapse 3.0 공식 패키지(synapse-kit, synapse-db, synapse-bus, synapse-guard, synapse-mesh, synapse-runner) 연결 및 bun install 완료",
+        "src/synapse/ 전용 파사드 계층 구축: config, types, guard, bus, vaultDb, engine, index",
+        "Guard: DISCORD_BOT_TOKEN, CLOUDFLARE_TUNNEL_TOKEN, 관리자 비밀번호 유출 0초 차단 및 클립 메타데이터 악성 스크립트(XSS) 실시간 정화",
+        "Bus: 0.3µs 링버퍼 이벤트 버스로 클립 감지(chzzk.clip.detected), 포럼 게시(chzzk.clip.posted), 삭제(chzzk.clip.deleted), 조회수 갱신(chzzk.clip.views_updated) 디커플링",
+        "Vault DB & Causal-WAL: 클립 데이터 및 길드 설정을 data/synapse_vault/ 마크다운 볼트 노드와 Causal-WAL에 영구 보존, 기존 SQLite chzzk_clips.db와 실시간 양방향 동기화",
+        "대시보드: /api/stats 응답에 Synapse 3.0 실시간 엔진 메트릭(볼트 문서 수, WAL LSN, 버스 지연시간 등) 노출",
+        "실전 통합 검증: tests/synapse-integration.test.ts 8대 테스트 스위트 40개 expect() 단언문 전체 100% 통과 (260ms 소요)"
+      ],
+      "lastVerified": "2026-11-11"
+    },
+    {
+      "actions": [
+        "디스코드 전송 전 SynapseBotGuard.assertSafeOutput() 호출 의무화",
+        "치지직 클립 감지 시 SynapseBotBus.emit('chzzk.clip.detected') 0.3µs 비차단 발행",
+        "포럼 게시 및 삭제 시 SynapseVaultDb 마크다운 볼트 및 Causal-WAL 타임라인 동기화"
+      ],
+      "context": [
+        "디스코드 봇 개발 및 운영",
+        "Synapse 3.0 프레임워크 연동"
+      ],
+      "domain": "synapse_discord_integration",
+      "id": "rule_synapse_discord_bot_invariants",
+      "invariants": [
+        "DISCORD_BOT_TOKEN 및 관리자 시크릿의 평문 로그/메시지 노출 절대 금지 (Secret Shield)",
+        "클립 제목 및 스트리머명의 악성 스크립트(XSS) 주입 원천 차단 (VaultSanitizer)",
+        "모든 데이터 상태 변화는 마크다운 볼트와 Causal-WAL에 무손실 불변 기록 보존"
+      ],
+      "title": "Synapse 3.0 디스코드 봇 보안 및 고속 이벤트 불변 규칙",
+      "triggers": {
+        "on_event": "discord_message_send_or_clip_event",
+        "source": "chzzk_discord_clip_bot"
+      },
+      "lastVerified": "2026-11-11"
+    },
+    {
+      "id": "rule-project_synapse_kit-synapse_causal_release_engine",
+      "domain": "Project_Synapse_Kit",
+      "title": "Synapse_Causal_Release_Engine",
+      "entityType": "Engine_Subsystem",
+      "triggers": {
+        "files": [
+          "synapse",
+          "synapse.config.ts"
+        ],
+        "keywords": [
+          "synapse",
+          "synapse-kit",
+          "시냅스",
+          "인과율",
+          "causal",
+          "컴파일러",
+          "체커"
+        ],
+        "commands": [
+          "check",
+          "build",
+          "package",
+          "sign",
+          "init",
+          "memory"
+        ]
+      },
+      "invariants": [],
+      "actions": [],
+      "context": [
+        "Synapse Kit 3.0에 초경량 제로-토큰 GitHub 릴리즈 엔진(Causal Release & Deploy) 공식 탑재 완료",
+        "Git 전체 diff 대신 Merkle-DAG Root 및 모듈별 시맨틱 변경점을 인과율 분석하여 0.00초에 초압축 릴리즈 노트 자동 생성 (기존 10,000+ 토큰 대비 96~99% 토큰 절감)",
+        "--compact 모드 지원: 단 1줄의 정형 JSON(약 20~25 토큰)만 표준 출력하여 AI 코딩 에이전트의 컨텍스트 윈도우 오염 및 비용 낭비 원천 차단",
+        "Zero-Token Preflight Guard 내장: 릴리즈 노트 및 첨부 에셋 내 API 토큰/시크릿 누출, .env 파일, 100MB 초과 파일(dummy1gb.tmp 등) 0.00초 검사 및 Fail-Closed 차단",
+        "사용자 전역 규칙 준수: GitHub 릴리즈 배포 시 GitHub CLI (gh release create) 사용 의무화 완벽 연동",
+        "synapse release, synapse deploy 명령어 및 bun run release:compact 스크립트 제공"
+      ],
+      "lastVerified": "2026-11-11"
     }
   ],
   "relations": [
@@ -5049,6 +5203,26 @@
       "from": "Kimi_K3_Spike_Bridge_Architecture",
       "relationType": "DRIVES_ZERO_FLOAT_INFERENCE",
       "to": "BioPhys_Grand_Unified_Spike_Engine_Master_Plan"
+    },
+    {
+      "from": "Chzzk_Discord_Clip_Bot_Synapse_Integration",
+      "relationType": "implements_and_deploys",
+      "to": "Synapse_3_0_Master_Architecture"
+    },
+    {
+      "from": "Synapse_3_0_Master_Architecture",
+      "relationType": "subsumes_and_expands",
+      "to": "Synapse_DB_Universal_Markdown_Connectome"
+    },
+    {
+      "from": "Synapse_3_0_Master_Architecture",
+      "relationType": "governed_by",
+      "to": "Synapse_Kit_Core_Invariants"
+    },
+    {
+      "from": "Synapse_Causal_Release_Engine",
+      "relationType": "partOf",
+      "to": "Synapse_3_0_Master_Architecture"
     }
   ]
 }

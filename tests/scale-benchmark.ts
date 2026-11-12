@@ -17,6 +17,7 @@ const RESET = '\x1b[0m';
 const BOLD = '\x1b[1m';
 const CYAN = '\x1b[36m';
 const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
 const GRAY = '\x1b[90m';
 

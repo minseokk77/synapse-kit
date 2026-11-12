@@ -1,6 +1,6 @@
 {
   "name": "synapse-db",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Universal Markdown-First & In-Memory Connectome Database with Causal-WAL Time-Travel, Zero-GC Ring Buffer, Bump Arena & Obsidian Canvas Exporter",
   "type": "module",
   "main": "dist/index.js",

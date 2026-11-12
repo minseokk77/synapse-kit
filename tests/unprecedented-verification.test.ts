@@ -265,7 +265,7 @@ describe('Synapse Kit 3대 코어 (DB · Memory · Compiler) 미시행 심층 �
         {
           tableName: 'clips',
           targetCollection: 'clips',
-          mapRow: (row: Record<string, unknown>) => ({
+          mapRow: (row: Record<string, unknown>): any => ({
             id: String(row.clip_id),
             data: { streamer_id: String(row.streamer_id), title: String(row.title), views: Number(row.views) },
             body: `# ${String(row.title)}\n\n스트리머 [[streamers/${String(row.streamer_id)}]] 클립`,
@@ -479,7 +479,7 @@ describe('Synapse Kit 3대 코어 (DB · Memory · Compiler) 미시행 심층 �
       // 2. 클린 상태에서는 상대 경로('./src') 소스 트랙이 정확히 스킵되어야 함
       const trackConfig = {
         name: 'frontend',
-        cmd: 'bun --version',
+        command: ['bun', '--version'],
         sources: ['./src'],
         artifacts: ['dist/bundle.js'],
       };

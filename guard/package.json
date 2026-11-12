@@ -1,0 +1,41 @@
+{
+  "name": "synapse-guard",
+  "version": "0.4.0",
+  "description": "AST-Level Security Firewall & Credential Leak Shield for Synapse Monorepo",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun build index.ts --outfile dist/index.js --target bun && tsc -p tsconfig.build.json",
+    "prepublishOnly": "bun run build",
+    "test": "bun test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minseokk77/synapse-kit.git",
+    "directory": "guard"
+  },
+  "keywords": [
+    "security",
+    "firewall",
+    "secret-detection",
+    "ast-guard",
+    "anti-leak",
+    "synapse-kit",
+    "bun"
+  ],
+  "author": "Vesper",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "typescript": "^5.6.3"
+  }
+}

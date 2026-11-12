@@ -92,7 +92,8 @@ ${BOLD}공통 플래그:${RESET}
 /**
  * synapse memory CLI 명령어 핸들러
  */
-export async function handleMemoryCommand(args: readonly string[], options?: MemoryCliOptions): Promise<number> {
+export async function handleMemoryCommand(args: readonly string[], rawOptions?: MemoryCliOptions): Promise<number> {
+  const options = rawOptions || { mode: 'smart', agentMode: false, compactMode: false, watch: false };
   const subArgs = args.filter((a) => a !== 'memory');
   const subCommand = subArgs.find((a) => !a.startsWith('-')) || 'query';
 

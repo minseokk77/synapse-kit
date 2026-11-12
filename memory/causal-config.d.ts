@@ -15,10 +15,24 @@ export declare const CAUSAL_MEMORY_CONFIG: {
     readonly DEFAULT_HOST: string;
     /** 독립 로컬 데몬 서버 기본 포트 */
     readonly DEFAULT_PORT: number;
+    /** 원격 Causal Memory 데몬 프록시 URL (예: Tailscale 피어 http://100.82.92.122:4242) */
+    readonly REMOTE_URL: string;
+    /** 원격 요청 제한 시간 (ms) */
+    readonly REMOTE_TIMEOUT_MS: number;
     /** MCP 서버 프로토콜 버전 */
     readonly MCP_PROTOCOL_VERSION: string;
     /** MCP 서버 식별 이름 */
     readonly MCP_SERVER_NAME: "synapse-causal-memory";
     /** 공명 쿼리 시 컨텍스트 최대 노출 줄 수 (토큰 절감 임계치) */
     readonly MAX_CONTEXT_PREVIEW_LINES: number;
+    /** 전역 컨텍스트 스냅샷(Checkpoint) 저장소 기본 경로 */
+    readonly CONTEXT_DB_PATH: string;
+    /** 패키지 내장 폴백 컨텍스트 스냅샷 경로 */
+    readonly LOCAL_CONTEXT_DB_PATH: string;
+    /** 최대 보존 컨텍스트 체크포인트 개수 */
+    readonly MAX_CHECKPOINTS_RETAINED: number;
+    /** 옵시디언(Obsidian) 볼트 기본 연동 루트 경로 */
+    readonly DEFAULT_OBSIDIAN_VAULT_PATH: string;
+    /** 옵시디언 볼트 내부 인과율 렌즈 저장 서브디렉터리 */
+    readonly OBSIDIAN_LENS_SUBDIR: string;
 };

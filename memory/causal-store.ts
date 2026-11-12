@@ -204,9 +204,9 @@ export class CausalMemoryStore {
     };
 
     for (const rule of this.database.rules) {
-      const domainLower = rule.domain.toLowerCase();
-      const titleLower = rule.title.toLowerCase();
-      const idLower = rule.id.toLowerCase();
+      const domainLower = (rule.domain || 'general').toLowerCase();
+      const titleLower = (rule.title || rule.id || '').toLowerCase();
+      const idLower = (rule.id || '').toLowerCase();
 
       this.titleToRuleMap.set(titleLower, rule);
       this.idToRuleMap.set(idLower, rule);
@@ -308,8 +308,8 @@ export class CausalMemoryStore {
    * 동일 제목(title) 규칙 중복 시 도메인 우선순위 점수 산출
    */
   private static getRuleDomainPriority(rule: CausalRule): number {
-    const titleLower = rule.title.toLowerCase();
-    const dom = rule.domain;
+    const titleLower = (rule.title || rule.id || '').toLowerCase();
+    const dom = rule.domain || '';
     if (titleLower.includes('biophys') && dom === 'User_Preferences_And_Rules') {
       return 0; // 오분류된 BioPhys 상시 활성 규칙은 최저 우선순위
     }
@@ -387,6 +387,9 @@ export class CausalMemoryStore {
    * 데이터베이스 디스크 동기화
    */
   private saveDatabase(): void {
+    if (this.dbPath === ':memory:') {
+      return;
+    }
     try {
       const dir = dirname(this.dbPath);
       if (!existsSync(dir)) {
@@ -441,14 +444,14 @@ export class CausalMemoryStore {
   private getCompiledSearchRules(): readonly CompiledSearchRule[] {
     if (this.compiledSearchRules.length === 0 && this.database.rules.length > 0) {
       for (const rule of this.database.rules) {
-        const domainLower = rule.domain.toLowerCase();
+        const domainLower = (rule.domain || 'general').toLowerCase();
         const searchableText = [
-          rule.title,
-          rule.domain,
-          ...(rule.triggers.keywords || []),
-          ...rule.invariants,
-          ...rule.actions,
-          ...rule.context,
+          rule.title || '',
+          rule.domain || '',
+          ...(rule.triggers?.keywords || []),
+          ...(rule.invariants || []),
+          ...(rule.actions || []),
+          ...(rule.context || []),
         ]
           .join(' ')
           .toLowerCase();
@@ -473,7 +476,7 @@ export class CausalMemoryStore {
 
     // 1. 상시 활성(alwaysActive) 규칙 즉시 O(1) 등록
     for (const rule of this.alwaysActiveRules) {
-      if (targetDomain && rule.domain.toLowerCase() !== targetDomain) continue;
+      if (targetDomain && (rule.domain || '').toLowerCase() !== targetDomain) continue;
       matchedRulesMap.set(rule.id, rule);
     }
 
@@ -482,9 +485,9 @@ export class CausalMemoryStore {
       const cmdRules = this.commandIndex.get(queryCommand);
       if (cmdRules) {
         for (const rule of cmdRules) {
-          if (targetDomain && rule.domain.toLowerCase() !== targetDomain) continue;
+          if (targetDomain && (rule.domain || '').toLowerCase() !== targetDomain) continue;
           matchedRulesMap.set(rule.id, rule);
-          nonAlwaysMatchedTitles.add(rule.title.toLowerCase());
+          nonAlwaysMatchedTitles.add((rule.title || rule.id || '').toLowerCase());
         }
       }
     }
@@ -498,9 +501,9 @@ export class CausalMemoryStore {
         if (!hits) return;
         for (let i = 0; i < hits.length; i++) {
           const rule = hits[i];
-          if (targetDomain && rule.domain.toLowerCase() !== targetDomain) continue;
+          if (targetDomain && (rule.domain || '').toLowerCase() !== targetDomain) continue;
           matchedRulesMap.set(rule.id, rule);
-          nonAlwaysMatchedTitles.add(rule.title.toLowerCase());
+          nonAlwaysMatchedTitles.add((rule.title || rule.id || '').toLowerCase());
         }
       };
 
@@ -575,9 +578,9 @@ export class CausalMemoryStore {
         const exactHits = this.exactKeywordIndex.get(qk);
         if (exactHits && exactHits.length > 0) {
           for (const rule of exactHits) {
-            if (targetDomain && rule.domain.toLowerCase() !== targetDomain) continue;
+            if (targetDomain && (rule.domain || '').toLowerCase() !== targetDomain) continue;
             matchedRulesMap.set(rule.id, rule);
-            nonAlwaysMatchedTitles.add(rule.title.toLowerCase());
+            nonAlwaysMatchedTitles.add((rule.title || rule.id || '').toLowerCase());
           }
         } else {
           unindexedKeywords.push(qk);
@@ -594,7 +597,7 @@ export class CausalMemoryStore {
           for (const qk of unindexedKeywords) {
             if (entry.searchableText.includes(qk)) {
               matchedRulesMap.set(entry.rule.id, entry.rule);
-              nonAlwaysMatchedTitles.add(entry.rule.title.toLowerCase());
+              nonAlwaysMatchedTitles.add((entry.rule.title || entry.rule.id || '').toLowerCase());
               break;
             }
           }
@@ -605,7 +608,7 @@ export class CausalMemoryStore {
     // 5. 인접 리스트(Adjacency List) 기반 다중 홉(Multi-Hop) 인과 파동 전파 (순환 참조 완벽 방지)
     const activeRelationsSet = new Set<CausalRelation>();
     const visitedTitles = new Set<string>(
-      Array.from(matchedRulesMap.values()).map((r) => r.title.toLowerCase())
+      Array.from(matchedRulesMap.values()).map((r) => (r.title || r.id || '').toLowerCase())
     );
 
     let currentFrontier = new Set<string>(
@@ -637,7 +640,7 @@ export class CausalMemoryStore {
               const neighborRule = this.titleToRuleMap.get(neighborLower);
               if (
                 neighborRule &&
-                (!targetDomain || neighborRule.domain.toLowerCase() === targetDomain)
+                (!targetDomain || (neighborRule.domain || '').toLowerCase() === targetDomain)
               ) {
                 matchedRulesMap.set(neighborRule.id, neighborRule);
               }
@@ -672,26 +675,38 @@ export class CausalMemoryStore {
   /**
    * 신규 규칙 등록 또는 기존 규칙 갱신
    */
-  public assertRule(rule: CausalRule, persistToDisk: boolean = true): void {
-    const targetTitle = (rule.title || (rule as any).name || '').toLowerCase();
+  public assertRule(rawRule: CausalRule | any, persistToDisk: boolean = true): void {
+    const sanitizedRule: CausalRule = {
+      id: rawRule.id || `rule_${Date.now()}`,
+      domain: rawRule.domain || 'general',
+      title: rawRule.title || rawRule.name || rawRule.id || 'Untitled Rule',
+      triggers: rawRule.triggers || {},
+      invariants: Array.isArray(rawRule.invariants) ? rawRule.invariants : [],
+      actions: Array.isArray(rawRule.actions) ? rawRule.actions : [],
+      context: Array.isArray(rawRule.context) ? rawRule.context : [],
+      ...rawRule,
+    };
+
+    const targetTitle = (sanitizedRule.title || sanitizedRule.id).toLowerCase();
     const existingIndex = this.database.rules.findIndex(
       (r) =>
-        r.id === rule.id ||
+        r.id === sanitizedRule.id ||
         (targetTitle.length > 0 &&
-          (r.title || (r as any).name || '').toLowerCase() === targetTitle)
+          (r.title || (r as any).name || r.id || '').toLowerCase() === targetTitle)
     );
     const updatedRules = [...this.database.rules];
     const today = new Date().toISOString().split('T')[0];
 
     if (existingIndex >= 0) {
       updatedRules[existingIndex] = {
-        ...rule,
-        id: rule.id || updatedRules[existingIndex].id,
+        ...updatedRules[existingIndex],
+        ...sanitizedRule,
+        id: sanitizedRule.id || updatedRules[existingIndex].id,
         lastVerified: today,
       };
     } else {
       updatedRules.push({
-        ...rule,
+        ...sanitizedRule,
         lastVerified: today,
       });
     }
@@ -707,6 +722,13 @@ export class CausalMemoryStore {
     if (persistToDisk) {
       this.saveDatabase();
     }
+  }
+
+  /**
+   * 단일 인과율 간선(Relation) 추가 또는 갱신
+   */
+  public assertRelation(relation: CausalRelation, persistToDisk: boolean = true): void {
+    this.createRelations([relation], persistToDisk);
   }
 
   /**

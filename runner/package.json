@@ -1,0 +1,45 @@
+{
+  "name": "synapse-runner",
+  "version": "0.4.0",
+  "description": "Self-Healing Process Supervisor & Zero-Downtime Hot-Swap Daemon for Synapse Ecosystem",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "synapse-runner": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build:bundle": "bun build cli.ts --outfile dist/cli.js --target bun && bun build index.ts --outfile dist/index.js --target bun",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build": "bun run build:bundle && bun run build:types",
+    "prepublishOnly": "bun run build",
+    "test": "bun test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minseokk77/synapse-kit.git",
+    "directory": "runner"
+  },
+  "keywords": [
+    "process-supervisor",
+    "self-healing",
+    "hot-swap",
+    "daemon",
+    "synapse-kit",
+    "bun"
+  ],
+  "author": "Vesper",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "typescript": "^5.6.3"
+  }
+}
