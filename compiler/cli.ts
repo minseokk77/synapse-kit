@@ -248,6 +248,18 @@ async function main(): Promise<void> {
     }
   }
 
+  if (command === 'mcp') {
+    try {
+      const { SynapseMcpServer } = await import('./mcp');
+      const server = new SynapseMcpServer();
+      server.start();
+      return; // 이벤트 루프 유지
+    } catch (err: any) {
+      process.stderr.write(`${RED}❌ MCP 서버 기동 실패: ${err?.message || err}${RESET}\n`);
+      process.exit(1);
+    }
+  }
+
   try {
     let config: SynapseConfig;
     try {

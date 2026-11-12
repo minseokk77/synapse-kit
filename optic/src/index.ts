@@ -7,3 +7,5 @@ export * from "./a11yParser";
 export * from "./driver";
 export * from "./optic";
 export * from "./causalPaperAnalyzer";
+export * from "./hybridRouter";
+export * from "./actionRecorder";

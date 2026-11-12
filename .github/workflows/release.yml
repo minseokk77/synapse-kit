@@ -1,0 +1,45 @@
+name: Synapse 3.0 Automated Release & Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  publish:
+    name: Build, Verify and Publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build All Monorepo Packages
+        run: bun run build
+
+      - name: Run Full Test Suite
+        run: bun test tests/ optic/tests/
+
+      - name: Publish Monorepo to npm Registry
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}" > ~/.npmrc
+          bun publish --access public
+          cd memory && bun publish --access public && cd ..
+          cd optic && bun publish --access public && cd ..
+          cd compiler && bun publish --access public && cd ..
+          cd db && bun publish --access public && cd ..
+          cd bus && bun publish --access public && cd ..
+          cd runner && bun publish --access public && cd ..
+          cd mesh && bun publish --access public && cd ..
+          cd guard && bun publish --access public && cd ..
+          cd verifier && bun publish --access public && cd ..
+          cd runtime && bun publish --access public && cd ..

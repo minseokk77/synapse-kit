@@ -1,0 +1,20 @@
+[package]
+name = "synapse-studio"
+version = "0.4.0"
+description = "Synapse 3.0 Realtime Desktop Mission Control"
+edition = "2021"
+
+[lib]
+name = "synapse_studio_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.0.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0.0", features = [] }
+tauri-plugin-shell = "2.0.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.38", features = ["full"] }
+rusqlite = { version = "0.31", features = ["bundled"] }

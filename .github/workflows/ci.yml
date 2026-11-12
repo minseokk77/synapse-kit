@@ -1,0 +1,37 @@
+name: Synapse 3.0 Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: Verify on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Build All Monorepo Packages
+        run: bun run build
+
+      - name: Run Full Test Suite (140+ Tests, 8000+ Asserts)
+        run: bun test tests/ optic/tests/
+
+      - name: Verify Optic Accelerated Survey Pipeline
+        run: bun compiler/cli.ts survey --count 10
