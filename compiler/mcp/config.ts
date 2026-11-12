@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 시냅스 공식 Model Context Protocol (MCP) 서버 환경설정 및 상수
  */
 
@@ -8,7 +8,7 @@ export const MCP_SERVER_CONFIG = {
   /** 공식 MCP 서버 이름 */
   SERVER_NAME: "synapse-mcp",
   /** 서버 버전 */
-  SERVER_VERSION: "0.4.0",
+  SERVER_VERSION: "0.4.1",
   /** 인과 쿼리 기본 최대 반환 개수 */
   DEFAULT_QUERY_LIMIT: 10,
   /** 기본 검증/감사 대상 소스 파일명 */

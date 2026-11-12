@@ -1,6 +1,6 @@
-{
+﻿{
   "name": "synapse-optic",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "AI-Native Action-Oriented Browser Engine & A11y Tree Compressor for Synapse",
   "type": "module",
   "main": "dist/index.js",

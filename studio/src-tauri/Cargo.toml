@@ -1,6 +1,6 @@
-[package]
+﻿[package]
 name = "synapse-studio"
-version = "0.4.0"
+version = "0.4.1"
 description = "Synapse 3.0 Realtime Desktop Mission Control"
 edition = "2021"
 

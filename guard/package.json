@@ -1,6 +1,6 @@
-{
+﻿{
   "name": "synapse-guard",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "AST-Level Security Firewall & Credential Leak Shield for Synapse Monorepo",
   "type": "module",
   "main": "dist/index.js",

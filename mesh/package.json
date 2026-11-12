@@ -1,6 +1,6 @@
-{
+﻿{
   "name": "synapse-mesh",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Zero-Config Distributed P2P Mesh & Cloudflare Secure Tunnel Bridge for Synapse Vaults",
   "type": "module",
   "main": "dist/index.js",

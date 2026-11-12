@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 시냅스 공식 Model Context Protocol (MCP) 서버 종합 검증 스위트
  */
 import { describe, it, expect } from "bun:test";
@@ -17,7 +17,7 @@ describe("🤖 Synapse MCP (Model Context Protocol) JSON-RPC 2.0 서버 검증",
 
     expect(res).not.toBeNull();
     expect(res?.result.serverInfo.name).toBe("synapse-mcp");
-    expect(res?.result.serverInfo.version).toBe("0.4.0");
+    expect(res?.result.serverInfo.version).toBe("0.4.1");
     expect(res?.result.protocolVersion).toBe("2024-11-05");
   });
 

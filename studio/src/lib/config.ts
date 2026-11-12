@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 시냅스 스튜디오(Synapse Studio) 환경설정 및 시스템 상수
  */
 
@@ -10,7 +10,7 @@ export interface SynapseCoreInfo {
   readonly desc: string;
 }
 
-export const STUDIO_VERSION = "0.4.0";
+export const STUDIO_VERSION = "0.4.1";
 export const DEFAULT_LSN = 1042;
 export const MIN_LSN = 1;
 export const MAX_LSN = 2000;

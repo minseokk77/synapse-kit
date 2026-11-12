@@ -1,6 +1,6 @@
-{
+﻿{
   "name": "synapse-verifier",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Autonomous Invariant & Code Integrity Verifier for Synapse Ecosystem",
   "type": "module",
   "main": "dist/index.js",
