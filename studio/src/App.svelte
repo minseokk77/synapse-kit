@@ -1,38 +1,66 @@
 <script lang="ts">
-  // Svelte 5 Runes ($state, $derived, $effect)
+  import { invoke } from '@tauri-apps/api/core';
+  import {
+    STUDIO_VERSION,
+    DEFAULT_LSN,
+    MIN_LSN,
+    MAX_LSN,
+    SCAN_DURATION_MS,
+    OPTIC_WS_ENDPOINT,
+    INITIAL_CORES,
+    type SynapseCoreInfo,
+  } from './lib/config';
+
+  // Svelte 5 Runes ($state, $derived)
   let activeTab = $state<'dashboard' | 'connectome' | 'wal_timetravel' | 'optic_monitor'>('dashboard');
-  let currentLsn = $state<number>(1042);
+  let currentLsn = $state<number>(DEFAULT_LSN);
   let isScanning = $state<boolean>(false);
-  let selectedCore = $state<string>('optic');
+  let statusMessage = $state<string>('시스템 정상 대기 중');
+  let errorMessage = $state<string | null>(null);
 
   // 11대 코어 라이브 상태
-  const cores = $state([
-    { id: 'compiler', name: 'Compiler', status: 'ONLINE', latency: '0.00ms', desc: '증분 DAG 컴파일러' },
-    { id: 'memory', name: 'Causal Memory', status: 'ONLINE', latency: '0.04ms', desc: '120B 가상 그래프' },
-    { id: 'db', name: 'Synapse DB', status: 'ONLINE', latency: '0.12ms', desc: 'Markdown + SQLite WAL' },
-    { id: 'bus', name: 'Neural Bus', status: 'ONLINE', latency: '0.30µs', desc: 'Zero-Copy 링버퍼' },
-    { id: 'runner', name: 'Runner', status: 'ONLINE', latency: '0.05ms', desc: '자가치유 프로세스 감시' },
-    { id: 'mesh', name: 'Mesh P2P', status: 'ONLINE', latency: '1.20ms', desc: '글로벌 분산 머클 동기화' },
-    { id: 'guard', name: 'Guard', status: 'ARMED', latency: '0.15ms', desc: 'AST 시크릿 차단 방화벽' },
-    { id: 'verifier', name: 'Verifier', status: 'ACTIVE', latency: '0.08ms', desc: '불변식 무결성 검증기' },
-    { id: 'runtime', name: 'Runtime', status: 'SANDBOXED', latency: '0.22ms', desc: '격리 마이크로 VM' },
-    { id: 'optic', name: 'Optic Browser', status: 'ENGAGED', latency: '0.04ms', desc: 'Fast-Path 듀얼 엔진' },
-    { id: 'axon', name: 'Axon Deploy', status: 'IDLE', latency: '0.00ms', desc: '제로-토큰 고속 배포' },
-  ]);
+  let cores = $state<SynapseCoreInfo[]>([...INITIAL_CORES]);
 
   // 활성 코어 수 도출 상태 ($derived)
   const onlineCoresCount = $derived(cores.filter(c => c.status !== 'OFFLINE').length);
 
-  function handleLsnChange(event: Event) {
+  async function handleLsnChange(event: Event) {
     const target = event.target as HTMLInputElement;
-    currentLsn = Number(target.value);
+    const lsn = Number(target.value);
+    currentLsn = lsn;
+
+    try {
+      errorMessage = null;
+      // Tauri 데스크톱 환경 IPC 호출 시도
+      const res = await invoke<{ ok: boolean; target_lsn: number; restored_entities_count: number; duration_ms: number }>(
+        'timetravel_to_lsn',
+        { lsn }
+      );
+      statusMessage = `LSN ${res.target_lsn} 복원 완료 (${res.restored_entities_count}개 엔터티, ${res.duration_ms}ms)`;
+    } catch {
+      // 브라우저 단독 실행 환경 또는 데스크톱 미연결 시 로컬 상태 폴백
+      statusMessage = `로컬 LSN ${lsn} 시계열 상태로 전환되었습니다. (브라우저 시뮬레이션)`;
+    }
   }
 
-  function triggerFastScan() {
+  async function triggerFastScan() {
     isScanning = true;
-    setTimeout(() => {
-      isScanning = false;
-    }, 600);
+    errorMessage = null;
+    statusMessage = '인과 공명 스캔 동기화 진행 중...';
+
+    try {
+      const status = await invoke<{ version: string; online_cores: number; total_cores: number; avg_latency_ms: number }>(
+        'query_synapse_status'
+      );
+      statusMessage = `시냅스 상태 동기화 성공: v${status.version} (${status.online_cores}/${status.total_cores} 코어 활성, ${status.avg_latency_ms}ms)`;
+    } catch {
+      // 브라우저 단독 실행 환경 폴백
+      statusMessage = '인과 공명 스캔 완료 (로컬 인메모리 커넥톰 모드)';
+    } finally {
+      setTimeout(() => {
+        isScanning = false;
+      }, SCAN_DURATION_MS);
+    }
   }
 </script>
 
@@ -45,7 +73,7 @@
       </div>
       <div>
         <h1 class="font-bold text-sm tracking-wide text-white">SYNAPSE STUDIO</h1>
-        <p class="text-[10px] text-synapse-cyan font-mono">v0.4.0 UNIFIED</p>
+        <p class="text-[10px] text-synapse-cyan font-mono">v{STUDIO_VERSION} UNIFIED</p>
       </div>
     </div>
 
@@ -106,6 +134,16 @@
         <span class="text-xs px-2 py-0.5 rounded bg-synapse-neon/10 text-synapse-neon border border-synapse-neon/30 font-mono">
           O(1) AUTONOMOUS CONNECTOME
         </span>
+        {#if statusMessage}
+          <span class="text-xs font-mono text-synapse-cyan/90 border border-synapse-cyan/20 bg-synapse-cyan/10 px-2 py-0.5 rounded">
+            {statusMessage}
+          </span>
+        {/if}
+        {#if errorMessage}
+          <span class="text-xs font-mono text-red-400 border border-red-500/30 bg-red-500/10 px-2 py-0.5 rounded">
+            {errorMessage}
+          </span>
+        {/if}
       </div>
 
       <div class="flex items-center space-x-4">
@@ -161,15 +199,15 @@
             </div>
             <input
               type="range"
-              min="1"
-              max="2000"
+              min={MIN_LSN}
+              max={MAX_LSN}
               value={currentLsn}
               oninput={handleLsnChange}
               class="w-full accent-synapse-cyan cursor-pointer"
             />
             <div class="flex justify-between text-[10px] font-mono text-gray-500">
-              <span>LSN: 1 (최초 기원)</span>
-              <span>LSN: 2000 (최신 커밋)</span>
+              <span>LSN: {MIN_LSN} (최초 기원)</span>
+              <span>LSN: {MAX_LSN} (최신 커밋)</span>
             </div>
           </div>
         </div>
@@ -179,7 +217,7 @@
           <p class="text-xs text-gray-400">98.4% A11y 접근성 트리 압축 및 68ms 100편 논문 탐색 실시간 상태</p>
           <div class="p-4 rounded-lg bg-black/60 font-mono text-xs text-synapse-neon space-y-1">
             <div>[Optic Fast-Path] Status: Ready (68.73ms 100-Papers Verified)</div>
-            <div>[Prometheus Driver] WebSocket: ws://127.0.0.1:9222/devtools</div>
+            <div>[Prometheus Driver] WebSocket: {OPTIC_WS_ENDPOINT}</div>
             <div>[Adaptive Router] Auto-Switching Enabled (Fast-Path / Deep-Inspect)</div>
           </div>
         </div>

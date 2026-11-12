@@ -38,6 +38,15 @@ export const OPTIC_DEFAULTS = {
   ]),
 } as const;
 
+/**
+ * 시냅스 옵틱 하이브리드 라우터 및 액션 레코더 기본 상수
+ */
+export const OPTIC_HYBRID_DEFAULTS = {
+  FAST_PATH_PATTERNS: ["arxiv.org", ".pdf", "github.com", "docs."] as const,
+  TEXT_PAYLOAD_THRESHOLD: 500,
+  DEFAULT_SESSION_NAME: "default_session",
+} as const;
+
 export interface OpticConfig {
   /** CDP 엔드포인트 URL (기본: http://127.0.0.1:9222) */
   readonly endpoint?: string;

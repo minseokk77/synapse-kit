@@ -4,7 +4,7 @@
  * - Deep-Inspect (CDP WebSocket 연결 기반 대화형 라이브 브라우저)
  * 두 실행 모드 간의 지능형 자동 라우팅 및 폴백(Fallback) 보장
  */
-import type { OpticConfig } from "./config";
+import { OPTIC_HYBRID_DEFAULTS, type OpticConfig } from "./config";
 import type { OpticSnapshot } from "./types";
 import { SynapseOptic } from "./optic";
 import { CausalPaperAnalyzer } from "./causalPaperAnalyzer";
@@ -39,13 +39,11 @@ export class OpticHybridRouter {
 
     const lower = target.toLowerCase();
     // 학술 사이트, 정적 문서, PDF, 텍스트 블록은 초고속 Fast-Path 적용
-    if (
-      lower.includes("arxiv.org") ||
-      lower.includes(".pdf") ||
-      lower.includes("github.com") ||
-      lower.includes("docs.") ||
-      target.length > 500 // 텍스트 페이로드 직접 입력
-    ) {
+    const matchesPattern = OPTIC_HYBRID_DEFAULTS.FAST_PATH_PATTERNS.some((pattern) =>
+      lower.includes(pattern)
+    );
+
+    if (matchesPattern || target.length > OPTIC_HYBRID_DEFAULTS.TEXT_PAYLOAD_THRESHOLD) {
       return "fast_path";
     }
 

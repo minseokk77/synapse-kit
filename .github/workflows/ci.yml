@@ -35,3 +35,7 @@ jobs:
 
       - name: Verify Optic Accelerated Survey Pipeline
         run: bun compiler/cli.ts survey --count 10
+
+      - name: Build Synapse Studio Frontend (Svelte 5 + Vite)
+        working-directory: ./studio
+        run: bun install && bun run build

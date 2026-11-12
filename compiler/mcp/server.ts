@@ -2,6 +2,7 @@
  * 시냅스 공식 Model Context Protocol (MCP) Stdio 서버 구현
  */
 import readline from "node:readline";
+import { MCP_SERVER_CONFIG, MCP_ERROR_CODES } from "./config";
 import { SYNAPSE_MCP_TOOLS, executeMcpTool } from "./tools";
 import type { McpRequest, McpResponse } from "./types";
 
@@ -33,7 +34,7 @@ export class SynapseMcpServer {
           jsonrpc: "2.0",
           id: 0,
           error: {
-            code: -32700,
+            code: MCP_ERROR_CODES.PARSE_ERROR,
             message: `JSON 파싱 오류: ${err?.message || err}`,
           },
         };
@@ -58,13 +59,13 @@ export class SynapseMcpServer {
           jsonrpc: "2.0",
           id,
           result: {
-            protocolVersion: "2024-11-05",
+            protocolVersion: MCP_SERVER_CONFIG.PROTOCOL_VERSION,
             capabilities: {
               tools: {},
             },
             serverInfo: {
-              name: "synapse-mcp",
-              version: "0.4.0",
+              name: MCP_SERVER_CONFIG.SERVER_NAME,
+              version: MCP_SERVER_CONFIG.SERVER_VERSION,
             },
           },
         };
@@ -105,7 +106,7 @@ export class SynapseMcpServer {
           jsonrpc: "2.0",
           id,
           error: {
-            code: -32601,
+            code: MCP_ERROR_CODES.METHOD_NOT_FOUND,
             message: `지원하지 않는 메서드: ${method}`,
           },
         };

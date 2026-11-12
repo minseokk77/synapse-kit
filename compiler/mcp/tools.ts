@@ -1,6 +1,7 @@
 /**
  * 시냅스 11대 코어 공식 MCP 도구 레지스트리 (Synapse MCP Tool Registry)
  */
+import { MCP_SERVER_CONFIG } from "./config";
 import type { McpTool, McpToolResult } from "./types";
 
 export const SYNAPSE_MCP_TOOLS: McpTool[] = [
@@ -16,7 +17,15 @@ export const SYNAPSE_MCP_TOOLS: McpTool[] = [
         },
         limit: {
           type: "number",
-          description: "최대 반환 규칙 개수 (기본: 10)",
+          description: `최대 반환 규칙 개수 (기본: ${MCP_SERVER_CONFIG.DEFAULT_QUERY_LIMIT})`,
+        },
+        domain: {
+          type: "string",
+          description: "선택적 도메인 필터",
+        },
+        compact: {
+          type: "boolean",
+          description: "단일 라인 초경량 JSON 반환 여부",
         },
       },
       required: ["query"],
@@ -34,7 +43,11 @@ export const SYNAPSE_MCP_TOOLS: McpTool[] = [
         },
         fileName: {
           type: "string",
-          description: "파일명 (기본: source.ts)",
+          description: `파일명 (기본: ${MCP_SERVER_CONFIG.DEFAULT_FILE_NAME})`,
+        },
+        compact: {
+          type: "boolean",
+          description: "단일 라인 초경량 JSON 반환 여부",
         },
       },
       required: ["code"],
@@ -46,17 +59,24 @@ export const SYNAPSE_MCP_TOOLS: McpTool[] = [
     inputSchema: {
       type: "object",
       properties: {
+        code: {
+          type: "string",
+          description: "검증할 소스 코드",
+        },
+        fileName: {
+          type: "string",
+          description: `대상 파일명 (기본: ${MCP_SERVER_CONFIG.DEFAULT_FILE_NAME})`,
+        },
         contextName: {
           type: "string",
-          description: "검증 대상 컨텍스트 명칭",
+          description: "컨텍스트 명칭",
         },
-        invariants: {
-          type: "array",
-          items: { type: "string" },
-          description: "검증할 불변식 표현식 목록",
+        compact: {
+          type: "boolean",
+          description: "단일 라인 초경량 JSON 반환 여부",
         },
       },
-      required: ["contextName"],
+      required: [],
     },
   },
   {
@@ -68,6 +88,10 @@ export const SYNAPSE_MCP_TOOLS: McpTool[] = [
         text: {
           type: "string",
           description: "분석할 논문 초록 또는 웹페이지 텍스트",
+        },
+        compact: {
+          type: "boolean",
+          description: "단일 라인 초경량 JSON 반환 여부",
         },
       },
       required: ["text"],
@@ -83,39 +107,138 @@ export const SYNAPSE_MCP_TOOLS: McpTool[] = [
           type: "string",
           description: "검색 쿼리 문자열",
         },
+        vaultDir: {
+          type: "string",
+          description: `검색할 마크다운 볼트 경로 (기본: ${MCP_SERVER_CONFIG.DEFAULT_VAULT_DIR})`,
+        },
+        compact: {
+          type: "boolean",
+          description: "단일 라인 초경량 JSON 반환 여부",
+        },
       },
       required: ["query"],
     },
   },
 ];
 
+// 지연 초기화 싱글턴 캐시 변수
+let cachedMemoryStore: any = null;
+let cachedGuard: any = null;
+let cachedVerifier: any = null;
+let cachedOpticAnalyzer: any = null;
+let cachedDbMod: any = null;
+
+async function getCachedMemoryStore(): Promise<any> {
+  if (!cachedMemoryStore) {
+    let memoryMod: any;
+    try {
+      // @ts-ignore
+      memoryMod = await import("../../memory");
+    } catch {
+      // @ts-ignore
+      memoryMod = await import("../memory");
+    }
+    cachedMemoryStore = new memoryMod.CausalMemoryStore();
+  }
+  return cachedMemoryStore;
+}
+
+async function getCachedGuard(): Promise<any> {
+  if (!cachedGuard) {
+    let guardMod: any;
+    try {
+      // @ts-ignore
+      guardMod = await import("../../guard");
+    } catch {
+      // @ts-ignore
+      guardMod = await import("../guard");
+    }
+    cachedGuard = new guardMod.SynapseGuard();
+  }
+  return cachedGuard;
+}
+
+async function getCachedVerifier(): Promise<any> {
+  if (!cachedVerifier) {
+    let verifierMod: any;
+    try {
+      // @ts-ignore
+      verifierMod = await import("../../verifier");
+    } catch {
+      // @ts-ignore
+      verifierMod = await import("../verifier");
+    }
+    cachedVerifier = new verifierMod.SynapseVerifier();
+  }
+  return cachedVerifier;
+}
+
+async function getCachedOpticAnalyzer(): Promise<any> {
+  if (!cachedOpticAnalyzer) {
+    let opticMod: any;
+    try {
+      // @ts-ignore
+      opticMod = await import("../../optic");
+    } catch {
+      // @ts-ignore
+      opticMod = await import("../optic");
+    }
+    cachedOpticAnalyzer = new opticMod.CausalPaperAnalyzer();
+    cachedOpticAnalyzer.initializeKnowledgeGraph();
+  }
+  return cachedOpticAnalyzer;
+}
+
+async function getCachedDbMod(): Promise<any> {
+  if (!cachedDbMod) {
+    try {
+      // @ts-ignore
+      cachedDbMod = await import("../../db");
+    } catch {
+      // @ts-ignore
+      cachedDbMod = await import("../db");
+    }
+  }
+  return cachedDbMod;
+}
+
+function serializePayload(payload: unknown, compact?: boolean): string {
+  return compact === true ? JSON.stringify(payload) : JSON.stringify(payload, null, 2);
+}
+
 /**
  * MCP 도구 실행 디스패처
  */
 export async function executeMcpTool(name: string, args: Record<string, any> = {}): Promise<McpToolResult> {
   try {
+    const isCompact = Boolean(args.compact);
+
     switch (name) {
       case "synapse_causal_query": {
         const queryStr = String(args.query || "");
-        const limit = Number(args.limit || 10);
-        
-        let memoryMod: any;
-        try {
-          // @ts-ignore
-          memoryMod = await import("../../memory");
-        } catch {
-          // @ts-ignore
-          memoryMod = await import("../memory");
-        }
-        
-        const store = new memoryMod.CausalStore();
-        const results = store.queryRules(queryStr).slice(0, limit);
-        
+        const limit = Number(args.limit || MCP_SERVER_CONFIG.DEFAULT_QUERY_LIMIT);
+        const store = await getCachedMemoryStore();
+
+        const keywords = queryStr.split(/\s+/).filter(Boolean);
+        const res = store.queryResonance({
+          keywords,
+          domain: args.domain ? String(args.domain) : undefined,
+        });
+        const rules = res.resonanceRules.slice(0, limit);
+
+        const payload = {
+          ok: true,
+          query: queryStr,
+          total: rules.length,
+          queryDurationMs: res.queryDurationMs,
+          rules,
+        };
+
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({ ok: true, query: queryStr, total: results.length, rules: results }, null, 2),
+              text: serializePayload(payload, isCompact),
             },
           ],
         };
@@ -123,25 +246,15 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
 
       case "synapse_guard_audit": {
         const code = String(args.code || "");
-        const fileName = String(args.fileName || "source.ts");
-
-        let guardMod: any;
-        try {
-          // @ts-ignore
-          guardMod = await import("../../guard");
-        } catch {
-          // @ts-ignore
-          guardMod = await import("../guard");
-        }
-
-        const guard = new guardMod.SynapseGuard();
+        const fileName = String(args.fileName || MCP_SERVER_CONFIG.DEFAULT_FILE_NAME);
+        const guard = await getCachedGuard();
         const report = guard.auditSource(code, fileName);
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(report, null, 2),
+              text: serializePayload(report, isCompact),
             },
           ],
           isError: !report.ok,
@@ -149,45 +262,32 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
       }
 
       case "synapse_verifier_check": {
-        const contextName = String(args.contextName || "global");
-        const invariants = Array.isArray(args.invariants) ? args.invariants : [];
+        const verifier = await getCachedVerifier();
+        const codeToVerify = String(args.code || "");
+        const targetFile = String(args.fileName || args.contextName || MCP_SERVER_CONFIG.DEFAULT_FILE_NAME);
+        const audit = verifier.checkSource(codeToVerify, targetFile);
 
-        let verifierMod: any;
-        try {
-          // @ts-ignore
-          verifierMod = await import("../../verifier");
-        } catch {
-          // @ts-ignore
-          verifierMod = await import("../verifier");
-        }
-
-        const verifier = new verifierMod.RuntimeVerifier();
-        const report = verifier.verifyAll({ contextName, invariants });
+        const payload = {
+          ok: audit.ok,
+          targetFile: audit.targetFile || audit.target || targetFile,
+          violations: audit.violations,
+          checkedAtMs: audit.checkedAtMs || Date.now(),
+        };
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify(report, null, 2),
+              text: serializePayload(payload, isCompact),
             },
           ],
-          isError: !report.passed,
+          isError: !audit.ok,
         };
       }
 
       case "synapse_optic_survey": {
         const text = String(args.text || "");
-
-        let opticMod: any;
-        try {
-          // @ts-ignore
-          opticMod = await import("../../optic");
-        } catch {
-          // @ts-ignore
-          opticMod = await import("../optic");
-        }
-
-        const analyzer = new opticMod.CausalPaperAnalyzer();
+        const analyzer = await getCachedOpticAnalyzer();
         analyzer.initializeKnowledgeGraph();
         const analysis = analyzer.analyze(text);
 
@@ -195,7 +295,7 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
           content: [
             {
               type: "text",
-              text: JSON.stringify(analysis, null, 2),
+              text: serializePayload(analysis, isCompact),
             },
           ],
         };
@@ -203,24 +303,27 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
 
       case "synapse_db_search": {
         const query = String(args.query || "");
+        const vaultDir = String(args.vaultDir || MCP_SERVER_CONFIG.DEFAULT_VAULT_DIR);
+        const dbMod = await getCachedDbMod();
 
-        let dbMod: any;
-        try {
-          // @ts-ignore
-          dbMod = await import("../../db");
-        } catch {
-          // @ts-ignore
-          dbMod = await import("../db");
-        }
+        const db = new dbMod.SynapseDB({ vaultDir, autoWatch: false });
+        await db.init();
+        const searchResults = db.engine.connectome.search(query);
+        db.close();
 
-        const engine = new dbMod.MarkdownDbEngine();
-        const searchResults = engine.search(query);
+        const payload = {
+          ok: true,
+          query,
+          vaultDir,
+          total: searchResults.length,
+          results: searchResults,
+        };
 
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({ ok: true, query, results: searchResults }, null, 2),
+              text: serializePayload(payload, isCompact),
             },
           ],
         };
