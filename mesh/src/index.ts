@@ -97,3 +97,4 @@ export * from "./types";
 export * from "./vaultSync";
 export * from "./peerMesh";
 export * from "./tunnel";
+export * from "./serverlessSync";

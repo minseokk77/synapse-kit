@@ -250,6 +250,12 @@ async function main(): Promise<void> {
 
   if (command === 'mcp') {
     try {
+      if (args.includes('audit')) {
+        const { SYNAPSE_MCP_TOOLS, auditMcpToolsNoBox } = await import('./mcp');
+        const report = auditMcpToolsNoBox(SYNAPSE_MCP_TOOLS);
+        process.stdout.write(JSON.stringify(report) + '\n');
+        process.exit(report.ok ? 0 : 1);
+      }
       const { SynapseMcpServer } = await import('./mcp');
       const server = new SynapseMcpServer();
       server.start();
@@ -347,7 +353,13 @@ async function main(): Promise<void> {
       if (countIdx !== -1 && args[countIdx + 1]) {
         targetCount = parseInt(args[countIdx + 1], 10) || 8;
       }
-      const result = await runAcceleratedSurveyPipeline({ targetCount });
+      let days = 60;
+      const daysIdx = args.indexOf('--days');
+      if (daysIdx !== -1 && args[daysIdx + 1]) {
+        days = parseInt(args[daysIdx + 1], 10) || 60;
+      }
+      const live = args.includes('--live');
+      const result = await runAcceleratedSurveyPipeline({ targetCount, live, days });
       if (options.compactMode || options.agentMode) {
         process.stdout.write(JSON.stringify(result) + '\n');
       } else {

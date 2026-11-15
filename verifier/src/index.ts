@@ -94,3 +94,4 @@ export * from "./types";
 export * from "./invariantChecker";
 export * from "./runtimeVerifier";
 export * from "./reporter";
+export * from "./temporalMonitor";

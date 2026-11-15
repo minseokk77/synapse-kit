@@ -13,11 +13,16 @@ import type {
   CausalWalEntry,
   CausalWalUnifiedStats,
   CompilerTemporalMetric,
+  WalBranchMergeResult,
+  WalBranchSnapshot,
+  WalBranchSummary,
 } from "./wal";
+import { WalBranchManager } from "./wal/branch";
 
 export class SynapseDB {
   public readonly engine: SynapseEngine;
   private readonly collections = new Map<string, SynapseCollection<any>>();
+  private readonly branchManager = new WalBranchManager();
 
   constructor(config: SynapseDBConfig) {
     this.engine = new SynapseEngine(config);
@@ -115,6 +120,35 @@ export class SynapseDB {
   }
 
   /**
+   * Copy-on-Write 격리 브랜치 포크 생성
+   */
+  public branch(name: string): WalBranchSnapshot {
+    const lsn = this.engine.wal.ringBuffer.getCurrentLsn();
+    return this.branchManager.fork(name, lsn, this.engine.connectome);
+  }
+
+  /**
+   * CoW 브랜치 핸들 조회
+   */
+  public getBranchManager(): WalBranchManager {
+    return this.branchManager;
+  }
+
+  /**
+   * 브랜치 변경분을 메인 커넥톰으로 원자적 병합
+   */
+  public mergeBranch(name: string, dropAfterMerge = true): WalBranchMergeResult {
+    return this.branchManager.mergeInto(name, this.engine.connectome, dropAfterMerge);
+  }
+
+  /**
+   * 활성 브랜치 목록 조회
+   */
+  public listBranches(): WalBranchSummary[] {
+    return this.branchManager.listBranches();
+  }
+
+  /**
    * 데이터베이스 종료 및 워처 해제
    */
   public close(): void {
@@ -131,3 +165,4 @@ export * from "./engine";
 export * from "./migrator";
 export * from "./canvasExporter";
 export * from "./wal";
+export * from "./firewall";

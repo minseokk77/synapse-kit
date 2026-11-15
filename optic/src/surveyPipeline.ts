@@ -3,12 +3,21 @@
  * - 수작업 디버깅 및 파일 편집 지연 0초화
  * - Causal Seed 자동 주입 ➔ 0ms 인과 공명 대조 ➔ 100% 무결성 검증을 1초 내 원스톱 완결
  */
-import { CausalPaperAnalyzer, PAPERS_SURVEY, generateMassivePapersDataset } from "./causalPaperAnalyzer";
+import { CausalPaperAnalyzer, PAPERS_SURVEY, generateMassivePapersDataset, type PaperMetadata } from "./causalPaperAnalyzer";
+import { fetchRecentArxivPapers, OPTIC_LIVE_SURVEY_CONFIG } from "./liveFetcher";
 
 export interface SurveyPipelineOptions {
   readonly query?: string;
   readonly quiet?: boolean;
   readonly targetCount?: number;
+  /** 실시간 arXiv 수집 활성화 여부 */
+  readonly live?: boolean;
+  /** 최근 N일 필터 (기본: 60일) */
+  readonly days?: number;
+  /** 실시간 수집 타임아웃 (ms) */
+  readonly timeoutMs?: number;
+  /** 커스텀 fetch 주입 (테스트용) */
+  readonly fetchImpl?: typeof fetch;
 }
 
 export interface SurveyPipelineResult {
@@ -16,6 +25,7 @@ export interface SurveyPipelineResult {
   readonly pipelineDurationMs: number;
   readonly resonanceAverageMs: number;
   readonly passedTestsCount: number;
+  readonly liveFetched: boolean;
   readonly summary: string;
 }
 
@@ -24,7 +34,26 @@ export async function runAcceleratedSurveyPipeline(
 ): Promise<SurveyPipelineResult> {
   const start = performance.now();
   const targetCount = options.targetCount ?? 8;
-  const papers = generateMassivePapersDataset(targetCount);
+  let liveFetched = false;
+  let papers: readonly PaperMetadata[];
+
+  if (options.live) {
+    const liveRes = await fetchRecentArxivPapers({
+      days: options.days ?? OPTIC_LIVE_SURVEY_CONFIG.DEFAULT_DAYS,
+      maxResults: targetCount,
+      timeoutMs: options.timeoutMs,
+      query: options.query,
+      fetchImpl: options.fetchImpl,
+    });
+    if (liveRes.liveFetched && liveRes.papers.length > 0) {
+      papers = liveRes.papers;
+      liveFetched = true;
+    } else {
+      papers = generateMassivePapersDataset(targetCount);
+    }
+  } else {
+    papers = generateMassivePapersDataset(targetCount);
+  }
 
   // 1. CausalPaperAnalyzer 인스턴스 초기화 (Zero-Copy In-Memory Connectome)
   const analyzer = new CausalPaperAnalyzer();
@@ -63,7 +92,8 @@ export async function runAcceleratedSurveyPipeline(
     pipelineDurationMs,
     resonanceAverageMs,
     passedTestsCount,
-    summary: `[시냅스 초고속 파이프라인] ${comparisons.length}편 논문 인과 공명 대조 및 ${passedTestsCount}개 불변식 검증 완료 (총 ${pipelineDurationMs}ms 소요)`,
+    liveFetched,
+    summary: `[시냅스 초고속 파이프라인] ${comparisons.length}편 논문(${liveFetched ? "실시간 arXiv" : "로컬 코퍼스"}) 인과 공명 대조 및 ${passedTestsCount}개 불변식 검증 완료 (총 ${pipelineDurationMs}ms 소요)`,
   };
 }
 

@@ -11,3 +11,4 @@ export * from './causal-branch';
 export * from './causal-predictor';
 export * from './causal-synthesizer';
 export * from './causal-lens';
+export * from './causal-doctor';

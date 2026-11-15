@@ -418,3 +418,4 @@ export * from "./ringBuffer";
 export * from "./arena";
 export * from "./sqliteWalStore";
 export * from "./timeTravel";
+export * from "./branch";

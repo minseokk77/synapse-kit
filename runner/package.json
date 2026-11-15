@@ -1,6 +1,6 @@
 {
   "name": "synapse-runner",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Self-Healing Process Supervisor & Zero-Downtime Hot-Swap Daemon for Synapse Ecosystem",
   "type": "module",
   "main": "dist/index.js",

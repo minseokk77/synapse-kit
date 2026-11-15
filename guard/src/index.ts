@@ -325,3 +325,4 @@ export * from "./types";
 export * from "./secretShield";
 export * from "./vulnerabilityGuard";
 export * from "./vaultSanitizer";
+export * from "./actionAuditor";

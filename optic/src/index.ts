@@ -9,3 +9,6 @@ export * from "./optic";
 export * from "./causalPaperAnalyzer";
 export * from "./hybridRouter";
 export * from "./actionRecorder";
+export * from "./a11yAuditor";
+export * from "./liveFetcher";
+export * from "./surveyPipeline";
