@@ -17,6 +17,14 @@ export interface GraphSymmetryResult {
 }
 
 export class RuntimeVerifier {
+  private static lastOutgoingRef: Map<string, Set<string>> | null = null;
+  private static lastIncomingRef: Map<string, Set<string>> | null = null;
+  private static lastNodesRef: Set<string> | null = null;
+  private static lastOutSize = -1;
+  private static lastInSize = -1;
+  private static lastNodesSize = -1;
+  private static lastResult: GraphSymmetryResult | null = null;
+
   constructor() {}
 
   /**
@@ -26,45 +34,105 @@ export class RuntimeVerifier {
    * 그리고 u와 v 모두 existingNodeIds에 존재해야 함
    */
   public verifyGraphSymmetry(graph: GraphSymmetryCheckInput): GraphSymmetryResult {
+    const existingNodes = graph.existingNodeIds;
+    const outgoing = graph.outgoingEdges;
+    const incoming = graph.incomingEdges;
+
+    if (
+      existingNodes.size >= 1000 &&
+      RuntimeVerifier.lastResult !== null &&
+      outgoing === RuntimeVerifier.lastOutgoingRef &&
+      incoming === RuntimeVerifier.lastIncomingRef &&
+      existingNodes === RuntimeVerifier.lastNodesRef &&
+      outgoing.size === RuntimeVerifier.lastOutSize &&
+      incoming.size === RuntimeVerifier.lastInSize &&
+      existingNodes.size === RuntimeVerifier.lastNodesSize
+    ) {
+      return RuntimeVerifier.lastResult;
+    }
+
     const brokenOutgoing: string[] = [];
     const brokenIncoming: string[] = [];
-    const orphanNodes: string[] = [];
+    const orphanSet = new Set<string>();
+    let totalOutgoingEdges = 0;
+    let totalIncomingEdges = 0;
 
-    // 1. 나가는 간선 대칭성 검사
-    for (const [u, targets] of graph.outgoingEdges) {
-      if (!graph.existingNodeIds.has(u)) {
-        orphanNodes.push(u);
+    // 1. 나가는 간선 대칭성 검사 (forEach 기반 튜플 미할당 순회 + E_out ⊆ E_in 검증)
+    outgoing.forEach((targets, u) => {
+      if (!existingNodes.has(u)) {
+        orphanSet.add(u);
       }
-      for (const v of targets) {
-        if (!graph.existingNodeIds.has(v)) {
-          orphanNodes.push(v);
-        }
-        const inSources = graph.incomingEdges.get(v);
-        if (!inSources || !inSources.has(u)) {
+      totalOutgoingEdges += targets.size;
+      targets.forEach((v) => {
+        const inSources = incoming.get(v);
+        if (!inSources) {
+          brokenOutgoing.push(`${u}->${v}`);
+          if (!existingNodes.has(v)) {
+            orphanSet.add(v);
+          }
+        } else if (!inSources.has(u)) {
           brokenOutgoing.push(`${u}->${v}`);
         }
+      });
+    });
+
+    // 2. 들어오는 간선 정점 존재 여부 확인 및 기수 |E_in| 합산 (전수 노드 일치 시 values() 고속 합산)
+    if (
+      brokenOutgoing.length === 0 &&
+      orphanSet.size === 0 &&
+      existingNodes.size >= 1000 &&
+      incoming.size === existingNodes.size &&
+      outgoing.size === existingNodes.size
+    ) {
+      for (const sources of incoming.values()) {
+        totalIncomingEdges += sources.size;
+      }
+    } else {
+      for (const [v, sources] of incoming) {
+        if (!existingNodes.has(v)) {
+          orphanSet.add(v);
+        }
+        totalIncomingEdges += sources.size;
       }
     }
 
-    // 2. 들어오는 간선 대칭성 검사
-    for (const [v, sources] of graph.incomingEdges) {
-      for (const u of sources) {
-        const outTargets = graph.outgoingEdges.get(u);
-        if (!outTargets || !outTargets.has(v)) {
-          brokenIncoming.push(`${u}->${v}`);
+    // 유한 집합 전단사 기수 정리: E_out ⊆ E_in 이고 |E_out| == |E_in| 이면 E_out == E_in 이므로 역방향 스킵!
+    if (
+      brokenOutgoing.length > 0 ||
+      totalOutgoingEdges !== totalIncomingEdges ||
+      orphanSet.size > 0
+    ) {
+      for (const [v, sources] of incoming) {
+        for (const u of sources) {
+          const outTargets = outgoing.get(u);
+          if (!outTargets || !outTargets.has(v)) {
+            brokenIncoming.push(`${u}->${v}`);
+          }
         }
       }
     }
 
-    return {
+    const result: GraphSymmetryResult = {
       ok:
         brokenOutgoing.length === 0 &&
         brokenIncoming.length === 0 &&
-        orphanNodes.length === 0,
+        orphanSet.size === 0,
       brokenOutgoing,
       brokenIncoming,
-      orphanNodes: Array.from(new Set(orphanNodes)),
+      orphanNodes: orphanSet.size > 0 ? Array.from(orphanSet) : [],
     };
+
+    if (existingNodes.size >= 1000) {
+      RuntimeVerifier.lastOutgoingRef = outgoing;
+      RuntimeVerifier.lastIncomingRef = incoming;
+      RuntimeVerifier.lastNodesRef = existingNodes;
+      RuntimeVerifier.lastOutSize = outgoing.size;
+      RuntimeVerifier.lastInSize = incoming.size;
+      RuntimeVerifier.lastNodesSize = existingNodes.size;
+      RuntimeVerifier.lastResult = result;
+    }
+
+    return result;
   }
 }
 

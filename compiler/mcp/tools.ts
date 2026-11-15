@@ -127,6 +127,7 @@ let cachedGuard: any = null;
 let cachedVerifier: any = null;
 let cachedOpticAnalyzer: any = null;
 let cachedDbMod: any = null;
+const vaultDbCache = new Map<string, any>();
 
 async function getCachedMemoryStore(): Promise<any> {
   if (!cachedMemoryStore) {
@@ -288,7 +289,6 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
       case "synapse_optic_survey": {
         const text = String(args.text || "");
         const analyzer = await getCachedOpticAnalyzer();
-        analyzer.initializeKnowledgeGraph();
         const analysis = analyzer.analyze(text);
 
         return {
@@ -304,12 +304,14 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
       case "synapse_db_search": {
         const query = String(args.query || "");
         const vaultDir = String(args.vaultDir || MCP_SERVER_CONFIG.DEFAULT_VAULT_DIR);
-        const dbMod = await getCachedDbMod();
-
-        const db = new dbMod.SynapseDB({ vaultDir, autoWatch: false });
-        await db.init();
+        let db = vaultDbCache.get(vaultDir);
+        if (!db) {
+          const dbMod = await getCachedDbMod();
+          db = new dbMod.SynapseDB({ vaultDir, autoWatch: false });
+          await db.init();
+          vaultDbCache.set(vaultDir, db);
+        }
         const searchResults = db.engine.connectome.search(query);
-        db.close();
 
         const payload = {
           ok: true,

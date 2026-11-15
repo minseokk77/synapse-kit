@@ -5,4 +5,7 @@ dist/
 Thumbs.db
 *.exe
 tools/
+.temp_mesh_vault/
+tmp_mesh/
+target/
 

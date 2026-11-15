@@ -14,6 +14,7 @@ export interface RawParsedMarkdown<T = Record<string, any>> {
 }
 
 const EMPTY_WIKILINKS: SynapseWikilink[] = [];
+const ensuredDirs = new Set<string>();
 
 /**
  * 텍스트에서 옵시디언 위키링크([[target|alias]] 또는 [[target]]) 자동 추출
@@ -340,12 +341,30 @@ export function stringifyDocument(data: Record<string, any>, body = ""): string 
 }
 
 /**
- * 원자적 디스크 쓰기 (임시 파일 후 atomic rename)
+ * 원자적 디스크 쓰기 (디렉터리 존재 캐시 + 신규 파일 직접 기록 Fast-Path + 덮어쓰기 시 atomic rename)
  */
 export function atomicWriteFile(targetPath: string, content: string): void {
   const dir = dirname(targetPath);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
+  if (!ensuredDirs.has(dir)) {
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+    ensuredDirs.add(dir);
+  }
+
+  if (!existsSync(targetPath)) {
+    try {
+      writeFileSync(targetPath, content, "utf-8");
+      return;
+    } catch (err: any) {
+      if (err?.code === "ENOENT") {
+        mkdirSync(dir, { recursive: true });
+        ensuredDirs.add(dir);
+        writeFileSync(targetPath, content, "utf-8");
+        return;
+      }
+      throw err;
+    }
   }
 
   const tmpPath = `${targetPath}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`;
@@ -353,6 +372,7 @@ export function atomicWriteFile(targetPath: string, content: string): void {
     writeFileSync(tmpPath, content, "utf-8");
     renameSync(tmpPath, targetPath);
   } catch (err) {
+    ensuredDirs.delete(dir);
     try {
       if (existsSync(tmpPath)) {
         unlinkSync(tmpPath);

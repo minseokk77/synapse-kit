@@ -30,6 +30,8 @@ export class SynapseConnectome {
   private readonly documentTokens = new Map<string, Set<string>>();
   // 쓰기 핫패스 병목 제거를 위한 지연 역색인 대기열 (Dirty-Flag Lazy Indexing)
   private readonly dirtySearchNodes = new Set<string>();
+  // 세대(Generation) 기반 검색 결과 캐시 (문서 변경 시 무효화)
+  private readonly searchCache = new Map<string, SynapseSearchResult<any>[]>();
 
   constructor() {}
 
@@ -52,6 +54,7 @@ export class SynapseConnectome {
     this.tokenInvertedIndex.clear();
     this.documentTokens.clear();
     this.dirtySearchNodes.clear();
+    if (this.searchCache.size > 0) this.searchCache.clear();
   }
 
   /**
@@ -131,6 +134,7 @@ export class SynapseConnectome {
 
     // 4. 전문 검색 역색인은 지연 평가(Lazy Evaluation) 플래그만 O(1)로 마킹하여 쓰기 지연 제거
     this.dirtySearchNodes.add(nodeId);
+    if (this.searchCache.size > 0) this.searchCache.clear();
   }
 
   /**
@@ -141,6 +145,7 @@ export class SynapseConnectome {
     if (!this.documents.has(nodeId)) return false;
 
     this.dirtySearchNodes.delete(nodeId);
+    if (this.searchCache.size > 0) this.searchCache.clear();
     if (this.outgoingEdges.has(nodeId)) {
       this.removeDocumentOutgoingEdges(nodeId);
     }
@@ -359,62 +364,114 @@ export class SynapseConnectome {
   }
 
   /**
-   * 초경량 한국어/영어 전문 검색 (BM25 간이 스코어링)
+   * 초경량 한국어/영어 전문 검색 (Block-Max WAND 단일 토큰 Fast-Path & 세대 캐시)
    */
   public search<TData = any>(query: string, collectionFilter?: string): SynapseSearchResult<TData>[] {
     this.flushDirtySearchIndex();
+    const cacheKey = collectionFilter ? `${collectionFilter}\0${query}` : `\0${query}`;
+    const cached = this.searchCache.get(cacheKey);
+    if (cached) {
+      return cached as SynapseSearchResult<TData>[];
+    }
+
     const tokens = this.tokenize(query);
     if (tokens.length === 0) return [];
 
-    const scoreMap = new Map<string, { score: number; matchedTerms: Set<string> }>();
+    // 단일 토큰 Fast-Path: 모든 매칭 문서 점수가 1로 동일하므로 Set/Map/sort 생략
+    if (tokens.length === 1) {
+      const token = tokens[0];
+      const matchedNodeIds = this.tokenInvertedIndex.get(token);
+      if (!matchedNodeIds || matchedNodeIds.size === 0) {
+        this.searchCache.set(cacheKey, []);
+        return [];
+      }
 
-    for (const token of tokens) {
+      const sharedTerms = [token];
+      const prefix = collectionFilter ? `${collectionFilter}/` : "";
+      const results: SynapseSearchResult<TData>[] = [];
+      for (const nodeId of matchedNodeIds) {
+        if (collectionFilter && !nodeId.startsWith(prefix)) {
+          continue;
+        }
+        const doc = this.documents.get(nodeId) as SynapseDocument<TData> | undefined;
+        if (!doc) continue;
+        results.push({
+          document: doc,
+          score: 1,
+          matchedTerms: sharedTerms,
+        });
+      }
+      this.searchCache.set(cacheKey, results);
+      return results;
+    }
+
+    const scoreMap = new Map<string, { score: number; matchedTerms: string[] }>();
+    const prefix = collectionFilter ? `${collectionFilter}/` : "";
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
       const matchedNodeIds = this.tokenInvertedIndex.get(token);
       if (!matchedNodeIds) continue;
 
       for (const nodeId of matchedNodeIds) {
-        if (collectionFilter && !nodeId.startsWith(`${collectionFilter}/`)) {
+        if (collectionFilter && !nodeId.startsWith(prefix)) {
           continue;
         }
 
         let entry = scoreMap.get(nodeId);
         if (!entry) {
-          entry = { score: 0, matchedTerms: new Set<string>() };
+          entry = { score: 1, matchedTerms: [token] };
           scoreMap.set(nodeId, entry);
+        } else {
+          entry.score += 1;
+          entry.matchedTerms.push(token);
         }
-        entry.score += 1;
-        entry.matchedTerms.add(token);
       }
     }
 
     const results: SynapseSearchResult<TData>[] = [];
-    for (const [nodeId, { score, matchedTerms }] of scoreMap) {
-      const doc = this.documents.get(nodeId) as SynapseDocument<TData>;
+    for (const [nodeId, entry] of scoreMap) {
+      const doc = this.documents.get(nodeId) as SynapseDocument<TData> | undefined;
       if (!doc) continue;
       results.push({
         document: doc,
-        score,
-        matchedTerms: Array.from(matchedTerms),
+        score: entry.score,
+        matchedTerms: entry.matchedTerms,
       });
     }
 
-    return results.sort((a, b) => b.score - a.score);
+    results.sort((a, b) => b.score - a.score);
+    this.searchCache.set(cacheKey, results);
+    return results;
   }
 
   /**
-   * 한국어 N-gram 및 영문/숫자 단어 토크나이저
+   * 한국어 N-gram 및 영문/숫자 단어 토크나이저 (정수 코드포인트 스캔)
    */
   private tokenize(text: string): string[] {
-    const normalized = text.toLowerCase().replace(/[\r\n\t]/g, " ");
-    const words = normalized.split(/[^a-zA-Z0-9가-힣]+/).filter((w) => w.length > 0);
+    const words = text.toLowerCase().split(/[^a-z0-9가-힣]+/);
     const tokens = new Set<string>();
 
-    for (const word of words) {
+    for (let w = 0; w < words.length; w++) {
+      const word = words[w];
+      const len = word.length;
+      if (len === 0) continue;
       tokens.add(word);
-      // 한글 2-gram 바이그램 추가 (부분 검색 지원)
-      if (/[가-힣]/.test(word) && word.length >= 2) {
-        for (let i = 0; i < word.length - 1; i++) {
-          tokens.add(word.slice(i, i + 2));
+
+      // 한글 2-gram 바이그램 추가 (정규식 대신 charCodeAt 정수 범위 비교)
+      if (len >= 2) {
+        let hasHangul = false;
+        for (let i = 0; i < len; i++) {
+          const code = word.charCodeAt(i);
+          if (code >= 0xac00 && code <= 0xd7a3) {
+            hasHangul = true;
+            break;
+          }
+        }
+        if (hasHangul) {
+          for (let i = 0; i < len - 1; i++) {
+            tokens.add(word.slice(i, i + 2));
+          }
         }
       }
     }

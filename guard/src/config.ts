@@ -30,7 +30,7 @@ export const KNOWN_SECRET_PATTERNS = [
   },
   {
     name: "GitHub Personal Access Token",
-    pattern: /gh[pousr]_[a-zA-Z0-9]{36,}/g,
+    pattern: /gh[pousr]_[a-zA-Z0-9_]{36,}/g,
   },
   {
     name: "SSH / RSA Private Key",
@@ -50,8 +50,8 @@ export const KNOWN_SECRET_PATTERNS = [
  * SQL Injection 위험 패턴
  */
 export const SQL_INJECTION_PATTERNS = [
-  /SELECT\s+.*\s+FROM\s+.*\s+(?:WHERE\s+)?.*['"]\s*\+\s*[a-zA-Z0-9_]+/i,
-  /INSERT\s+INTO\s+.*\s+VALUES\s*\(.*['"]\s*\+\s*[a-zA-Z0-9_]+/i,
+  /SELECT\s+.*?\s+FROM\s+.*?(?:WHERE\s+)?.*?['"]\s*\+\s*[a-zA-Z0-9_]+/i,
+  /INSERT\s+INTO\s+.*?\s+VALUES\s*\(.*?['"]\s*\+\s*[a-zA-Z0-9_]+/i,
   /DROP\s+(?:TABLE|DATABASE|VIEW)\s+/i,
   /;\s*TRUNCATE\s+TABLE/i,
   /(?:OR|AND)\s+['"]?1['"]?\s*=\s*['"]?1['"]?/i,

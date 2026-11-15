@@ -12,6 +12,11 @@ export class ProcessSupervisor {
   private readonly subprocesses = new Map<string, Subprocess>();
   private readonly stderrBuffers = new Map<string, string[]>();
   private readonly restartTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private readonly uptimeTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private signalCallbacks: Array<{
+    event: "SIGINT" | "SIGTERM" | "beforeExit" | "exit";
+    listener: () => void;
+  }> = [];
   private totalRestartsTriggered = 0;
   private isShuttingDown = false;
 
@@ -98,12 +103,19 @@ export class ProcessSupervisor {
       this.captureStderr(id, proc);
 
       // 일정 시간 이상 안정 실행 시 재시작 카운터 리셋
+      const prevUptimeTimer = this.uptimeTimers.get(id);
+      if (prevUptimeTimer) {
+        clearTimeout(prevUptimeTimer);
+      }
       const minUptime = spec.minUptimeMs ?? RUNNER_DEFAULTS.MIN_UPTIME_MS;
-      setTimeout(() => {
+      const uptimeTimer = setTimeout(() => {
+        this.uptimeTimers.delete(id);
         if (state.status === "RUNNING" && this.subprocesses.get(id) === proc) {
           state.restartCount = 0;
         }
       }, minUptime);
+      uptimeTimer.unref?.();
+      this.uptimeTimers.set(id, uptimeTimer);
 
       return true;
     } catch (err: any) {
@@ -147,6 +159,12 @@ export class ProcessSupervisor {
     signalCode: number | string | null,
     error?: Error
   ): void {
+    const uptimeTimer = this.uptimeTimers.get(id);
+    if (uptimeTimer) {
+      clearTimeout(uptimeTimer);
+      this.uptimeTimers.delete(id);
+    }
+
     const state = this.states.get(id);
     if (!state) return;
 
@@ -226,6 +244,12 @@ export class ProcessSupervisor {
     if (timer) {
       clearTimeout(timer);
       this.restartTimers.delete(id);
+    }
+
+    const uptimeTimer = this.uptimeTimers.get(id);
+    if (uptimeTimer) {
+      clearTimeout(uptimeTimer);
+      this.uptimeTimers.delete(id);
     }
 
     const state = this.states.get(id);
@@ -320,10 +344,21 @@ export class ProcessSupervisor {
     };
 
     try {
-      process.on("SIGINT", () => handleShutdown("SIGINT"));
-      process.on("SIGTERM", () => handleShutdown("SIGTERM"));
-      process.on("beforeExit", () => handleShutdown("beforeExit"));
-      process.on("exit", () => handleShutdown("exit"));
+      const bindEvent = (
+        event: "SIGINT" | "SIGTERM" | "beforeExit" | "exit",
+        attach: (listener: () => void) => void
+      ) => {
+        const listener = () => {
+          void handleShutdown(event);
+        };
+        attach(listener);
+        this.signalCallbacks.push({ event, listener });
+      };
+
+      bindEvent("SIGINT", (l) => process.on("SIGINT", l));
+      bindEvent("SIGTERM", (l) => process.on("SIGTERM", l));
+      bindEvent("beforeExit", (l) => process.on("beforeExit", l));
+      bindEvent("exit", (l) => process.on("exit", l));
     } catch {}
   }
 
@@ -355,6 +390,29 @@ export class ProcessSupervisor {
       clearTimeout(timer);
     }
     this.restartTimers.clear();
+    for (const timer of this.uptimeTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.uptimeTimers.clear();
+    for (const { event, listener } of this.signalCallbacks) {
+      try {
+        switch (event) {
+          case "SIGINT":
+            process.off("SIGINT", listener);
+            break;
+          case "SIGTERM":
+            process.off("SIGTERM", listener);
+            break;
+          case "beforeExit":
+            process.off("beforeExit", listener);
+            break;
+          case "exit":
+            process.off("exit", listener);
+            break;
+        }
+      } catch {}
+    }
+    this.signalCallbacks = [];
     this.stopAll();
     this.states.clear();
     this.stderrBuffers.clear();

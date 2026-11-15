@@ -43,10 +43,11 @@ export class SynapseBus {
    * 이벤트 발행 (Pub/Sub)
    */
   public emit<T = any>(topic: string, payload: T, sender?: string): BusMessage<T> {
-    const msg = this.ringBufferBus.emit(topic, payload, sender);
-    if (this.ipcBridge) {
-      this.ipcBridge.broadcastRemote(msg);
+    if (this.ipcBridge === null) {
+      return this.ringBufferBus.emit(topic, payload, sender);
     }
+    const msg = this.ringBufferBus.emit(topic, payload, sender);
+    this.ipcBridge.broadcastRemote(msg);
     return msg;
   }
 

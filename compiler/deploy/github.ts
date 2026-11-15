@@ -48,7 +48,7 @@ export function resolveReleaseTag(explicitTag?: string, rootDir: string = proces
   const pkgPath = resolve(rootDir, 'package.json');
   if (existsSync(pkgPath)) {
     try {
-      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8').replace(/^\uFEFF/, ''));
       if (pkg.version) {
         const pkgTag = `v${pkg.version}`;
         if (SAFE_TAG_PATTERN.test(pkgTag)) {

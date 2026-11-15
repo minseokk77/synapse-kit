@@ -44,7 +44,7 @@ export class CausalWalEngine {
   public readonly arena: CausalArenaAllocator;
   public readonly sqliteStore: SqliteCausalWalStore | null;
 
-  constructor(vaultDir: string, config?: CausalWalConfig) {
+  constructor(vaultDir: string = process.cwd(), config?: CausalWalConfig) {
     this.ringBuffer = new TemporalRingBuffer(
       config?.ringCapacity ?? WAL_CONFIG_DEFAULTS.RING_BUFFER_CAPACITY
     );

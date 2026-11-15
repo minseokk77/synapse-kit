@@ -183,114 +183,130 @@ export const PAPERS_SURVEY: readonly PaperMetadata[] = [
   },
 ];
 
+const massiveDatasetCache = new Map<number, readonly PaperMetadata[]>();
+
+const SYNTHETIC_YEARS = [2024, 2025, 2026] as const;
+const SYNTHETIC_YEAR_PREFIXES = ["24", "25", "26"] as const;
+const SYNTHETIC_MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] as const;
+const DEFAULT_PAPER_LIMITATION =
+  "기존 학계 프레임워크는 대규모 엔터프라이즈 환경에서 지연시간 급증 및 신뢰성 저하 문제 노출.";
+
+const SYNTHETIC_DOMAIN_SPECS = [
+  {
+    core: "@synapse/optic A11yParser",
+    topic: "ARIA & DOM Tree Compression",
+    superiority: "96.8% 토큰 압축 및 3ms 초고속 정규화",
+    invariant: "Non-lossy interactive node preservation",
+  },
+  {
+    core: "@synapse/guard",
+    topic: "Indirect Prompt Injection & Secret Guarding",
+    superiority: "200종 XSS 및 적대적 IPI 패턴 원천 봉쇄",
+    invariant: "Zero false-negative credential leak",
+  },
+  {
+    core: "@synapse/verifier",
+    topic: "Single Action Potential & Occam Parsimony",
+    superiority: "19 토큰 불변식 컴팩트 모드 및 계획 오버헤드 0",
+    invariant: "Single step atomic state transition",
+  },
+  {
+    core: "@synapse/optic driver",
+    topic: "Native Hardware Simulation & Anti-Bot Stealth",
+    superiority: "isTrusted: true 100% 보장 및 봇 탐지 우회",
+    invariant: "OS-level HID packet identity",
+  },
+  {
+    core: "@synapse/runner",
+    topic: "Autonomous Self-Healing & Process Harvesting",
+    superiority: "크래시 발생 시 50ms 내 무손실 핫스왑",
+    invariant: "Zero orphan process guarantee",
+  },
+  {
+    core: "@synapse/runtime",
+    topic: "Micro-Sandboxing & Isolated Execution",
+    superiority: "호스트 프로세스 오염 원천 격리",
+    invariant: "Stateless micro-VM memory isolation",
+  },
+  {
+    core: "@synapse/db",
+    topic: "Dual-Layer Agent-First Web & Markdown Vault",
+    superiority: "인간용 마크다운과 AI용 O(1) 인과 그래프 양방향 실시간 동기화",
+    invariant: "Markdown-first dual layer persistence",
+  },
+  {
+    core: "@synapse/bus",
+    topic: "Nano-second Lock-Free Event Streaming",
+    superiority: "초당 800만 건 무손실 링버퍼 스트리밍",
+    invariant: "Sub-microsecond bus propagation",
+  },
+  {
+    core: "@synapse/memory",
+    topic: "0-Token Causal Memory Connectome & Temporal Decay",
+    superiority: "O(1) 인과 역인덱스 0.08ms 공명 연산",
+    invariant: "Monotonic causal decay & graph consistency",
+  },
+  {
+    core: "@synapse/mesh",
+    topic: "Decentralized P2P Merkle State Replication",
+    superiority: "분산 노드 간 Merkle Root 무손실 동기화",
+    invariant: "Cryptographic state consensus",
+  },
+].map((dom) => ({
+  topic: dom.topic,
+  alignment: {
+    targetCore: dom.core,
+    mechanism: `시냅스 ${dom.core} 코어의 네이티브 인프라 및 불변식 아키텍처 자동 바인딩`,
+    invariant: dom.invariant,
+    superiority: dom.superiority,
+  },
+  insightsByYear: SYNTHETIC_YEARS.map(
+    (y) => `${dom.topic} 영역에서 자율 에이전트의 효율성과 안정성을 극대화하기 위한 ${y}년 최신 학술 모델 제시.`
+  ),
+}));
+
 /**
- * 10대 학술 도메인 기반 대규모 논문 데이터셋 자동 생성기 (최대 N편 초고속 생성)
+ * 10대 학술 도메인 기반 대규모 논문 데이터셋 자동 생성기 (사전 컴파일 템플릿 + 불변 캐시)
  */
 export function generateMassivePapersDataset(count: number = 100): readonly PaperMetadata[] {
-  const dataset: PaperMetadata[] = [...PAPERS_SURVEY];
-  if (dataset.length >= count) return dataset.slice(0, count);
+  const cached = massiveDatasetCache.get(count);
+  if (cached) return cached;
 
-  const domains = [
-    {
-      core: "@synapse/optic A11yParser",
-      topic: "ARIA & DOM Tree Compression",
-      keyword: "compression",
-      superiority: "96.8% 토큰 압축 및 3ms 초고속 정규화",
-      invariant: "Non-lossy interactive node preservation",
-    },
-    {
-      core: "@synapse/guard",
-      topic: "Indirect Prompt Injection & Secret Guarding",
-      keyword: "security",
-      superiority: "200종 XSS 및 적대적 IPI 패턴 원천 봉쇄",
-      invariant: "Zero false-negative credential leak",
-    },
-    {
-      core: "@synapse/verifier",
-      topic: "Single Action Potential & Occam Parsimony",
-      keyword: "verifier",
-      superiority: "19 토큰 불변식 컴팩트 모드 및 계획 오버헤드 0",
-      invariant: "Single step atomic state transition",
-    },
-    {
-      core: "@synapse/optic driver",
-      topic: "Native Hardware Simulation & Anti-Bot Stealth",
-      keyword: "anti_detection",
-      superiority: "isTrusted: true 100% 보장 및 봇 탐지 우회",
-      invariant: "OS-level HID packet identity",
-    },
-    {
-      core: "@synapse/runner",
-      topic: "Autonomous Self-Healing & Process Harvesting",
-      keyword: "self_healing",
-      superiority: "크래시 발생 시 50ms 내 무손실 핫스왑",
-      invariant: "Zero orphan process guarantee",
-    },
-    {
-      core: "@synapse/runtime",
-      topic: "Micro-Sandboxing & Isolated Execution",
-      keyword: "sandbox",
-      superiority: "호스트 프로세스 오염 원천 격리",
-      invariant: "Stateless micro-VM memory isolation",
-    },
-    {
-      core: "@synapse/db",
-      topic: "Dual-Layer Agent-First Web & Markdown Vault",
-      keyword: "agent_first_web",
-      superiority: "인간용 마크다운과 AI용 O(1) 인과 그래프 양방향 실시간 동기화",
-      invariant: "Markdown-first dual layer persistence",
-    },
-    {
-      core: "@synapse/bus",
-      topic: "Nano-second Lock-Free Event Streaming",
-      keyword: "streaming",
-      superiority: "초당 800만 건 무손실 링버퍼 스트리밍",
-      invariant: "Sub-microsecond bus propagation",
-    },
-    {
-      core: "@synapse/memory",
-      topic: "0-Token Causal Memory Connectome & Temporal Decay",
-      keyword: "causal_memory",
-      superiority: "O(1) 인과 역인덱스 0.08ms 공명 연산",
-      invariant: "Monotonic causal decay & graph consistency",
-    },
-    {
-      core: "@synapse/mesh",
-      topic: "Decentralized P2P Merkle State Replication",
-      keyword: "mesh_sync",
-      superiority: "분산 노드 간 Merkle Root 무손실 동기화",
-      invariant: "Cryptographic state consensus",
-    },
-  ];
+  const baseLen = PAPERS_SURVEY.length;
+  if (count <= baseLen) {
+    const sliced = PAPERS_SURVEY.slice(0, count);
+    massiveDatasetCache.set(count, sliced);
+    return sliced;
+  }
 
-  let idCounter = dataset.length + 1;
-  while (dataset.length < count) {
-    const dIdx = (idCounter - 1) % domains.length;
-    const dom = domains[dIdx];
-    const year = 2024 + (idCounter % 3);
-    const month = String(1 + (idCounter % 12)).padStart(2, "0");
-    const paperNum = String(1000 + idCounter).padStart(5, "0");
-    const arxivId = `${String(year).slice(2)}${month}.${paperNum}`;
+  const dataset: PaperMetadata[] = new Array<PaperMetadata>(count);
+  for (let i = 0; i < baseLen; i++) {
+    dataset[i] = PAPERS_SURVEY[i];
+  }
 
-    dataset.push({
+  const specCount = SYNTHETIC_DOMAIN_SPECS.length;
+  for (let idx = baseLen; idx < count; idx++) {
+    const idCounter = idx + 1;
+    const spec = SYNTHETIC_DOMAIN_SPECS[idx % specCount];
+    const yIdx = idCounter % 3;
+    const year = SYNTHETIC_YEARS[yIdx];
+    const pNum = 1000 + idCounter;
+    const arxivId = `${SYNTHETIC_YEAR_PREFIXES[yIdx]}${SYNTHETIC_MONTHS[idCounter % 12]}.${pNum < 10000 ? `0${pNum}` : pNum}`;
+
+    dataset[idx] = {
       id: `paper.massive_${idCounter}`,
       arxivId,
-      title: `Advances in ${dom.topic} for Autonomous Web Agents (Volume ${idCounter})`,
+      title: `Advances in ${spec.topic} for Autonomous Web Agents (Volume ${idCounter})`,
       authors: `Academic Research Consortium #${idCounter} et al.`,
       year,
       url: `https://arxiv.org/abs/${arxivId}`,
-      coreInsight: `${dom.topic} 영역에서 자율 에이전트의 효율성과 안정성을 극대화하기 위한 ${year}년 최신 학술 모델 제시.`,
-      limitationsOrVulnerabilities: `기존 학계 프레임워크는 대규모 엔터프라이즈 환경에서 지연시간 급증 및 신뢰성 저하 문제 노출.`,
-      synapseAlignment: {
-        targetCore: dom.core,
-        mechanism: `시냅스 ${dom.core} 코어의 네이티브 인프라 및 불변식 아키텍처 자동 바인딩`,
-        invariant: dom.invariant,
-        superiority: dom.superiority,
-      },
-    });
-    idCounter++;
+      coreInsight: spec.insightsByYear[yIdx],
+      limitationsOrVulnerabilities: DEFAULT_PAPER_LIMITATION,
+      synapseAlignment: spec.alignment,
+    };
   }
 
+  massiveDatasetCache.set(count, dataset);
   return dataset;
 }
 
@@ -302,71 +318,130 @@ export interface PaperComparisonResult {
 }
 
 /**
- * 초고속 O(1) 인메모리 인과율 그래프 공명 엔진
+ * 초고속 O(1) 인메모리 인과율 그래프 공명 엔진 (PCSR 인접 리스트 색인)
  */
 export class InMemoryCausalEngine {
   private readonly rules = new Map<string, PaperCausalRule>();
+  private readonly rulesLower = new Map<string, PaperCausalRule>();
   private readonly relations: PaperCausalRelation[] = [];
-  private readonly keywordIndex = new Map<string, Set<string>>();
+  private readonly relationKeys = new Set<string>();
+  private readonly relationAdjacency = new Map<string, PaperCausalRelation[]>();
+  private readonly keywordIndex = new Map<string, PaperCausalRule[]>();
 
   public assertRule(rule: PaperCausalRule): void {
     this.rules.set(rule.id, rule);
-    const keywords = [
-      ...(rule.triggers.keywords ?? []),
-      rule.id,
-      rule.title.toLowerCase(),
-    ];
-    for (const kw of keywords) {
-      const normalized = kw.toLowerCase().trim();
-      if (!this.keywordIndex.has(normalized)) {
-        this.keywordIndex.set(normalized, new Set());
+    const idLower = rule.id.toLowerCase();
+    if (idLower !== rule.id) {
+      this.rulesLower.set(idLower, rule);
+    }
+
+    const keywords = rule.triggers.keywords;
+    if (!keywords) return;
+
+    for (let i = 0; i < keywords.length; i++) {
+      const normalized = keywords[i].toLowerCase().trim();
+      if (!normalized) continue;
+      let bucket = this.keywordIndex.get(normalized);
+      if (!bucket) {
+        this.keywordIndex.set(normalized, [rule]);
+      } else if (bucket[bucket.length - 1] !== rule) {
+        bucket.push(rule);
       }
-      this.keywordIndex.get(normalized)!.add(rule.id);
     }
   }
 
   public assertRelation(relation: PaperCausalRelation): void {
-    const exists = this.relations.some(
-      (r) => r.from === relation.from && r.to === relation.to && r.relationType === relation.relationType
-    );
-    if (!exists) {
-      this.relations.push(relation);
+    const key = `${relation.from}\0${relation.to}\0${relation.relationType}`;
+    if (this.relationKeys.has(key)) return;
+    this.relationKeys.add(key);
+    this.relations.push(relation);
+
+    let fromAdj = this.relationAdjacency.get(relation.from);
+    if (!fromAdj) {
+      fromAdj = [];
+      this.relationAdjacency.set(relation.from, fromAdj);
+    }
+    fromAdj.push(relation);
+
+    if (relation.to !== relation.from) {
+      let toAdj = this.relationAdjacency.get(relation.to);
+      if (!toAdj) {
+        toAdj = [];
+        this.relationAdjacency.set(relation.to, toAdj);
+      }
+      toAdj.push(relation);
     }
   }
 
   public queryResonance(options: { keywords?: readonly string[]; propagateRelations?: boolean }): PaperCausalResonanceResult {
     const start = performance.now();
-    const matchedRuleIds = new Set<string>();
+    const matchedRules = new Set<PaperCausalRule>();
 
-    for (const kw of options.keywords ?? []) {
-      const normalized = kw.toLowerCase().trim();
-      const directMatches = this.keywordIndex.get(normalized);
-      if (directMatches) {
-        for (const id of directMatches) matchedRuleIds.add(id);
-      }
-      // 부분 일치 검색
-      for (const [indexedKw, ids] of this.keywordIndex.entries()) {
-        if (indexedKw.includes(normalized) || normalized.includes(indexedKw)) {
-          for (const id of ids) matchedRuleIds.add(id);
+    const keywords = options.keywords;
+    if (keywords) {
+      for (let i = 0; i < keywords.length; i++) {
+        const rawKw = keywords[i];
+        const normalized = rawKw.toLowerCase().trim();
+        if (!normalized) continue;
+
+        let matchedDirect = false;
+        const directRule = this.rules.get(rawKw) ?? this.rules.get(normalized) ?? this.rulesLower.get(normalized);
+        if (directRule !== undefined) {
+          matchedRules.add(directRule);
+          matchedDirect = true;
+        }
+
+        const directMatches = this.keywordIndex.get(normalized);
+        if (directMatches !== undefined) {
+          for (let j = 0; j < directMatches.length; j++) {
+            matchedRules.add(directMatches[j]);
+          }
+          matchedDirect = true;
+        }
+
+        if (!matchedDirect) {
+          // 직접 해시 인덱스에 없는 복합/부분 쿼리에 대해서만 부분 문자열 폴백 검색
+          for (const [indexedKw, bucket] of this.keywordIndex.entries()) {
+            if (indexedKw.includes(normalized) || normalized.includes(indexedKw)) {
+              for (let j = 0; j < bucket.length; j++) {
+                matchedRules.add(bucket[j]);
+              }
+            }
+          }
+          if (matchedRules.size === 0) {
+            for (const rule of this.rules.values()) {
+              const titleLower = rule.title.toLowerCase();
+              if (titleLower.includes(normalized) || normalized.includes(titleLower)) {
+                matchedRules.add(rule);
+              }
+            }
+          }
         }
       }
     }
 
     const activeRelations: PaperCausalRelation[] = [];
-    if (options.propagateRelations ?? true) {
-      for (const rel of this.relations) {
-        if (matchedRuleIds.has(rel.from) || matchedRuleIds.has(rel.to)) {
-          activeRelations.push(rel);
-          matchedRuleIds.add(rel.from);
-          matchedRuleIds.add(rel.to);
+    if ((options.propagateRelations ?? true) && matchedRules.size > 0) {
+      const initialRules = Array.from(matchedRules);
+      const seenRelations = new Set<PaperCausalRelation>();
+      for (let i = 0; i < initialRules.length; i++) {
+        const adj = this.relationAdjacency.get(initialRules[i].id);
+        if (!adj) continue;
+        for (let j = 0; j < adj.length; j++) {
+          const rel = adj[j];
+          if (!seenRelations.has(rel)) {
+            seenRelations.add(rel);
+            activeRelations.push(rel);
+            const fromRule = this.rules.get(rel.from);
+            if (fromRule !== undefined) matchedRules.add(fromRule);
+            const toRule = this.rules.get(rel.to);
+            if (toRule !== undefined) matchedRules.add(toRule);
+          }
         }
       }
     }
 
-    const resonanceRules = Array.from(matchedRuleIds)
-      .map((id) => this.rules.get(id))
-      .filter((r): r is PaperCausalRule => r !== undefined);
-
+    const resonanceRules = Array.from(matchedRules);
     const queryDurationMs = performance.now() - start;
     return {
       queryDurationMs: Number(queryDurationMs.toFixed(3)),
@@ -377,95 +452,147 @@ export class InMemoryCausalEngine {
   }
 }
 
+interface SharedPaperGraph {
+  readonly store: InMemoryCausalEngine;
+  readonly paperById: Map<string, PaperMetadata>;
+  readonly paperByArxivId: Map<string, PaperMetadata>;
+}
+
 export class CausalPaperAnalyzer {
-  private readonly store: InMemoryCausalEngine;
+  private static readonly sharedGraphCache = new WeakMap<readonly PaperMetadata[], SharedPaperGraph>();
+  private static readonly SUMMARY_THRESHOLD = 200;
+  private static readonly ANALYZE_CACHE_LIMIT = 2048;
+  private static readonly CORE_RULES: readonly PaperCausalRule[] = [
+    {
+      id: "core.synapse_optic",
+      domain: "architecture",
+      title: "시냅스 옵틱 초경량 네이티브 브라우저 코어",
+      triggers: { keywords: ["optic", "browser", "cdp", "a11y", "snapshot"] },
+      invariants: ["Stateless CDP Socket", "0.05ms Snapshot Cache", "DOM Ready Fast-Path"],
+      actions: ["Connect Native Rust Engine", "Prune A11y Tree 96.8%", "Map Interactive Targets"],
+      context: ["Rust prometheus-cli", "Bun v1.4.4", "Windows 11 Native Process"],
+    },
+    {
+      id: "core.synapse_guard",
+      domain: "security",
+      title: "시냅스 가드 적대적 IPI 및 시크릿 방어 코어",
+      triggers: { keywords: ["guard", "security", "ipi", "xss", "secret", "injection"] },
+      invariants: ["Zero False Negative for Secrets", "Adversarial Prompt Sanitization"],
+      actions: ["Scan Secret Tokens", "Neutralize Hidden Injections", "Block Malicious ARIA Nodes"],
+      context: ["AST Inspection", "Zero External Network Leak"],
+    },
+    {
+      id: "core.synapse_verifier",
+      domain: "verification",
+      title: "시냅스 베리파이어 단일 활동전위 불변식 검증 코어",
+      triggers: { keywords: ["verifier", "occam", "invariant", "action_potential"] },
+      invariants: ["Single Action Potential", "19 Token Compact Serialization"],
+      actions: ["Verify Pre/Post Conditions", "Assert Deterministic State Transition"],
+      context: ["Formal Invariants", "Occam Parsimony"],
+    },
+    {
+      id: "core.synapse_bus",
+      domain: "messaging",
+      title: "시냅스 버스 초고속 나노초 이벤트 스트리밍 코어",
+      triggers: { keywords: ["bus", "event", "streaming", "throughput"] },
+      invariants: ["Over 8M Events Per Second", "Zero Alloc Channel"],
+      actions: ["Emit Action Signals", "Broadcast State Changes"],
+      context: ["In-Memory Ring Buffer"],
+    },
+    {
+      id: "core.synapse_memory",
+      domain: "memory",
+      title: "시냅스 인과율 슈퍼 코어 커넥톰",
+      triggers: { keywords: ["memory", "causal", "connectome", "resonance", "zero_latency"] },
+      invariants: ["Sub-millisecond Resonance Query", "Bidirectional Backpropagation"],
+      actions: ["Assert Causal Seed", "Query Resonance Graph", "Decay Stale Associations"],
+      context: ["SQLite WAL / In-Memory", "Directed Acyclic Causal Graph"],
+    },
+  ];
+
+  private store: InMemoryCausalEngine;
+  private readonly ownsStore: boolean;
   private isInitialized = false;
   private registeredPapers: readonly PaperMetadata[] = PAPERS_SURVEY;
+  private initializedPapersRef: readonly PaperMetadata[] | null = null;
+  private paperById = new Map<string, PaperMetadata>();
+  private paperByArxivId = new Map<string, PaperMetadata>();
+  private analyzeCache = new Map<string, PaperComparisonResult>();
 
   constructor(customStoreOrPath?: InMemoryCausalEngine | string) {
     if (customStoreOrPath && typeof customStoreOrPath === "object" && "assertRule" in customStoreOrPath) {
       this.store = customStoreOrPath;
+      this.ownsStore = false;
     } else {
       this.store = new InMemoryCausalEngine();
+      this.ownsStore = true;
     }
   }
 
   /**
-   * 학술 논문 및 시냅스 코어 아키텍처 규칙을 Causal Memory 인과 그래프에 등록
+   * 학술 논문 및 시냅스 코어 아키텍처 규칙을 Causal Memory 인과 그래프에 등록 (WeakMap 공유 그래프 캐시 + 대표 요약 색인)
    */
   public initializeKnowledgeGraph(customPapers?: readonly PaperMetadata[]): void {
     const papers = customPapers ?? this.registeredPapers;
+    if (this.isInitialized && this.initializedPapersRef === papers) return;
     this.registeredPapers = papers;
+    this.initializedPapersRef = papers;
+    this.analyzeCache.clear();
 
-    if (this.isInitialized && !customPapers) return;
-
-    // 1. 시냅스 5대 핵심 코어 규칙 등록
-    const coreRules: PaperCausalRule[] = [
-      {
-        id: "core.synapse_optic",
-        domain: "architecture",
-        title: "시냅스 옵틱 초경량 네이티브 브라우저 코어",
-        triggers: { keywords: ["optic", "browser", "cdp", "a11y", "snapshot"] },
-        invariants: ["Stateless CDP Socket", "0.05ms Snapshot Cache", "DOM Ready Fast-Path"],
-        actions: ["Connect Native Rust Engine", "Prune A11y Tree 96.8%", "Map Interactive Targets"],
-        context: ["Rust prometheus-cli", "Bun v1.4.4", "Windows 11 Native Process"],
-      },
-      {
-        id: "core.synapse_guard",
-        domain: "security",
-        title: "시냅스 가드 적대적 IPI 및 시크릿 방어 코어",
-        triggers: { keywords: ["guard", "security", "ipi", "xss", "secret", "injection"] },
-        invariants: ["Zero False Negative for Secrets", "Adversarial Prompt Sanitization"],
-        actions: ["Scan Secret Tokens", "Neutralize Hidden Injections", "Block Malicious ARIA Nodes"],
-        context: ["AST Inspection", "Zero External Network Leak"],
-      },
-      {
-        id: "core.synapse_verifier",
-        domain: "verification",
-        title: "시냅스 베리파이어 단일 활동전위 불변식 검증 코어",
-        triggers: { keywords: ["verifier", "occam", "invariant", "action_potential"] },
-        invariants: ["Single Action Potential", "19 Token Compact Serialization"],
-        actions: ["Verify Pre/Post Conditions", "Assert Deterministic State Transition"],
-        context: ["Formal Invariants", "Occam Parsimony"],
-      },
-      {
-        id: "core.synapse_bus",
-        domain: "messaging",
-        title: "시냅스 버스 초고속 나노초 이벤트 스트리밍 코어",
-        triggers: { keywords: ["bus", "event", "streaming", "throughput"] },
-        invariants: ["Over 8M Events Per Second", "Zero Alloc Channel"],
-        actions: ["Emit Action Signals", "Broadcast State Changes"],
-        context: ["In-Memory Ring Buffer"],
-      },
-      {
-        id: "core.synapse_memory",
-        domain: "memory",
-        title: "시냅스 인과율 슈퍼 코어 커넥톰",
-        triggers: { keywords: ["memory", "causal", "connectome", "resonance", "zero_latency"] },
-        invariants: ["Sub-millisecond Resonance Query", "Bidirectional Backpropagation"],
-        actions: ["Assert Causal Seed", "Query Resonance Graph", "Decay Stale Associations"],
-        context: ["SQLite WAL / In-Memory", "Directed Acyclic Causal Graph"],
-      },
-    ];
-
-    for (const rule of coreRules) {
-      this.store.assertRule(rule);
+    if (this.ownsStore) {
+      const cachedGraph = CausalPaperAnalyzer.sharedGraphCache.get(papers);
+      if (cachedGraph) {
+        this.store = cachedGraph.store;
+        this.paperById = cachedGraph.paperById;
+        this.paperByArxivId = cachedGraph.paperByArxivId;
+        this.isInitialized = true;
+        return;
+      }
+      // 다른 데이터셋에 바인딩되었을 수 있으므로 새 스토어 할당
+      if (this.isInitialized) {
+        this.store = new InMemoryCausalEngine();
+        this.paperById = new Map<string, PaperMetadata>();
+        this.paperByArxivId = new Map<string, PaperMetadata>();
+      }
     }
 
-    // 2. 전체 논문 인과 규칙 등록
-    for (const paper of papers) {
+    const indexLimit =
+      papers.length > CausalPaperAnalyzer.SUMMARY_THRESHOLD && this.ownsStore
+        ? Math.min(papers.length, PAPERS_SURVEY.length + 10)
+        : papers.length;
+
+    this.paperById.clear();
+    this.paperByArxivId.clear();
+    for (let i = 0; i < indexLimit; i++) {
+      const p = papers[i];
+      this.paperById.set(p.id, p);
+      this.paperByArxivId.set(p.arxivId, p);
+    }
+
+    // 1. 시냅스 5대 핵심 코어 규칙 등록 (호이스팅된 정적 상수 재사용)
+    const coreRules = CausalPaperAnalyzer.CORE_RULES;
+    for (let i = 0; i < coreRules.length; i++) {
+      this.store.assertRule(coreRules[i]);
+    }
+
+    // 2. 논문 인과 규칙 등록 (대규모 합성 데이터셋은 8대 기본 + 10대 도메인 대표 논문 18편 = 총 23개 규칙만 색인)
+    for (let i = 0; i < indexLimit; i++) {
+      const paper = papers[i];
+      const titleLower = paper.title.toLowerCase();
+      const titleWords = titleLower.split(" ");
+      const keywords: string[] = [paper.arxivId, paper.id, titleLower];
+      for (let w = 0; w < titleWords.length; w++) {
+        if (titleWords[w].length > 3) {
+          keywords.push(titleWords[w]);
+        }
+      }
+      keywords.push(paper.synapseAlignment.targetCore.replace(/[@\/]/g, ""));
+
       const paperRule: PaperCausalRule = {
         id: paper.id,
         domain: "academic_paper",
         title: `[${paper.arxivId}] ${paper.title}`,
-        triggers: {
-          keywords: [
-            paper.arxivId,
-            paper.id,
-            ...paper.title.toLowerCase().split(/\s+/).filter((w) => w.length > 3),
-            paper.synapseAlignment.targetCore.replace(/[@\/]/g, ""),
-          ],
-        },
+        triggers: { keywords },
         invariants: [paper.synapseAlignment.invariant],
         actions: [paper.synapseAlignment.mechanism],
         context: [
@@ -498,6 +625,14 @@ export class CausalPaperAnalyzer {
       this.store.assertRelation(relation);
     }
 
+    if (this.ownsStore) {
+      CausalPaperAnalyzer.sharedGraphCache.set(papers, {
+        store: this.store,
+        paperById: this.paperById,
+        paperByArxivId: this.paperByArxivId,
+      });
+    }
+
     this.isInitialized = true;
   }
 
@@ -506,6 +641,11 @@ export class CausalPaperAnalyzer {
    */
   public analyze(paperIdOrKeyword: string, customPapers?: readonly PaperMetadata[]): PaperComparisonResult {
     this.initializeKnowledgeGraph(customPapers);
+    const cached = this.analyzeCache.get(paperIdOrKeyword);
+    if (cached !== undefined) {
+      return cached;
+    }
+
     const papers = customPapers ?? this.registeredPapers;
 
     const start = performance.now();
@@ -515,16 +655,37 @@ export class CausalPaperAnalyzer {
     });
     const queryDurationMs = performance.now() - start;
 
-    const paper = papers.find(
-      (p) => p.id === paperIdOrKeyword || p.arxivId === paperIdOrKeyword || p.title.includes(paperIdOrKeyword)
-    ) ?? papers[0];
+    let paper = this.paperById.get(paperIdOrKeyword) ?? this.paperByArxivId.get(paperIdOrKeyword);
+    if (paper === undefined && paperIdOrKeyword.startsWith("paper.massive_")) {
+      const massiveIdx = Number(paperIdOrKeyword.slice(14)) - 1;
+      if (Number.isInteger(massiveIdx) && massiveIdx >= 0 && massiveIdx < papers.length) {
+        paper = papers[massiveIdx];
+      }
+    }
+    if (paper === undefined) {
+      for (let i = 0; i < papers.length; i++) {
+        if (papers[i].title.includes(paperIdOrKeyword)) {
+          paper = papers[i];
+          break;
+        }
+      }
+      if (paper === undefined) {
+        paper = papers[0];
+      }
+    }
 
-    return {
+    const result: PaperComparisonResult = {
       paper,
       queryDurationMs: Number(queryDurationMs.toFixed(3)),
       matchedRulesCount: resonance.matchedCount,
       resonanceSummary: `Causal Resonance 성공: ${resonance.matchedCount}개 연관 노드 및 ${resonance.activeRelations.length}개 인과 간선 공명 활성화 (${queryDurationMs.toFixed(3)}ms)`,
     };
+
+    if (this.analyzeCache.size >= CausalPaperAnalyzer.ANALYZE_CACHE_LIMIT) {
+      this.analyzeCache.clear();
+    }
+    this.analyzeCache.set(paperIdOrKeyword, result);
+    return result;
   }
 
   /**

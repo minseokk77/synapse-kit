@@ -22,33 +22,77 @@ export interface HybridExecutionResult {
 }
 
 export class OpticHybridRouter {
-  private readonly optic: SynapseOptic;
-  private readonly analyzer: CausalPaperAnalyzer;
+  private readonly config: OpticConfig;
+  private optic: SynapseOptic | null = null;
+  private analyzer: CausalPaperAnalyzer | null = null;
+  private graphInitialized = false;
+  private lastFastPrefix = "";
+  private lastDeepPrefix = "";
 
   constructor(config: OpticConfig = {}) {
-    this.optic = new SynapseOptic(config);
-    this.analyzer = new CausalPaperAnalyzer();
-    this.analyzer.initializeKnowledgeGraph();
+    this.config = config;
+  }
+
+  private getOptic(): SynapseOptic {
+    if (this.optic === null) {
+      this.optic = new SynapseOptic(this.config);
+    }
+    return this.optic;
+  }
+
+  private getAnalyzer(): CausalPaperAnalyzer {
+    if (this.analyzer === null) {
+      this.analyzer = new CausalPaperAnalyzer();
+    }
+    return this.analyzer;
+  }
+
+  private ensureGraphInitialized(): CausalPaperAnalyzer {
+    const analyzer = this.getAnalyzer();
+    if (!this.graphInitialized) {
+      analyzer.initializeKnowledgeGraph();
+      this.graphInitialized = true;
+    }
+    return analyzer;
   }
 
   /**
-   * 대상 URL 또는 텍스트의 특성에 따라 최적의 실행 모드 판별
+   * 대상 URL 또는 텍스트의 특성에 따라 최적의 실행 모드 판별 (리터럴 + 프리픽스 로컬리티 캐시 Fast-Path)
    */
   public determineMode(target: string, preferredMode: ExecutionMode = "auto"): ExecutionMode {
     if (preferredMode !== "auto") return preferredMode;
 
-    const lower = target.toLowerCase();
-    // 학술 사이트, 정적 문서, PDF, 텍스트 블록은 초고속 Fast-Path 적용
-    const matchesPattern = OPTIC_HYBRID_DEFAULTS.FAST_PATH_PATTERNS.some((pattern) =>
-      lower.includes(pattern)
-    );
+    const len = target.length;
+    if (len > OPTIC_HYBRID_DEFAULTS.TEXT_PAYLOAD_THRESHOLD) return "fast_path";
 
-    if (matchesPattern || target.length > OPTIC_HYBRID_DEFAULTS.TEXT_PAYLOAD_THRESHOLD) {
+    if (this.lastFastPrefix.length > 0 && target.startsWith(this.lastFastPrefix)) {
       return "fast_path";
     }
+    if (
+      this.lastDeepPrefix.length > 0 &&
+      target.startsWith(this.lastDeepPrefix) &&
+      target.charCodeAt(len - 4) !== 46 /* '.' (.pdf 방어) */
+    ) {
+      return "deep_inspect";
+    }
 
-    // 그 외 일반 웹 URL은 Deep-Inspect 시도
-    return "deep_inspect";
+    const isFast =
+      target.includes("arxiv.org") ||
+      target.includes(".pdf") ||
+      target.includes("github.com") ||
+      target.includes("docs.");
+
+    const lastSlash = target.lastIndexOf("/");
+    if (lastSlash > 8) {
+      const prefix = target.slice(0, lastSlash + 1);
+      if (isFast && !target.includes(".pdf")) {
+        this.lastFastPrefix = prefix;
+      } else if (!isFast) {
+        this.lastDeepPrefix = prefix;
+      }
+    }
+
+    return isFast ? "fast_path" : "deep_inspect";
   }
 
   /**
@@ -64,7 +108,8 @@ export class OpticHybridRouter {
     // 1. Fast-Path 모드 실행
     if (resolvedMode === "fast_path") {
       try {
-        const resonance = this.analyzer.analyze(target);
+        const analyzer = this.ensureGraphInitialized();
+        const resonance = analyzer.analyze(target);
         return {
           modeUsed: "fast_path",
           durationMs: Number((performance.now() - startTime).toFixed(2)),
@@ -91,7 +136,7 @@ export class OpticHybridRouter {
     wasFallback: boolean
   ): Promise<HybridExecutionResult> {
     try {
-      const snap = await this.optic.goto(target);
+      const snap = await this.getOptic().goto(target);
       return {
         modeUsed: "deep_inspect",
         durationMs: Number((performance.now() - startTime).toFixed(2)),
@@ -102,7 +147,8 @@ export class OpticHybridRouter {
     } catch (deepInspectErr: any) {
       // 라이브 브라우저 미기동 시 Fast-Path 인과 엔진으로 무중단 자동 폴백!
       try {
-        const resonance = this.analyzer.analyze(target);
+        const analyzer = this.ensureGraphInitialized();
+        const resonance = analyzer.analyze(target);
         return {
           modeUsed: "fast_path",
           durationMs: Number((performance.now() - startTime).toFixed(2)),

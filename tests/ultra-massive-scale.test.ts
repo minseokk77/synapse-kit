@@ -162,7 +162,6 @@ describe('🚀 시냅스 11대 전역 슈퍼 코어 초대규모 엔터프라이
       const resonant = store.queryResonance({
         keywords: ['Rust', '인과율'],
         domain: 'Rust',
-        limit: 10,
       });
       expect(resonant.resonanceRules.length).toBeGreaterThan(0);
     }
@@ -174,7 +173,7 @@ describe('🚀 시냅스 11대 전역 슈퍼 코어 초대규모 엔터프라이
   // 3. [Bus & RingBuffer] 5,000개 초고속 이벤트 스트리밍 & 백프레셔 제어
   // =========================================================================
   it('3. [Bus & RingBuffer] 20,000개 이벤트 초고속 스트리밍 및 가변 백프레셔 메모리 안정성 검증', async () => {
-    const bus = new SynapseBus({ bufferSize: 2048, backpressureStrategy: 'drop-oldest' });
+    const bus = new SynapseBus({ ringCapacity: 2048, backpressure: 'drop-oldest' });
 
     let receivedCount = 0;
     bus.on('telemetry.metric', () => {

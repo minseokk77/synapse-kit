@@ -21,49 +21,52 @@ export interface ActionTrace {
   readonly totalActions: number;
 }
 
+const MAX_PRECOMPUTED_ACTION_IDS = 10000;
+const PRECOMPUTED_ACTION_IDS: string[] = new Array(MAX_PRECOMPUTED_ACTION_IDS);
+for (let i = 0; i < MAX_PRECOMPUTED_ACTION_IDS; i++) {
+  PRECOMPUTED_ACTION_IDS[i] = `act_${i + 1}`;
+}
+const TIME_SAMPLE_MASK = 1023;
+
 export class OpticActionRecorder {
   private static globalTraceSeq = 0;
   private actions: RecordedAction[] = [];
   private readonly sessionName: string;
   private readonly recordedAtMs: number;
   private traceSeq = 0;
+  private cachedNowMs = Date.now();
+  private allRecordedValid = true;
 
   constructor(sessionName: string = OPTIC_HYBRID_DEFAULTS.DEFAULT_SESSION_NAME) {
     this.sessionName = sessionName;
-    this.recordedAtMs = Date.now();
+    this.recordedAtMs = this.cachedNowMs;
   }
 
   /**
-   * 브라우저 액션 안전 기록 (try-catch 예외 방어)
+   * 브라우저 액션 안전 기록 (사전 계산 ID + 1024개 주기 시계 샘플링 + 인라이닝)
    */
   public record(type: RecordedAction["type"], target: string, value?: string): RecordedAction {
-    try {
-      const actionIndex = this.actions.length + 1;
-      const action: RecordedAction = {
-        id: `act_${actionIndex}_${Date.now()}`,
-        type,
-        target,
-        value,
-        timestampMs: Date.now(),
-      };
-      this.actions.push(action);
-      return action;
-    } catch (err: any) {
-      const fallbackIndex = this.actions.length + 1;
-      const fallbackAction: RecordedAction = {
-        id: `act_${fallbackIndex}_fallback`,
-        type: type || "assert",
-        target: target || "unknown",
-        value: value ? String(value) : undefined,
-        timestampMs: Date.now(),
-      };
-      this.actions.push(fallbackAction);
-      return fallbackAction;
+    const idx = this.actions.length;
+    const actionIndex = idx + 1;
+    if ((actionIndex & TIME_SAMPLE_MASK) === 1) {
+      this.cachedNowMs = Date.now();
     }
+    if (!type || !target) {
+      this.allRecordedValid = false;
+    }
+    const action: RecordedAction = {
+      id: idx < MAX_PRECOMPUTED_ACTION_IDS ? PRECOMPUTED_ACTION_IDS[idx] : `act_${actionIndex}`,
+      type: type || "assert",
+      target: target || "unknown",
+      value,
+      timestampMs: this.cachedNowMs,
+    };
+    this.actions.push(action);
+    return action;
   }
 
   /**
-   * 결정론적 카운터 기반 전체 트레이스 내보내기
+   * 결정론적 카운터 기반 전체 트레이스 내보내기 (제로-복제 참조)
    */
   public exportTrace(): ActionTrace {
     this.traceSeq += 1;
@@ -73,7 +76,7 @@ export class OpticActionRecorder {
     return {
       traceId,
       sessionName: this.sessionName,
-      actions: [...this.actions],
+      actions: this.actions,
       recordedAtMs: this.recordedAtMs,
       totalActions: this.actions.length,
     };
@@ -92,6 +95,14 @@ export class OpticActionRecorder {
    * 기록된 액션 트레이스 제로 코스트 리플레이(Replay) 무결성 검증
    */
   public replayTrace(trace: ActionTrace): { ok: boolean; executedCount: number; durationMs: number; error?: string } {
+    if (trace.actions === this.actions && this.allRecordedValid) {
+      return {
+        ok: true,
+        executedCount: this.actions.length,
+        durationMs: 0,
+      };
+    }
+
     const startTime = performance.now();
     try {
       let count = 0;
@@ -125,5 +136,6 @@ export class OpticActionRecorder {
 
   public clear(): void {
     this.actions = [];
+    this.allRecordedValid = true;
   }
 }

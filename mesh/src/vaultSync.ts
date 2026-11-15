@@ -4,7 +4,7 @@
  * - 원자적 파일 치환을 통한 무손실 분산 볼트 미러링
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync, renameSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { createHash } from "node:crypto";
 import type { VaultFileMetadata, VaultSyncDelta, VaultSyncManifest } from "./types";
 
@@ -130,10 +130,26 @@ export class DistributedVaultSynchronizer {
   }
 
   /**
+   * 볼트 디렉터리 내부 경로인지 검증 후 절대 경로 반환 (Path Traversal 방어)
+   */
+  private resolveSafeVaultPath(relativePath: string): string {
+    const normalizedRel = relativePath.replace(/\\/g, "/");
+    if (normalizedRel.startsWith("/") || normalizedRel.includes("\0") || /^[a-zA-Z]:/.test(normalizedRel)) {
+      throw new Error(`[DistributedVaultSynchronizer] 허용되지 않는 볼트 파일 경로입니다: ${relativePath}`);
+    }
+    const rootPath = resolve(this.vaultDir);
+    const targetPath = resolve(rootPath, normalizedRel);
+    if (targetPath !== rootPath && !targetPath.startsWith(rootPath + sep)) {
+      throw new Error(`[DistributedVaultSynchronizer] 볼트 디렉터리 외부 경로 접근(Path Traversal)이 차단되었습니다: ${relativePath}`);
+    }
+    return targetPath;
+  }
+
+  /**
    * 단일 파일 원자적 저장
    */
   public writeVaultFile(relativePath: string, content: string): void {
-    const targetPath = join(this.vaultDir, relativePath);
+    const targetPath = this.resolveSafeVaultPath(relativePath);
     const parentDir = dirname(targetPath);
     if (!existsSync(parentDir)) {
       mkdirSync(parentDir, { recursive: true });
@@ -157,7 +173,7 @@ export class DistributedVaultSynchronizer {
    * 단일 파일 내용 읽기
    */
   public readVaultFile(relativePath: string): string | null {
-    const targetPath = join(this.vaultDir, relativePath);
+    const targetPath = this.resolveSafeVaultPath(relativePath);
     if (!existsSync(targetPath)) return null;
     return readFileSync(targetPath, "utf-8");
   }
@@ -166,7 +182,7 @@ export class DistributedVaultSynchronizer {
    * 단일 파일 삭제
    */
   public deleteVaultFile(relativePath: string): boolean {
-    const targetPath = join(this.vaultDir, relativePath);
+    const targetPath = this.resolveSafeVaultPath(relativePath);
     if (!existsSync(targetPath)) return false;
     try {
       unlinkSync(targetPath);

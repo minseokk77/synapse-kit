@@ -48,7 +48,7 @@ export function inferZeroConfig(targetDir: string = process.cwd()): SynapseConfi
 
   if (existsSync(pkgPath)) {
     try {
-      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8').replace(/^\uFEFF/, ''));
       const deps = { ...pkg.dependencies, ...pkg.devDependencies };
       hasSvelteDep = Boolean(deps['svelte'] || deps['@sveltejs/kit']);
     } catch {

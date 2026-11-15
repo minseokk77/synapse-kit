@@ -1,12 +1,8 @@
-﻿[package]
+[package]
 name = "synapse-studio"
-version = "0.4.1"
+version = "0.5.0"
 description = "Synapse 3.0 Realtime Desktop Mission Control"
 edition = "2021"
-
-[lib]
-name = "synapse_studio_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.0.0", features = [] }

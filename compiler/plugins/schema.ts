@@ -32,7 +32,7 @@ export function schemaChecker(options: SchemaPluginOptions): CheckerPlugin {
       for (const target of options.targets) {
         const fullPath = resolve(ctx.rootDir, target.path);
         try {
-          const raw = await readFile(fullPath, 'utf8');
+          const raw = (await readFile(fullPath, 'utf8')).replace(/^\uFEFF/, '');
           const parsed = JSON.parse(raw);
           if (target.validator) {
             const validationError = target.validator(parsed);

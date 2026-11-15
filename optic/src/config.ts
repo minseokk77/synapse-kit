@@ -1,6 +1,11 @@
 /**
  * 시냅스 옵틱(Synapse Optic) 브라우저 엔진 설정 및 상수
  */
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+const USER_HOME = homedir();
+
 export const OPTIC_DEFAULTS = {
   /** 기본 CDP 디버깅 호스트 엔드포인트 */
   DEFAULT_ENDPOINT: "http://127.0.0.1:9222",
@@ -12,12 +17,13 @@ export const OPTIC_DEFAULTS = {
   DEFAULT_SCROLL_AMOUNT: 600,
   /** 네이티브 프로메테우스 바이너리 탐색 후보 경로 */
   NATIVE_PROMETHEUS_CANDIDATES: [
-    "C:\\Users\\minse\\.gemini\\antigravity\\scratch\\project-prometheus\\target\\release\\prometheus-cli.exe",
-    "C:\\Users\\minse\\.gemini\\antigravity\\scratch\\project-prometheus\\target\\debug\\prometheus-cli.exe",
+    ...(process.env.PROMETHEUS_BIN ? [process.env.PROMETHEUS_BIN] : []),
+    join(USER_HOME, ".gemini", "antigravity", "scratch", "project-prometheus", "target", "release", "prometheus-cli.exe"),
+    join(USER_HOME, ".gemini", "antigravity", "scratch", "project-prometheus", "target", "debug", "prometheus-cli.exe"),
     "./target/release/prometheus-cli.exe",
     "prometheus-cli.exe",
     "prom.exe",
-  ],
+  ] as readonly string[],
   /** 상호작용 지원 표준 역할(Role) 집합 */
   INTERACTIVE_ROLES: new Set([
     "button",

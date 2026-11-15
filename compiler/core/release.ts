@@ -43,7 +43,7 @@ export async function executeRelease(
       const pkgPath = resolve(rootDir, 'package.json');
       if (existsSync(pkgPath)) {
         try {
-          const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+          const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8').replace(/^\uFEFF/, ''));
           const parts = (pkg.version || '0.1.0').split('.').map((p: string) => parseInt(p, 10) || 0);
           while (parts.length < 3) parts.push(0);
 

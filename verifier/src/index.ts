@@ -26,19 +26,22 @@ export class SynapseVerifier {
   }
 
   /**
-   * 다중 파일 맵 일괄 검증 및 요약 생성
+   * 다중 파일 맵 일괄 검증 및 요약 생성 (Zero-Tuple Iteration)
    */
   public verifyFiles(files: Record<string, string>): VerifierAuditSummary {
     const start = performance.now();
     const allViolations: InvariantViolation[] = [];
+    let totalFilesChecked = 0;
     let criticalCount = 0;
     let highCount = 0;
     let mediumCount = 0;
 
-    for (const [fileName, content] of Object.entries(files)) {
-      const res = this.checker.checkSource(content, fileName);
-      for (const v of res.violations) {
-        allViolations.push(v);
+    for (const fileName in files) {
+      totalFilesChecked++;
+      const prevLen = allViolations.length;
+      this.checker.checkSourceInto(files[fileName], fileName, allViolations);
+      for (let i = prevLen; i < allViolations.length; i++) {
+        const v = allViolations[i];
         if (v.severity === "CRITICAL") criticalCount++;
         else if (v.severity === "HIGH") highCount++;
         else mediumCount++;
@@ -49,7 +52,7 @@ export class SynapseVerifier {
 
     return {
       ok: allViolations.length === 0,
-      totalFilesChecked: Object.keys(files).length,
+      totalFilesChecked,
       totalViolationsCount: allViolations.length,
       criticalCount,
       highCount,
