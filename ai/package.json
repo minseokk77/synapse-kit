@@ -1,0 +1,49 @@
+{
+  "name": "synapse-ai",
+  "version": "0.1.0",
+  "description": "Synapse AI Core: Quantized Hybrid Vector+BM25+Connectome Search, Multi-Agent Orchestrator, Groundedness Evals & Hallucination Scorer, Structured Output Repair, and Scan-PDF/OCR Multimodal Bridge",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun build index.ts --outfile dist/index.js --target bun && tsc -p tsconfig.build.json",
+    "prepublishOnly": "bun run build",
+    "test": "bun test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minseokk77/synapse-kit.git",
+    "directory": "ai"
+  },
+  "keywords": [
+    "ai-agents",
+    "hybrid-search",
+    "vector-db",
+    "rrf",
+    "multi-agent",
+    "evals",
+    "hallucination",
+    "json-repair",
+    "ocr",
+    "synapse-kit",
+    "bun"
+  ],
+  "author": "Vesper",
+  "license": "MIT",
+  "dependencies": {
+    "synapse-db": "^0.6.0",
+    "synapse-dci": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.7",
+    "typescript": "^5.6.3"
+  }
+}
