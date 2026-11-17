@@ -1,5 +1,5 @@
 {
-  "name": "synapse-ai",
+  "name": "synapse-ai-core",
   "version": "0.1.0",
   "description": "Synapse AI Core: Quantized Hybrid Vector+BM25+Connectome Search, Multi-Agent Orchestrator, Groundedness Evals & Hallucination Scorer, Structured Output Repair, and Scan-PDF/OCR Multimodal Bridge",
   "type": "module",
