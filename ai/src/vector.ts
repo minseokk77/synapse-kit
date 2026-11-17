@@ -34,37 +34,39 @@ export interface HybridSearchHit {
 }
 
 /**
- * 기본 로컬 경량 임베더: 한국어/영문 Subword + Character N-gram 해시 프로젝션 (외부 의존성 0개)
+ * 기본 로컬 경량 임베더: 한국어/영문 Subword + Character N-gram 순수 정수 해시 프로젝션 (외부 의존성 0개, Zero-FLOPs)
  */
 export function localHashEmbed(text: string, dimensions: number = VECTOR_ENGINE_CONFIG.DEFAULT_DIMENSIONS): number[] {
-  const vec = new Float32Array(dimensions);
+  const vec = new Int32Array(dimensions);
   const normalized = text.toLowerCase().replace(/\s+/g, " ").trim();
   if (!normalized) return Array.from(vec);
 
   const tokens = normalized.split(/[^a-z0-9가-힣_]+/).filter((t) => t.length > 0);
   for (const tok of tokens) {
-    // 단어 단위 해시 (가중치 1.5)
-    addHashedFeature(vec, tok, 1.5, dimensions);
-    // 2-gram / 3-gram 서브워드 해시 (형태소/부분 일치 보완)
+    // 단어 단위 정수 해시 (가중치 15, 서브워드 7 — 부동소수점 제거)
+    addHashedFeatureInt(vec, tok, 15, dimensions);
     for (let n = 2; n <= 3; n++) {
       if (tok.length < n) continue;
       for (let i = 0; i <= tok.length - n; i++) {
-        addHashedFeature(vec, tok.slice(i, i + n), 0.7, dimensions);
+        addHashedFeatureInt(vec, tok.slice(i, i + n), 7, dimensions);
       }
     }
   }
 
-  // L2 정규화
-  let normSq = 0;
-  for (let i = 0; i < dimensions; i++) normSq += vec[i] * vec[i];
-  const norm = Math.sqrt(normSq);
-  if (norm > 0) {
-    for (let i = 0; i < dimensions; i++) vec[i] /= norm;
+  // 최대 절대값 기준 정수 비트-스케일링 (Math.sqrt 없이 [-1, 1] 정규화 호환)
+  let maxAbs = 1;
+  for (let i = 0; i < dimensions; i++) {
+    const abs = vec[i] < 0 ? -vec[i] : vec[i];
+    if (abs > maxAbs) maxAbs = abs;
   }
-  return Array.from(vec);
+  const out = new Array<number>(dimensions);
+  for (let i = 0; i < dimensions; i++) {
+    out[i] = vec[i] / maxAbs;
+  }
+  return out;
 }
 
-function addHashedFeature(vec: Float32Array, feature: string, weight: number, dims: number): void {
+function addHashedFeatureInt(vec: Int32Array, feature: string, weight: number, dims: number): void {
   let h1 = 2166136261;
   let h2 = 0x811c9dc5;
   for (let i = 0; i < feature.length; i++) {

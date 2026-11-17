@@ -32,15 +32,16 @@ export interface VoiceIngestOutcome {
 }
 
 /**
- * PCM 오디오 프레임의 RMS(Root Mean Square) 에너지 계산
+ * PCM 오디오 프레임의 제곱 평균 에너지(Mean Square) 계산 (Math.sqrt 제거로 Zero-Root 고속 VAD)
  */
-export function computeRmsEnergy(samples: Float32Array): number {
+export function computeMeanSquareEnergy(samples: Float32Array): number {
   if (samples.length === 0) return 0;
   let sumSq = 0;
   for (let i = 0; i < samples.length; i++) {
-    sumSq += samples[i] * samples[i];
+    const v = samples[i];
+    sumSq += v * v;
   }
-  return Math.sqrt(sumSq / samples.length);
+  return sumSq / samples.length;
 }
 
 /**
@@ -57,6 +58,7 @@ export async function ingestVoiceSession(
   }
 ): Promise<VoiceIngestOutcome> {
   const threshold = options.vadThreshold ?? VOICE_CONFIG.DEFAULT_VAD_RMS_THRESHOLD;
+  const thresholdSq = threshold * threshold;
   const collection = options.collection ?? VOICE_CONFIG.DEFAULT_COLLECTION;
 
   let activeSpeechChunks = 0;
@@ -64,8 +66,8 @@ export async function ingestVoiceSession(
   const allSegments: UtteranceSegment[] = [];
 
   for (const chunk of chunks) {
-    const rms = computeRmsEnergy(chunk.pcmSamples);
-    if (rms < threshold) {
+    const msEnergy = computeMeanSquareEnergy(chunk.pcmSamples);
+    if (msEnergy < thresholdSq) {
       silenceSkippedChunks++;
       continue;
     }

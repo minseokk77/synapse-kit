@@ -4,6 +4,7 @@
 export const TRACE_CONFIG = {
   MAX_SPANS: 10_000,
   DEFAULT_COST_PER_1K_TOKENS_USD: 0.002,
+  KEYFRAME_INTERVAL: 100,
 } as const;
 
 export interface TraceSpan {
@@ -43,6 +44,8 @@ export interface TraceProfileReport {
 export class SynapseTracer {
   public readonly sessionId: string;
   private readonly spans: TraceSpan[] = [];
+  private readonly keyframes = new Map<number, Record<string, unknown>>();
+  private readonly liveState: Record<string, unknown> = {};
   private readonly costPer1kUsd: number;
 
   constructor(sessionId: string, costPer1kUsd: number = TRACE_CONFIG.DEFAULT_COST_PER_1K_TOKENS_USD) {
@@ -60,11 +63,15 @@ export class SynapseTracer {
       timestampMs: Date.now(),
     };
     this.spans.push(span);
+    Object.assign(this.liveState, span.stateSnapshot);
+    if (this.spans.length % TRACE_CONFIG.KEYFRAME_INTERVAL === 0) {
+      this.keyframes.set(this.spans.length, { ...this.liveState });
+    }
     return span;
   }
 
   /**
-   * 특정 턴(Turn)까지의 누적 상태 타임트래블 리플레이
+   * 특정 턴(Turn)까지의 누적 상태 타임트래블 리플레이 (키프레임 기반 고속 복원)
    */
   public replayAtTurn(targetTurn: number): {
     turn: number;
@@ -72,15 +79,25 @@ export class SynapseTracer {
     mergedState: Record<string, unknown>;
     lastStatus: "ok" | "error" | "none";
   } {
-    const filtered = this.spans.filter((s) => s.turn <= targetTurn);
-    const mergedState: Record<string, unknown> = {};
-    for (const s of filtered) {
-      Object.assign(mergedState, s.stateSnapshot);
+    let endCount = 0;
+    while (endCount < this.spans.length && this.spans[endCount].turn <= targetTurn) {
+      endCount++;
     }
-    const last = filtered[filtered.length - 1];
+
+    // 가장 가까운 하위 키프레임부터만 델타 적용
+    const keyIdx =
+      Math.floor(endCount / TRACE_CONFIG.KEYFRAME_INTERVAL) * TRACE_CONFIG.KEYFRAME_INTERVAL;
+    const baseState = keyIdx > 0 ? this.keyframes.get(keyIdx) : undefined;
+    const mergedState: Record<string, unknown> = baseState ? { ...baseState } : {};
+    const startIdx = baseState ? keyIdx : 0;
+
+    for (let i = startIdx; i < endCount; i++) {
+      Object.assign(mergedState, this.spans[i].stateSnapshot);
+    }
+    const last = endCount > 0 ? this.spans[endCount - 1] : undefined;
     return {
       turn: targetTurn,
-      spansExecuted: filtered.length,
+      spansExecuted: endCount,
       mergedState,
       lastStatus: last ? last.status : "none",
     };

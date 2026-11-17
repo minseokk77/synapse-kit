@@ -326,3 +326,4 @@ export * from "./secretShield";
 export * from "./vulnerabilityGuard";
 export * from "./vaultSanitizer";
 export * from "./actionAuditor";
+export * from "./policy";

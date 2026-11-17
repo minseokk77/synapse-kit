@@ -105,6 +105,22 @@ export class SandboxOverlayFS {
   }
 
   /**
+   * 검증 통과 시에만 실제 디스크에 커밋하고, 실패 시 자동 롤백하는 안전 게이트
+   */
+  public async commitIfVerified(
+    verifier: (diffs: readonly OverlayFileDiff[]) => Promise<boolean> | boolean
+  ): Promise<{ verified: boolean; committedWrites: number; committedDeletes: number }> {
+    const diffs = this.diff();
+    const ok = await verifier(diffs);
+    if (!ok) {
+      this.rollback();
+      return { verified: false, committedWrites: 0, committedDeletes: 0 };
+    }
+    const res = this.commitToDisk();
+    return { verified: true, ...res };
+  }
+
+  /**
    * 0ms 즉시 롤백 (실디스크 변경 없음)
    */
   public rollback(): void {

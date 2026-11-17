@@ -2,7 +2,7 @@
  * RAG vs Raw-DCI vs 기본 DR-DCI vs Synapse-DCI 정량 비교 벤치마크
  * 실행: bun run tests/dci-vs-rag-benchmark.ts
  */
-import { SynapseConnectome, SynapseDciWorkspace, type SynapseDocument } from "../dci";
+import { SynapseConnectome, SynapseDciWorkspace, type SynapseDocument } from "../db";
 
 const BENCH_CONFIG = {
   CORPUS_SIZE: 5000,

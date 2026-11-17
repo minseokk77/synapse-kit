@@ -111,6 +111,14 @@ export const SYNAPSE_MCP_TOOLS: McpTool[] = [
           type: "string",
           description: `검색할 마크다운 볼트 경로 (기본: ${MCP_SERVER_CONFIG.DEFAULT_VAULT_DIR})`,
         },
+        mode: {
+          type: "string",
+          description: "검색 모드: basic(기본 BM25) 또는 dci(Synapse-DCI 다중 홉 동적 워크스페이스 Pull)",
+        },
+        hops: {
+          type: "number",
+          description: "DCI 모드 시 Connectome 확장 홉 깊이 (기본: 2)",
+        },
         compact: {
           type: "boolean",
           description: "단일 라인 초경량 JSON 반환 여부",
@@ -304,6 +312,7 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
       case "synapse_db_search": {
         const query = String(args.query || "");
         const vaultDir = String(args.vaultDir || MCP_SERVER_CONFIG.DEFAULT_VAULT_DIR);
+        const mode = String(args.mode || "basic");
         let db = vaultDbCache.get(vaultDir);
         if (!db) {
           const dbMod = await getCachedDbMod();
@@ -311,6 +320,21 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
           await db.init();
           vaultDbCache.set(vaultDir, db);
         }
+
+        if (mode === "dci") {
+          const hops = typeof args.hops === "number" ? args.hops : undefined;
+          const ws = db.createDciWorkspace();
+          const dciResult = ws.pull(query, { hops });
+          return {
+            content: [
+              {
+                type: "text",
+                text: serializePayload({ ok: true, mode: "dci", query, vaultDir, ...dciResult }, isCompact),
+              },
+            ],
+          };
+        }
+
         const searchResults = db.engine.connectome.search(query);
 
         const payload = {

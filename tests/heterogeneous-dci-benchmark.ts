@@ -9,7 +9,7 @@ import {
   SynapseDciWorkspace,
   parseHwpBufferToDocument,
   type SynapseDocument,
-} from "../dci";
+} from "../db";
 
 const MIXED_BENCH_CONFIG = {
   TOTAL_DOCS: 10000,

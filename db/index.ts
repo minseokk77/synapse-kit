@@ -18,6 +18,7 @@ import type {
   WalBranchSummary,
 } from "./wal";
 import { WalBranchManager } from "./wal/branch";
+import { SynapseDciWorkspace } from "./dci";
 
 export class SynapseDB {
   public readonly engine: SynapseEngine;
@@ -149,6 +150,13 @@ export class SynapseDB {
   }
 
   /**
+   * Synapse-DCI 동적 워크스페이스 생성 (Hybrid Causal Pull + Batch DCI + CoW Fork)
+   */
+  public createDciWorkspace(name?: string): SynapseDciWorkspace {
+    return new SynapseDciWorkspace(this.engine.connectome, name);
+  }
+
+  /**
    * 데이터베이스 종료 및 워처 해제
    */
   public close(): void {
@@ -166,3 +174,6 @@ export * from "./migrator";
 export * from "./canvasExporter";
 export * from "./wal";
 export * from "./firewall";
+export * from "./dci";
+export * from "./hwp";
+export * from "./office";

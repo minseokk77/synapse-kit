@@ -7,12 +7,11 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { SynapseConnectome } from "../db";
-import { SynapseTracer } from "../trace";
-import { buildRepoMap, computePrBlastRadius } from "../codemap";
-import { SandboxOverlayFS } from "../sandbox-fs";
-import { HitlApprovalGate, PiiRedactor } from "../policy";
-import { PulseEngine } from "../pulse";
-import { ingestVoiceSession, type AudioChunkInput } from "../voice";
+import { SynapseTracer, buildRepoMap, computePrBlastRadius } from "../compiler";
+import { SandboxOverlayFS } from "../runtime";
+import { HitlApprovalGate, PiiRedactor } from "../guard";
+import { PulseEngine } from "../bus";
+import { transcribeVoiceChunks, type AudioChunkInput } from "../optic";
 
 const SERIES_BENCH_CONFIG = {
   TRACE_SPANS: 10000,
@@ -146,7 +145,7 @@ async function runSeries6Benchmark(): Promise<void> {
     chunkId: `c-${i}`,
     pcmSamples: i % 5 === 0 ? speechPcm : silencePcm,
   }));
-  const voiceRes = await ingestVoiceSession(connectome, chunks, {
+  const voiceRes = await transcribeVoiceChunks(chunks, {
     sessionId: "massive-call-01",
     sttEngine: (_samples, _sr) => [{ speaker: "화자A", startSec: 0, endSec: 1, text: "안건 [[meetings/별표-1]] 확인" }],
   });

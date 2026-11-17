@@ -4,7 +4,7 @@
  * 실행: bun run tests/all-formats-dci-benchmark.ts
  */
 import { deflateRawSync, deflateSync } from "node:zlib";
-import { SynapseConnectome, SynapseDciWorkspace, parseAnyDocumentBuffer } from "../dci";
+import { SynapseConnectome, SynapseDciWorkspace, parseAnyDocumentBuffer } from "../db";
 
 const ALL_FORMATS_CONFIG = {
   TOTAL_DOCS: 10000,

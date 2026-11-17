@@ -8,6 +8,8 @@ export { executeChecks, executeBuild, executePackage, executeSign } from './core
 export { executeRelease } from './core/release';
 export { verifyAgentContracts, CONTRACT_PASS_CONFIG, type AgentToolContract, type ContractPassViolation, type ContractPassResult } from './core/contractPass';
 export { SpeculativePrefetcher, SPECULATIVE_PREFETCH_CONFIG, type SpeculativeTask, type SpeculativeRunReport } from './core/speculativePrefetch';
+export * from './core/codemap';
+export * from './core/tracer';
 export * from './deploy';
 export { reportResults } from './core/reporter';
 export { analyzeCausalGraph } from './causal-graph';

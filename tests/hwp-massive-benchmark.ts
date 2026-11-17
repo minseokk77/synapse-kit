@@ -3,7 +3,7 @@
  * 실행: bun run tests/hwp-massive-benchmark.ts
  */
 import { deflateRawSync } from "node:zlib";
-import { SynapseConnectome, SynapseDciWorkspace, parseHwpBufferToDocument, type SynapseDocument } from "../dci";
+import { SynapseConnectome, SynapseDciWorkspace, parseHwpBufferToDocument, type SynapseDocument } from "../db";
 
 const MASSIVE_HWP_CONFIG = {
   BINARY_INGEST_COUNT: 1000, // HWPX 500건 + HWP5 500건 실제 바이너리 파싱

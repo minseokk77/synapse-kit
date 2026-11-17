@@ -3,7 +3,12 @@
  * 실행: bun run tests/ai-comparison-benchmark.ts
  */
 import { SynapseConnectome, type SynapseDocument } from "../db";
-import { HybridVectorIndex, compareEvalRuns, parseAndEnforceSchema, runEvalSuite } from "../ai";
+import {
+  QuantizedVectorIndex,
+  compareEvalRuns,
+  parseAndEnforceSchema,
+  runEvalSuite,
+} from "../memory";
 
 function makeDoc(id: string, body: string, links: string[] = []): SynapseDocument {
   const now = new Date().toISOString();
@@ -52,16 +57,25 @@ async function runComparisonBenchmark(): Promise<void> {
   }
   const bm25Ms = performance.now() - bm25Start;
 
-  const hybridIndex = new HybridVectorIndex(connectome);
+  const hybridIndex = new QuantizedVectorIndex();
   const idxStart = performance.now();
-  await hybridIndex.syncFromConnectome();
+  for (const d of connectome.getAllDocuments()) {
+    await hybridIndex.upsert({ id: `bench/${d.id}`, text: d.body });
+  }
   const idxMs = performance.now() - idxStart;
 
   const hybStart = performance.now();
   let hybHits = 0;
   for (const q of queries) {
-    const hits = await hybridIndex.search(q.query, { topK: 5, collection: "bench" });
-    if (hits.some((h) => h.nodeId === q.targetId)) hybHits++;
+    const vecHits = await hybridIndex.search(q.query, 5);
+    const expanded = new Set<string>(vecHits.map((h) => h.id));
+    for (const h of vecHits.slice(0, 3)) {
+      const idOnly = h.id.replace("bench/", "");
+      for (const nb of connectome.getOutgoingDocuments("bench", idOnly)) {
+        expanded.add(`bench/${nb.id}`);
+      }
+    }
+    if (expanded.has(q.targetId)) hybHits++;
   }
   const hybMs = performance.now() - hybStart;
 

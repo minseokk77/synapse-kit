@@ -12,3 +12,5 @@ export * from "./actionRecorder";
 export * from "./a11yAuditor";
 export * from "./liveFetcher";
 export * from "./surveyPipeline";
+export * from "./ocr";
+export * from "./voice";
