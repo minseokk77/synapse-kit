@@ -8,6 +8,7 @@ export const OPTIC_LIVE_SURVEY_CONFIG = {
   ARXIV_API_ENDPOINT: "https://export.arxiv.org/api/query",
   DEFAULT_DAYS: 60,
   DEFAULT_FETCH_TIMEOUT_MS: 5000,
+  MAX_FEED_BYTES: 5 * 1024 * 1024,
   DEFAULT_CATEGORIES: ["cs.AI", "cs.CR", "cs.DB", "cs.SE", "cs.DC", "cs.HC"],
 } as const;
 
@@ -96,7 +97,22 @@ export async function fetchRecentArxivPapers(
         error: `arXiv API 응답 오류 (HTTP ${res.status})`,
       };
     }
+    const contentLength = Number(res.headers.get("content-length") || "0");
+    if (contentLength > OPTIC_LIVE_SURVEY_CONFIG.MAX_FEED_BYTES) {
+      return {
+        papers: [],
+        liveFetched: false,
+        error: `arXiv 응답 크기가 허용 상한(${OPTIC_LIVE_SURVEY_CONFIG.MAX_FEED_BYTES}바이트)을 초과했습니다.`,
+      };
+    }
     const xml = await res.text();
+    if (Buffer.byteLength(xml, "utf8") > OPTIC_LIVE_SURVEY_CONFIG.MAX_FEED_BYTES) {
+      return {
+        papers: [],
+        liveFetched: false,
+        error: `arXiv 응답 본문이 허용 상한(${OPTIC_LIVE_SURVEY_CONFIG.MAX_FEED_BYTES}바이트)을 초과했습니다.`,
+      };
+    }
     const parsed = parseArxivAtomXml(xml);
     return {
       papers: parsed,

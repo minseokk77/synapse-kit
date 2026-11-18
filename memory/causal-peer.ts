@@ -150,6 +150,43 @@ export async function pingPeer(
 }
 
 /**
+ * 원격 피어 URL에 대한 SSRF(Server-Side Request Forgery) 방어 검증
+ * - HTTP/HTTPS 스킴만 허용하고 클라우드 메타데이터 IP 및 비정상 호스트를 차단합니다.
+ */
+function validatePeerUrl(rawUrl: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error(`유효하지 않은 원격 피어 URL 형식입니다: ${rawUrl}`);
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error(`허용되지 않는 프로토콜입니다(${parsed.protocol}). http 또는 https만 허용됩니다.`);
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new Error('피어 URL에 인증 정보(userinfo)를 포함할 수 없습니다.');
+  }
+
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (
+    !host ||
+    host === '0.0.0.0' ||
+    host === '::' ||
+    host.startsWith('169.254.') ||
+    host.startsWith('fe80:') ||
+    host === 'metadata.google.internal' ||
+    host === 'metadata.azure.com' ||
+    host === '100.100.100.200'
+  ) {
+    throw new Error(`보안 정책상 접근이 차단된 피어 호스트입니다: ${host || '(empty)'}`);
+  }
+
+  return parsed;
+}
+
+/**
  * 원격 Causal Memory Daemon에 공명 쿼리 실행
  */
 export async function queryRemotePeer(
@@ -158,8 +195,9 @@ export async function queryRemotePeer(
 ): Promise<CausalResonanceResult> {
   const cleanUrl = remoteUrl.replace(/\/+$/, '');
   const endpoint = cleanUrl.endsWith('/query') ? cleanUrl : `${cleanUrl}/query`;
+  const safeUrl = validatePeerUrl(endpoint);
 
-  const res = await fetch(endpoint, {
+  const res = await fetch(safeUrl.toString(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(options),

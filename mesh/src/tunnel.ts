@@ -29,6 +29,27 @@ export class CloudflareTunnelManager {
     }
 
     try {
+      if (!Number.isInteger(localPort) || localPort < 1 || localPort > 65535) {
+        return {
+          success: false,
+          url: null,
+          error: `유효하지 않은 로컬 포트 번호입니다: ${localPort}`,
+        };
+      }
+
+      if (hostname !== undefined) {
+        if (
+          hostname.startsWith("-") ||
+          !/^[a-zA-Z0-9]([a-zA-Z0-9.-]{0,251}[a-zA-Z0-9])?$/.test(hostname)
+        ) {
+          return {
+            success: false,
+            url: null,
+            error: `유효하지 않거나 안전하지 않은 터널 호스트명입니다: ${hostname}`,
+          };
+        }
+      }
+
       const cmd = hostname
         ? ["cloudflared", "tunnel", "run", "--url", `http://localhost:${localPort}`, hostname]
         : ["cloudflared", "tunnel", "--url", `http://localhost:${localPort}`];

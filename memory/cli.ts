@@ -476,7 +476,14 @@ export async function handleMemoryCommand(args: readonly string[], rawOptions?: 
 
     if (isTailscale) {
       const { selfIp } = await getTailscalePeers();
-      host = selfIp || '0.0.0.0';
+      if (!selfIp) {
+        process.stderr.write(
+          `${RED}⚠️ Tailscale IP를 감지하지 못해 보안을 위해 127.0.0.1(로컬 루프백)로 바인딩합니다.${RESET}\n`
+        );
+        host = '127.0.0.1';
+      } else {
+        host = selfIp;
+      }
     }
 
     for (let i = 0; i < subArgs.length; i++) {

@@ -15,6 +15,85 @@ export interface ServerOptions {
   readonly host?: string;
   readonly dbPath?: string;
   readonly contextDbPath?: string;
+  readonly authToken?: string;
+  readonly maxBodyBytes?: number;
+}
+
+class HttpPayloadError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string
+  ) {
+    super(message);
+    this.name = 'HttpPayloadError';
+  }
+}
+
+async function readJsonBodyWithLimit<T = any>(req: Request, maxBytes: number): Promise<T> {
+  const contentLengthHeader = req.headers.get('content-length');
+  if (contentLengthHeader) {
+    const declaredLength = Number(contentLengthHeader);
+    if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+      throw new HttpPayloadError(
+        413,
+        `요청 본문 크기(${declaredLength}B)가 허용 상한(${maxBytes}B)을 초과했습니다.`
+      );
+    }
+  }
+
+  const buffer = await req.arrayBuffer();
+  if (buffer.byteLength > maxBytes) {
+    throw new HttpPayloadError(
+      413,
+      `요청 본문 크기(${buffer.byteLength}B)가 허용 상한(${maxBytes}B)을 초과했습니다.`
+    );
+  }
+
+  const rawText = new TextDecoder().decode(buffer);
+  if (!rawText.trim()) {
+    throw new HttpPayloadError(400, '요청 본문(JSON)이 비어 있습니다.');
+  }
+
+  try {
+    return JSON.parse(rawText) as T;
+  } catch {
+    throw new HttpPayloadError(400, '유효하지 않은 JSON 형식입니다.');
+  }
+}
+
+function resolveCorsOrigin(req: Request): string {
+  const configured = CAUSAL_MEMORY_CONFIG.CORS_ALLOW_ORIGIN;
+  const reqOrigin = req.headers.get('origin');
+  if (reqOrigin) {
+    try {
+      const parsed = new URL(reqOrigin);
+      if (
+        parsed.hostname === '127.0.0.1' ||
+        parsed.hostname === 'localhost' ||
+        parsed.hostname === '::1'
+      ) {
+        return reqOrigin;
+      }
+    } catch {
+      // 잘못된 Origin 헤더 무시
+    }
+  }
+  return configured;
+}
+
+function isAuthorizedRequest(req: Request, expectedToken: string): boolean {
+  if (!expectedToken) return true;
+  const authHeader = req.headers.get('authorization') || '';
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const customToken = (req.headers.get('x-synapse-token') || '').trim();
+  const provided = bearerToken || customToken;
+  if (!provided || provided.length !== expectedToken.length) return false;
+
+  let diff = 0;
+  for (let i = 0; i < expectedToken.length; i++) {
+    diff |= provided.charCodeAt(i) ^ expectedToken.charCodeAt(i);
+  }
+  return diff === 0;
 }
 
 export interface JsonRpcRequest {
@@ -836,6 +915,8 @@ export async function handleMcpJsonRpcRequest(
 export function startCausalServer(options: ServerOptions = {}) {
   const port = options.port || CAUSAL_MEMORY_CONFIG.DEFAULT_PORT;
   const host = options.host || CAUSAL_MEMORY_CONFIG.DEFAULT_HOST;
+  const authToken = options.authToken ?? CAUSAL_MEMORY_CONFIG.AUTH_TOKEN;
+  const maxBodyBytes = options.maxBodyBytes ?? CAUSAL_MEMORY_CONFIG.MAX_HTTP_BODY_BYTES;
   const store = new CausalMemoryStore(options.dbPath);
   const contextStore = new ContextCheckpointStore(options.contextDbPath, options.dbPath);
 
@@ -847,13 +928,20 @@ export function startCausalServer(options: ServerOptions = {}) {
 
       const headers = {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': resolveCorsOrigin(req),
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Synapse-Token',
       };
 
       if (req.method === 'OPTIONS') {
         return new Response(null, { headers });
+      }
+
+      if (url.pathname !== '/health' && !isAuthorizedRequest(req, authToken)) {
+        return new Response(
+          JSON.stringify({ error: '인증 토큰이 누락되었거나 유효하지 않습니다.' }),
+          { status: 401, headers }
+        );
       }
 
       try {
@@ -878,7 +966,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 3. 공명 쿼리 엔드포인트 (POST /query)
         if (url.pathname === '/query' && req.method === 'POST') {
           store.reloadIfNeeded();
-          const body: any = await req.json();
+          const body: any = await readJsonBodyWithLimit(req, maxBodyBytes);
           let files: string[] = Array.isArray(body.files) ? body.files : [];
           if (body.autoGit === true && files.length === 0) {
             files = await detectModifiedFiles(body.cwd);
@@ -909,7 +997,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 4. 인과 규칙 등록/갱신 (POST /assert)
         if (url.pathname === '/assert' && req.method === 'POST') {
           store.reloadIfNeeded();
-          const body = (await req.json()) as CausalRule;
+          const body = (await readJsonBodyWithLimit(req, maxBodyBytes)) as CausalRule;
           store.assertRule(body);
           return new Response(JSON.stringify({ ok: true, id: body.id }), { headers });
         }
@@ -929,7 +1017,7 @@ export function startCausalServer(options: ServerOptions = {}) {
 
         // 5-3. 피어 간 인과율 동기화 병합 (POST /sync)
         if (url.pathname === '/sync' && req.method === 'POST') {
-          const body: any = await req.json();
+          const body: any = await readJsonBodyWithLimit(req, maxBodyBytes);
           const incomingRules = Array.isArray(body.rules) ? body.rules : [];
           const incomingRelations = Array.isArray(body.relations) ? body.relations : [];
           const mergeResult = store.mergeDatabase(incomingRules, incomingRelations);
@@ -954,7 +1042,7 @@ export function startCausalServer(options: ServerOptions = {}) {
 
         // 5-5. 컨텍스트 체크포인트 저장 (POST /context)
         if (url.pathname === '/context' && req.method === 'POST') {
-          const body = (await req.json()) as SaveCheckpointInput;
+          const body = (await readJsonBodyWithLimit(req, maxBodyBytes)) as SaveCheckpointInput;
           const saved = await contextStore.saveCheckpoint(body);
           return new Response(JSON.stringify({ ok: true, checkpoint: saved }), { headers });
         }
@@ -975,7 +1063,7 @@ export function startCausalServer(options: ServerOptions = {}) {
             return new Response(JSON.stringify({ ok: true, traps: list }), { headers });
           }
           if (req.method === 'POST') {
-            const body: any = await req.json();
+            const body: any = await readJsonBodyWithLimit(req, maxBodyBytes);
             if (body.action === 'scan') {
               const scanRes = graveyard.scanTraps({
                 files: body.files,
@@ -1002,7 +1090,7 @@ export function startCausalServer(options: ServerOptions = {}) {
             );
           }
           if (req.method === 'POST') {
-            const body: any = await req.json();
+            const body: any = await readJsonBodyWithLimit(req, maxBodyBytes);
             if (body.action === 'create') {
               const b = await branchStore.createBranch(body.name, {
                 description: body.fromBranch,
@@ -1031,7 +1119,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 5-9. 파급 영향 예측 (POST /predict)
         if (url.pathname === '/predict' && req.method === 'POST') {
           const predictor = new CausalPredictorEngine(store, contextStore);
-          const body: any = await req.json();
+          const body: any = await readJsonBodyWithLimit(req, maxBodyBytes);
           const files = Array.isArray(body.files) ? body.files : [];
           const maxHops = typeof body.maxHops === 'number' ? body.maxHops : 3;
           const report = predictor.analyzeBlastRadius(files, maxHops);
@@ -1041,7 +1129,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 5-10. 자동 역합성 (POST /synthesize)
         if (url.pathname === '/synthesize' && req.method === 'POST') {
           const synthesizer = new CausalSynthesizerEngine(contextStore, store);
-          const body: any = await req.json();
+          const body: any = await readJsonBodyWithLimit(req, maxBodyBytes);
           const cwd = typeof body.cwd === 'string' ? body.cwd : process.cwd();
           if (body.autoCheckpoint === false) {
             const summary = await synthesizer.inspectGitChanges(cwd);
@@ -1055,7 +1143,7 @@ export function startCausalServer(options: ServerOptions = {}) {
         // 5-11. 옵시디언 렌즈 (POST /lens)
         if (url.pathname === '/lens' && req.method === 'POST') {
           const lens = new CausalObsidianLensEngine(store, contextStore);
-          const body: any = await req.json();
+          const body: any = await readJsonBodyWithLimit(req, maxBodyBytes);
           const vaultPath = typeof body.vaultPath === 'string' ? body.vaultPath : undefined;
           if (body.action === 'export') {
             const res = await lens.exportToVault(vaultPath);
@@ -1071,7 +1159,7 @@ export function startCausalServer(options: ServerOptions = {}) {
 
         // 6. MCP 호환 JSON-RPC 엔드포인트 (POST /mcp)
         if (url.pathname === '/mcp' && req.method === 'POST') {
-          const rpc = (await req.json()) as JsonRpcRequest;
+          const rpc = (await readJsonBodyWithLimit(req, maxBodyBytes)) as JsonRpcRequest;
           const responseObj = await handleMcpJsonRpcRequest(
             rpc,
             store,
@@ -1086,9 +1174,10 @@ export function startCausalServer(options: ServerOptions = {}) {
 
         return new Response(JSON.stringify({ error: 'Not Found' }), { status: 404, headers });
       } catch (err) {
+        const status = err instanceof HttpPayloadError ? err.status : 500;
         return new Response(
           JSON.stringify({ error: err instanceof Error ? err.message : String(err) }),
-          { status: 500, headers }
+          { status, headers }
         );
       }
     },

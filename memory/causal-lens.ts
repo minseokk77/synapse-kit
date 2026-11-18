@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync, statSync, renameSync } from 'node:fs';
-import { resolve, join, basename } from 'node:path';
+import { resolve, join, basename, relative, isAbsolute } from 'node:path';
 import { CAUSAL_MEMORY_CONFIG } from './causal-config';
 import { CausalMemoryStore, type CausalRule, type CausalRelation } from './causal-store';
 import { ContextCheckpointStore, type ContextCheckpoint } from './causal-context';
@@ -113,10 +113,18 @@ export class CausalObsidianLensEngine {
       this.contextStore.reloadIfNeeded();
       this.graveyardStore.reloadIfNeeded();
 
-      const mentalRoot = resolve(vaultRoot, CAUSAL_MEMORY_CONFIG.OBSIDIAN_LENS_SUBDIR);
-      const rulesDir = resolve(mentalRoot, 'Rules');
-      const graveyardDir = resolve(mentalRoot, 'Graveyard');
-      const checkpointsDir = resolve(mentalRoot, 'Checkpoints');
+      if (!vaultRoot || vaultRoot.includes('\0')) {
+        throw new Error('유효하지 않은 옵시디언 볼트 경로입니다.');
+      }
+      const resolvedVaultRoot = resolve(vaultRoot);
+      const mentalRoot = this.assertPathInsideBase(
+        resolvedVaultRoot,
+        resolve(resolvedVaultRoot, CAUSAL_MEMORY_CONFIG.OBSIDIAN_LENS_SUBDIR),
+        '옵시디언 렌즈 루트'
+      );
+      const rulesDir = this.assertPathInsideBase(mentalRoot, resolve(mentalRoot, 'Rules'), '규칙 디렉터리');
+      const graveyardDir = this.assertPathInsideBase(mentalRoot, resolve(mentalRoot, 'Graveyard'), '함정 디렉터리');
+      const checkpointsDir = this.assertPathInsideBase(mentalRoot, resolve(mentalRoot, 'Checkpoints'), '체크포인트 디렉터리');
 
       mkdirSync(rulesDir, { recursive: true });
       mkdirSync(graveyardDir, { recursive: true });
@@ -150,7 +158,12 @@ export class CausalObsidianLensEngine {
       const checkpoints = this.contextStore.listCheckpoints({ limit: 100 });
       let exportedCheckpoints = 0;
       for (const cp of checkpoints) {
-        const filePath = resolve(checkpointsDir, `${cp.id}.md`);
+        const safeCpId = this.sanitizeFileName(cp.id);
+        const filePath = this.assertPathInsideBase(
+          checkpointsDir,
+          resolve(checkpointsDir, `${safeCpId}.md`),
+          '체크포인트 파일'
+        );
         const content = this.renderCheckpointToMarkdown(cp);
         this.atomicWriteFile(filePath, content);
         exportedCheckpoints++;
@@ -645,6 +658,19 @@ export class CausalObsidianLensEngine {
     const tempPath = `${filePath}.tmp.${process.pid}.${Date.now()}`;
     writeFileSync(tempPath, content, 'utf-8');
     renameSync(tempPath, filePath);
+  }
+
+  /**
+   * 기준 디렉터리(baseDir) 내부 경로인지 검증해 Path Traversal을 차단합니다.
+   */
+  private assertPathInsideBase(baseDir: string, targetPath: string, label: string): string {
+    const resolvedBase = resolve(baseDir);
+    const resolvedTarget = resolve(targetPath);
+    const rel = relative(resolvedBase, resolvedTarget);
+    if (!rel || rel === '' || rel.startsWith('..') || isAbsolute(rel)) {
+      throw new Error(`보안 위반: ${label} 경로가 허용 범위를 벗어났습니다 (${resolvedTarget})`);
+    }
+    return resolvedTarget;
   }
 
   /**

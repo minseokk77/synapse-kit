@@ -6,6 +6,41 @@
 import { MESH_DEFAULTS, type PeerNodeInfo } from "./config";
 import type { PeerRuntimeState } from "./types";
 
+/**
+ * 피어 엔드포인트 SSRF 방어 검증 (HTTP/HTTPS만 허용, 메타데이터 IP/인증정보 포함 URL 차단)
+ */
+function validatePeerEndpoint(rawEndpoint: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawEndpoint);
+  } catch {
+    throw new Error(`유효하지 않은 피어 엔드포인트 URL입니다: ${rawEndpoint}`);
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`허용되지 않는 피어 프로토콜입니다: ${parsed.protocol}`);
+  }
+  if (parsed.username || parsed.password) {
+    throw new Error("피어 엔드포인트에 인증 정보(userinfo)를 포함할 수 없습니다.");
+  }
+
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (
+    !host ||
+    host === "0.0.0.0" ||
+    host === "::" ||
+    host.startsWith("169.254.") ||
+    host.startsWith("fe80:") ||
+    host === "metadata.google.internal" ||
+    host === "metadata.azure.com" ||
+    host === "100.100.100.200"
+  ) {
+    throw new Error(`보안 정책상 차단된 피어 호스트입니다: ${host || "(empty)"}`);
+  }
+
+  return parsed.toString().replace(/\/+$/, "");
+}
+
 export class PeerMeshRouter {
   private readonly peers = new Map<string, PeerRuntimeState>();
   private healthTimer: ReturnType<typeof setInterval> | null = null;
@@ -20,8 +55,9 @@ export class PeerMeshRouter {
    * 피어 등록
    */
   public addPeer(info: PeerNodeInfo): void {
+    const safeEndpoint = validatePeerEndpoint(info.endpoint);
     this.peers.set(info.id, {
-      info,
+      info: { ...info, endpoint: safeEndpoint },
       status: "HEALTHY",
       lastSeenMs: null,
       latencyMs: null,
@@ -78,7 +114,8 @@ export class PeerMeshRouter {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), MESH_DEFAULTS.PEER_TIMEOUT_MS);
 
-      const resp = await fetch(`${peer.info.endpoint}/health`, {
+      const safeBase = validatePeerEndpoint(peer.info.endpoint);
+      const resp = await fetch(`${safeBase}/health`, {
         signal: controller.signal,
       });
       clearTimeout(timeoutId);

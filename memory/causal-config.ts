@@ -61,4 +61,16 @@ export const CAUSAL_MEMORY_CONFIG = {
 
   /** 옵시디언 볼트 내부 인과율 렌즈 저장 서브디렉터리 */
   OBSIDIAN_LENS_SUBDIR: process.env.SYNAPSE_LENS_SUBDIR || 'Synapse-Mental',
+
+  /** HTTP JSON 요청 본문 최대 허용 크기 (바이트, 기본 2MB) */
+  MAX_HTTP_BODY_BYTES: parseInt(
+    process.env.SYNAPSE_MAX_HTTP_BODY_BYTES || String(2 * 1024 * 1024),
+    10
+  ),
+
+  /** 로컬/원격 데몬 인증 토큰 (설정 시 Authorization Bearer 또는 X-Synapse-Token 검증) */
+  AUTH_TOKEN: process.env.SYNAPSE_MEMORY_TOKEN || '',
+
+  /** HTTP CORS 허용 Origin 기본값 (와일드카드 * 차단) */
+  CORS_ALLOW_ORIGIN: process.env.SYNAPSE_CORS_ORIGIN || 'http://127.0.0.1',
 } as const;
