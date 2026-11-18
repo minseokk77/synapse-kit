@@ -204,4 +204,109 @@ describe("🤖 Synapse MCP (Model Context Protocol) JSON-RPC 2.0 서버 검증",
     const data = JSON.parse(rawText);
     expect(data.ok).toBe(true);
   });
+
+  it("11. [도구 실행 - DCI 인제스트 및 Aside 투영] synapse_dci_ingest로 CSV 파싱 및 Aside 마크다운 생성 검증", async () => {
+    const { mkdtempSync, writeFileSync, existsSync, rmSync } = await import("fs");
+    const { tmpdir } = await import("os");
+    const { join } = await import("path");
+    const tempDir = mkdtempSync(join(tmpdir(), "synapse-mcp-dci-"));
+    try {
+      const csvPath = join(tempDir, "sample.csv");
+      const asideDir = join(tempDir, "aside-memory");
+      writeFileSync(csvPath, "module,status\ndci,active\n", "utf-8");
+
+      const res = await server.handleRequest({
+        jsonrpc: "2.0",
+        id: 11,
+        method: "tools/call",
+        params: {
+          name: "synapse_dci_ingest",
+          arguments: {
+            filePath: csvPath,
+            projectToAside: true,
+            asideMemoryDir: asideDir,
+          },
+        },
+      });
+
+      expect(res).not.toBeNull();
+      expect(res?.result.isError).toBeFalsy();
+      const data = JSON.parse(res?.result.content[0].text);
+      expect(data.ok).toBe(true);
+      expect(data.format).toBe("csv");
+      expect(data.projectedPath).toBeTruthy();
+      expect(existsSync(data.projectedPath)).toBe(true);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("12. [도구 실행 - DCI/Connectome 검색] synapse_ai_search 호출 및 결과 반환 검증", async () => {
+    const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("fs");
+    const { tmpdir } = await import("os");
+    const { join } = await import("path");
+    const tempVault = mkdtempSync(join(tmpdir(), "synapse-mcp-ai-"));
+    try {
+      mkdirSync(join(tempVault, "concepts"), { recursive: true });
+      writeFileSync(join(tempVault, "concepts", "dci-note.md"), "# DCI Engine\nSynapse DCI enables multi-hop reasoning.\n", "utf-8");
+
+      const res = await server.handleRequest({
+        jsonrpc: "2.0",
+        id: 12,
+        method: "tools/call",
+        params: {
+          name: "synapse_ai_search",
+          arguments: {
+            query: "multi-hop reasoning",
+            vaultDir: tempVault,
+            topK: 3,
+          },
+        },
+      });
+
+      expect(res).not.toBeNull();
+      expect(res?.result.isError).toBeFalsy();
+      const data = JSON.parse(res?.result.content[0].text);
+      expect(data.ok).toBe(true);
+      expect(Array.isArray(data.results)).toBe(true);
+      expect(data.results.length).toBeGreaterThanOrEqual(1);
+    } finally {
+      rmSync(tempVault, { recursive: true, force: true });
+    }
+  });
+
+  it("13. [도구 실행 - DCI 문서 수정] synapse_dci_edit으로 마크다운 치환 및 결과 반환 검증", async () => {
+    const { mkdtempSync, writeFileSync, readFileSync, rmSync } = await import("fs");
+    const { tmpdir } = await import("os");
+    const { join } = await import("path");
+    const tempDir = mkdtempSync(join(tmpdir(), "synapse-mcp-edit-"));
+    try {
+      const mdPath = join(tempDir, "doc.md");
+      writeFileSync(mdPath, "Version: v1", "utf-8");
+
+      const res = await server.handleRequest({
+        jsonrpc: "2.0",
+        id: 13,
+        method: "tools/call",
+        params: {
+          name: "synapse_dci_edit",
+          arguments: {
+            filePath: mdPath,
+            operation: "replace_text",
+            target: "v1",
+            replacement: "v2",
+          },
+        },
+      });
+
+      expect(res).not.toBeNull();
+      expect(res?.result.isError).toBeFalsy();
+      const data = JSON.parse(res?.result.content[0].text);
+      expect(data.ok).toBe(true);
+      expect(data.replacementsCount).toBe(1);
+      expect(readFileSync(mdPath, "utf-8")).toBe("Version: v2");
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
 });

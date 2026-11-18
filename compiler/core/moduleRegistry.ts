@@ -41,7 +41,7 @@ export const MODULE_REGISTRY_CONFIG = {
       id: "dci",
       externalPackage: "synapse-dci",
       builtinFallbackPath: "../../db/dci",
-      mcpTools: ["synapse_db_search"],
+      mcpTools: ["synapse_db_search", "synapse_dci_ingest", "synapse_dci_edit", "synapse_ai_search"],
       description: "Hybrid Causal Pull + 12종 문서 네이티브 인제스터(HWP/PDF/Office)",
     },
     codemap: {

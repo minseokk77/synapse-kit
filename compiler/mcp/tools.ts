@@ -129,6 +129,60 @@ export const SYNAPSE_MCP_TOOLS: McpTool[] = [
       required: ["query"],
     },
   },
+  {
+    name: "synapse_dci_ingest",
+    description: "12종 문서(PDF, DOCX, PPTX, XLSX, HWPX, HWP5, HTML, CSV, JSON, YAML, XML, MD)를 Synapse-DCI로 파싱하고 선택적으로 Aside 메모리에 투영합니다.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        filePath: { type: "string", description: "인제스트할 로컬 문서 파일 경로" },
+        collection: { type: "string", description: "문서 컬렉션 이름 (기본: dci-docs)" },
+        projectToAside: { type: "boolean", description: "Aside 마크다운 메모리(concepts/)로 자동 투영할지 여부" },
+        asideMemoryDir: { type: "string", description: "Aside 메모리 루트 경로 (기본: ~/.aside/u/1/memory)" },
+        compact: { type: "boolean", description: "단일 라인 초경량 JSON 반환 여부" },
+      },
+      required: ["filePath"],
+    },
+  },
+  {
+    name: "synapse_dci_edit",
+    description: "텍스트/구조화 문서(MD, CSV, JSON, YAML, HTML, XML) 및 ZIP-XML 문서(HWPX, DOCX, PPTX, XLSX)를 안전하게 수정·저장합니다.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        filePath: { type: "string", description: "수정할 문서 파일 경로" },
+        operation: {
+          type: "string",
+          description: "수정 연산: replace_text | append | prepend | overwrite | json_patch | append_paragraph | remove_page_breaks | batch",
+        },
+        target: { type: "string", description: "replace_text 시 찾을 문자열" },
+        replacement: { type: "string", description: "replace_text 시 바꿀 문자열" },
+        content: { type: "string", description: "append / prepend / overwrite / append_paragraph 시 내용" },
+        replaceAll: { type: "boolean", description: "모든 일치 항목 치환 여부 (기본: true)" },
+        keyPath: { type: "string", description: "json_patch 시 점(.) 구분 키 경로" },
+        value: { description: "json_patch 시 설정할 JSON 값" },
+        edits: { type: "array", description: "batch 연산 시 순차 실행할 수정 단계 배열" },
+        dryRun: { type: "boolean", description: "실제 저장 없이 변경 건수만 시뮬레이션" },
+        backup: { type: "boolean", description: "수정 전 .bak 백업 파일 생성 여부" },
+        compact: { type: "boolean", description: "단일 라인 초경량 JSON 반환 여부" },
+      },
+      required: ["filePath", "operation"],
+    },
+  },
+  {
+    name: "synapse_ai_search",
+    description: "Synapse-DCI Multi-Hop + Connectome 하이브리드 검색을 볼트/Aside 메모리에서 수행합니다.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "검색 쿼리 문자열" },
+        vaultDir: { type: "string", description: `검색할 마크다운 볼트 또는 Aside 메모리 경로 (기본: ${MCP_SERVER_CONFIG.DEFAULT_VAULT_DIR})` },
+        topK: { type: "number", description: "최대 반환 문서 수 (기본: 8)" },
+        compact: { type: "boolean", description: "단일 라인 초경량 JSON 반환 여부" },
+      },
+      required: ["query"],
+    },
+  },
 ];
 
 // 지연 초기화 싱글턴 캐시 변수
@@ -365,6 +419,168 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
               text: serializePayload(payload, isCompact),
             },
           ],
+        };
+      }
+
+      case "synapse_dci_ingest": {
+        const rawFilePath = String(args.filePath || "").trim();
+        if (!rawFilePath || rawFilePath.includes("\0")) {
+          throw new Error("[MCP Security] 유효하지 않은 filePath입니다.");
+        }
+        const filePath = resolve(rawFilePath);
+        const collection = String(args.collection || "dci-docs");
+        const projectToAside = args.projectToAside === true;
+
+        const dbMod = await getCachedDbMod();
+        const connectome = new dbMod.SynapseConnectome();
+        const { document, parsed } = dbMod.ingestAnyDocumentFile(connectome, filePath, { collection });
+
+        let projectedPath: string | undefined;
+        if (projectToAside) {
+          const { homedir } = await import("os");
+          const { existsSync, mkdirSync, writeFileSync } = await import("fs");
+          const { createHash } = await import("crypto");
+
+          const rawAside = String(args.asideMemoryDir || resolve(homedir(), ".aside", "u", "1", "memory"));
+          if (rawAside.includes("\0")) {
+            throw new Error("[MCP Security] asideMemoryDir에 허용되지 않은 널 바이트가 포함되어 있습니다.");
+          }
+          const asideDir = resolve(rawAside);
+          const cwdRoot = resolve(process.cwd());
+          const tmpRoot = resolve(tmpdir());
+          const defaultAside = resolve(homedir(), ".aside");
+          const inBounds = (root: string, target: string) =>
+            target === root || target.startsWith(root.endsWith(sep) ? root : `${root}${sep}`);
+          if (!inBounds(cwdRoot, asideDir) && !inBounds(tmpRoot, asideDir) && !inBounds(defaultAside, asideDir)) {
+            throw new Error(`[MCP Security] 허용된 작업/임시/Aside 디렉터리 외부 경로가 차단되었습니다: ${rawAside}`);
+          }
+
+          const conceptsDir = resolve(asideDir, "concepts");
+          if (!existsSync(conceptsDir)) {
+            mkdirSync(conceptsDir, { recursive: true });
+          }
+
+          const slug =
+            String(document.id || "dci-document")
+              .toLowerCase()
+              .replace(/[^a-z0-9가-힣_-]+/g, "-")
+              .replace(/^-+|-+$/g, "")
+              .slice(0, 80) || "dci-document";
+          const title = (typeof document.data?.title === "string" && document.data.title) || slug;
+          const bodyContent = `# ${title}\n\n- **Format**: \`${parsed.format}\`\n- **Source**: \`${filePath}\`\n\n## 📄 Document Content\n\n${document.body.trim()}`;
+          const contentHash = createHash("sha256").update(bodyContent).digest("hex").slice(0, 16);
+          const md = [
+            "---",
+            "managed_by: synapse-aside",
+            `synapse_id: dci-${slug}`,
+            `last_synced: ${new Date().toISOString()}`,
+            `content_hash: ${contentHash}`,
+            `domain: ${parsed.format}`,
+            "entity_type: dci-document",
+            "---",
+            "",
+            bodyContent,
+            "",
+          ].join("\n");
+
+          projectedPath = resolve(conceptsDir, `${slug}.md`);
+          writeFileSync(projectedPath, md, "utf-8");
+        }
+
+        const payload = {
+          ok: true,
+          format: parsed.format,
+          documentId: document.id,
+          collection: document.collection,
+          charCount: document.body.length,
+          projectedPath,
+          preview: document.body.slice(0, 400),
+        };
+
+        return {
+          content: [{ type: "text", text: serializePayload(payload, isCompact) }],
+        };
+      }
+
+      case "synapse_dci_edit": {
+        const rawFilePath = String(args.filePath || "").trim();
+        if (!rawFilePath || rawFilePath.includes("\0")) {
+          throw new Error("[MCP Security] 유효하지 않은 filePath입니다.");
+        }
+        const filePath = resolve(rawFilePath);
+        const cwdRoot = resolve(process.cwd());
+        const tmpRoot = resolve(tmpdir());
+        const inBounds = (root: string, target: string) =>
+          target === root || target.startsWith(root.endsWith(sep) ? root : `${root}${sep}`);
+        if (!inBounds(cwdRoot, filePath) && !inBounds(tmpRoot, filePath)) {
+          throw new Error(`[MCP Security] 허용된 작업/임시 디렉터리 외부 파일 수정이 차단되었습니다: ${rawFilePath}`);
+        }
+
+        const operation = String(args.operation || "replace_text") as any;
+        const dbMod = await getCachedDbMod();
+        const result = dbMod.editDocumentFile(filePath, {
+          operation,
+          target: typeof args.target === "string" ? args.target : undefined,
+          replacement: typeof args.replacement === "string" ? args.replacement : undefined,
+          content: typeof args.content === "string" ? args.content : undefined,
+          replaceAll: typeof args.replaceAll === "boolean" ? args.replaceAll : true,
+          keyPath: typeof args.keyPath === "string" ? args.keyPath : undefined,
+          value: args.value,
+          edits: Array.isArray(args.edits) ? (args.edits as any[]) : undefined,
+          dryRun: args.dryRun === true,
+          backup: args.backup === true,
+        });
+
+        return {
+          content: [{ type: "text", text: serializePayload(result, isCompact) }],
+        };
+      }
+
+      case "synapse_ai_search": {
+        const query = String(args.query || "").trim();
+        const rawVaultDir = String(args.vaultDir || MCP_SERVER_CONFIG.DEFAULT_VAULT_DIR);
+        if (rawVaultDir.includes("\0")) {
+          throw new Error("[MCP Security] vaultDir에 허용되지 않은 널 바이트가 포함되어 있습니다.");
+        }
+        const vaultDir = resolve(rawVaultDir);
+        const cwdRoot = resolve(process.cwd());
+        const tmpRoot = resolve(tmpdir());
+        const { homedir } = await import("os");
+        const defaultAside = resolve(homedir(), ".aside");
+        const inBounds = (root: string, target: string) =>
+          target === root || target.startsWith(root.endsWith(sep) ? root : `${root}${sep}`);
+        if (!inBounds(cwdRoot, vaultDir) && !inBounds(tmpRoot, vaultDir) && !inBounds(defaultAside, vaultDir)) {
+          throw new Error(`[MCP Security] 허용된 작업/임시/Aside 디렉터리 외부 볼트 경로가 차단되었습니다: ${rawVaultDir}`);
+        }
+
+        const topK = typeof args.topK === "number" ? args.topK : 8;
+        let db = vaultDbCache.get(vaultDir);
+        if (!db) {
+          const dbMod = await getCachedDbMod();
+          db = new dbMod.SynapseDB({ vaultDir, autoWatch: false });
+          await db.init();
+          vaultDbCache.set(vaultDir, db);
+        }
+
+        const ws = db.createDciWorkspace();
+        const dciResult = ws.pull(query, { topK, hops: 2 });
+
+        const payload = {
+          ok: true,
+          query,
+          vaultDir,
+          total: dciResult.entries.length,
+          results: dciResult.entries.map((e: any) => ({
+            id: e.id,
+            collection: e.collection,
+            score: e.score,
+            source: e.source,
+            snippet: e.snippet,
+          })),
+        };
+
+        return {
+          content: [{ type: "text", text: serializePayload(payload, isCompact) }],
         };
       }
 

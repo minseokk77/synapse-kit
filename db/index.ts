@@ -177,3 +177,4 @@ export * from "./firewall";
 export * from "./dci";
 export * from "./hwp";
 export * from "./office";
+export * from "./editor";
