@@ -13,6 +13,7 @@ import type { SynapseDocument, SynapseWikilink } from "./types";
 export const OFFICE_PARSER_CONFIG = {
   DEFAULT_COLLECTION: "docs",
   MAX_FILE_BYTES: 64 * 1024 * 1024,
+  MAX_INFLATE_BYTES: 32 * 1024 * 1024,
   MAX_SLIDES: 512,
   PDF_MAGIC: "%PDF-",
 } as const;
@@ -373,10 +374,14 @@ export function parsePdfBuffer(
     let plainBytes: Uint8Array = rawSlice;
     if (isFlate) {
       try {
-        plainBytes = new Uint8Array(inflateSync(rawSlice));
+        plainBytes = new Uint8Array(
+          inflateSync(rawSlice, { maxOutputLength: OFFICE_PARSER_CONFIG.MAX_INFLATE_BYTES })
+        );
       } catch {
         try {
-          plainBytes = new Uint8Array(inflateRawSync(rawSlice));
+          plainBytes = new Uint8Array(
+            inflateRawSync(rawSlice, { maxOutputLength: OFFICE_PARSER_CONFIG.MAX_INFLATE_BYTES })
+          );
         } catch {
           plainBytes = rawSlice;
         }
@@ -733,4 +738,48 @@ export function ingestAnyDocumentFile(
   });
   connectome.putDocument(res.document);
   return res;
+}
+
+export type HybridOcrFallbackFn = (buf: Uint8Array, mimeType: string) => Promise<string> | string;
+
+/**
+ * 하이브리드 문서 인제스터:
+ * 1) Fast-Path: 텍스트/바이너리(PDF/DOCX/PPTX/XLSX/HWPX/HWP5/HTML/CSV/JSON/YAML/XML/MD) 0ms 네이티브 파싱
+ * 2) Slow-Path: 텍스트가 없는 스캔 이미지 PDF(/Subtype /Image) 또는 순수 이미지일 때만 OCR 폴백 자동 호출
+ */
+export async function ingestDocumentHybrid(
+  connectome: SynapseConnectome,
+  buf: Uint8Array,
+  options: OfficeIngestOptions & { readonly ocrFallback?: HybridOcrFallbackFn } = {}
+): Promise<{ document: SynapseDocument; usedOcr: boolean; format: OfficeFormat }> {
+  const isPdf = buf.byteLength >= 5 && new TextDecoder("latin1").decode(buf.subarray(0, 5)) === "%PDF-";
+  const isPngOrJpg =
+    (buf.byteLength >= 4 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) ||
+    (buf.byteLength >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff);
+
+  if (!isPngOrJpg) {
+    const nativeRes = parseAnyDocumentBuffer(buf, options);
+    const hasEnoughText = nativeRes.parsed.text.trim().length >= 16;
+    if (!isPdf || hasEnoughText || !options.ocrFallback) {
+      connectome.putDocument(nativeRes.document);
+      return { document: nativeRes.document, usedOcr: false, format: nativeRes.parsed.format };
+    }
+  }
+
+  if (!options.ocrFallback) {
+    throw new Error("[Synapse-Office] 이미지/스캔 PDF 처리를 위한 ocrFallback 어댑터가 제공되지 않았습니다.");
+  }
+
+  const mimeType = isPdf ? "application/pdf" : "image/png";
+  const ocrText = await options.ocrFallback(buf, mimeType);
+  const ocrParsed = parseAnyDocumentBuffer(new TextEncoder().encode(ocrText), {
+    ...options,
+    fileName: `${options.id || "ocr"}.md`,
+  });
+  const doc: SynapseDocument = {
+    ...ocrParsed.document,
+    data: { ...ocrParsed.document.data, ocrApplied: true, sourceFormat: isPdf ? "scanned-pdf" : "image" },
+  };
+  connectome.putDocument(doc);
+  return { document: doc, usedOcr: true, format: ocrParsed.parsed.format };
 }

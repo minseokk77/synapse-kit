@@ -40,3 +40,4 @@ export * from "./config";
 export * from "./types";
 export * from "./sandbox";
 export * from "./overlayFs";
+export * from "./hybridSandbox";

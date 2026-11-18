@@ -12,6 +12,7 @@ import type { SynapseDocument, SynapseWikilink } from "./types";
 export const HWP_PARSER_CONFIG = {
   DEFAULT_COLLECTION: "hwp",
   MAX_FILE_BYTES: 64 * 1024 * 1024,
+  MAX_INFLATE_BYTES: 32 * 1024 * 1024,
   MAX_SECTIONS: 256,
   ZIP_LOCAL_SIG: 0x04034b50,
   ZIP_CENTRAL_SIG: 0x02014b50,
@@ -156,7 +157,10 @@ export function extractZipFiles(buf: Uint8Array): Map<string, Uint8Array> {
     if (method === 0) {
       files.set(fileName, compressed);
     } else if (method === 8) {
-      files.set(fileName, new Uint8Array(inflateRawSync(compressed)));
+      files.set(
+        fileName,
+        new Uint8Array(inflateRawSync(compressed, { maxOutputLength: HWP_PARSER_CONFIG.MAX_INFLATE_BYTES }))
+      );
     }
   }
 
@@ -445,7 +449,9 @@ export function parseHwp5Buffer(
   for (const name of sectionNames) {
     const raw = streams.get(name);
     if (!raw) continue;
-    const plain = isCompressed ? new Uint8Array(inflateRawSync(raw)) : raw;
+    const plain = isCompressed
+      ? new Uint8Array(inflateRawSync(raw, { maxOutputLength: HWP_PARSER_CONFIG.MAX_INFLATE_BYTES }))
+      : raw;
     allLines.push(...decodeHwp5SectionRecords(plain));
   }
 

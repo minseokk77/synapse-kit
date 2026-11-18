@@ -62,16 +62,19 @@ fn timetravel_to_lsn(lsn: u64) -> Result<TimeTravelResponse, String> {
     )
     .map_err(|e| format!("WAL 체크포인트 테이블 생성 실패: {}", e))?;
 
+    let lsn_i64 = i64::try_from(lsn)
+        .map_err(|_| format!("LSN 값이 허용된 i64 범위(0..={})를 초과했습니다: {}", i64::MAX, lsn))?;
+
     conn.execute(
         "INSERT OR REPLACE INTO wal_checkpoint (lsn, entity_count) VALUES (?1, ?2)",
-        rusqlite::params![lsn as i64, config::DEFAULT_WAL_ENTITIES_COUNT as i64],
+        rusqlite::params![lsn_i64, config::DEFAULT_WAL_ENTITIES_COUNT as i64],
     )
     .map_err(|e| format!("WAL 체크포인트 레코드 갱신 실패: {}", e))?;
 
     let restored_count: usize = conn
         .query_row(
             "SELECT entity_count FROM wal_checkpoint WHERE lsn = ?1",
-            rusqlite::params![lsn as i64],
+            rusqlite::params![lsn_i64],
             |row| row.get(0),
         )
         .map_err(|e| format!("WAL 복원 엔터티 수 조회 실패: {}", e))?;

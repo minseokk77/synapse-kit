@@ -10,6 +10,7 @@ export { verifyAgentContracts, CONTRACT_PASS_CONFIG, type AgentToolContract, typ
 export { SpeculativePrefetcher, SPECULATIVE_PREFETCH_CONFIG, type SpeculativeTask, type SpeculativeRunReport } from './core/speculativePrefetch';
 export * from './core/codemap';
 export * from './core/tracer';
+export * from './core/moduleRegistry';
 export * from './deploy';
 export { reportResults } from './core/reporter';
 export { analyzeCausalGraph } from './causal-graph';

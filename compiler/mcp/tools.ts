@@ -1,6 +1,8 @@
 /**
  * 시냅스 11대 코어 공식 MCP 도구 레지스트리 (Synapse MCP Tool Registry)
  */
+import { tmpdir } from "node:os";
+import { resolve, sep } from "node:path";
 import { MCP_SERVER_CONFIG } from "./config";
 import type { McpTool, McpToolResult } from "./types";
 
@@ -311,7 +313,18 @@ export async function executeMcpTool(name: string, args: Record<string, any> = {
 
       case "synapse_db_search": {
         const query = String(args.query || "");
-        const vaultDir = String(args.vaultDir || MCP_SERVER_CONFIG.DEFAULT_VAULT_DIR);
+        const rawVaultDir = String(args.vaultDir || MCP_SERVER_CONFIG.DEFAULT_VAULT_DIR);
+        if (rawVaultDir.includes("\0")) {
+          throw new Error("[MCP Security] vaultDir에 허용되지 않은 널 바이트가 포함되어 있습니다.");
+        }
+        const vaultDir = resolve(rawVaultDir);
+        const cwdRoot = resolve(process.cwd());
+        const tmpRoot = resolve(tmpdir());
+        const inBounds = (root: string, target: string) =>
+          target === root || target.startsWith(root.endsWith(sep) ? root : `${root}${sep}`);
+        if (!inBounds(cwdRoot, vaultDir) && !inBounds(tmpRoot, vaultDir)) {
+          throw new Error(`[MCP Security] 허용된 작업/임시 디렉터리 외부 볼트 경로가 차단되었습니다: ${rawVaultDir}`);
+        }
         const mode = String(args.mode || "basic");
         let db = vaultDbCache.get(vaultDir);
         if (!db) {

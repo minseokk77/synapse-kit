@@ -4,7 +4,7 @@
  * - 검증 통과 시에만 실제 디스크에 원자적 커밋, 실패 시 0ms 롤백
  */
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, sep } from "node:path";
 
 export const SANDBOX_FS_CONFIG = {
   MAX_OVERLAY_FILES: 10_000,
@@ -26,7 +26,8 @@ export class SandboxOverlayFS {
 
   private resolveSafePath(relPath: string): string {
     const abs = resolve(this.rootDir, relPath);
-    if (!abs.startsWith(this.rootDir)) {
+    const rootPrefix = this.rootDir.endsWith(sep) ? this.rootDir : `${this.rootDir}${sep}`;
+    if (abs !== this.rootDir && !abs.startsWith(rootPrefix)) {
       throw new Error(`[Synapse-Sandbox-FS] 루트 디렉터리 외부 경로 접근 차단: ${relPath}`);
     }
     return abs;

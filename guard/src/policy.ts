@@ -140,3 +140,61 @@ export class HitlApprovalGate {
     return this.auditLogs;
   }
 }
+
+/**
+ * 하이브리드 보안·거버넌스 게이트:
+ * 1) Fast-Path: 0-토큰 로컬 PII 마스킹 + 시크릿/취약점 검사
+ * 2) Slow-Path: 고위험 액션일 때만 HITL 승인 콜백 호출
+ */
+export class HybridGovernanceGate {
+  public readonly redactor = new PiiRedactor();
+  public readonly hitl: HitlApprovalGate;
+
+  constructor(options?: {
+    extraHighRiskActions?: readonly string[];
+    approvalHandler?: ApprovalCallback;
+  }) {
+    this.hitl = new HitlApprovalGate(options);
+  }
+
+  public async evaluateAndRedact(
+    req: HitlActionRequest & { readonly payloadText: string; readonly secretDetector?: (text: string) => boolean }
+  ): Promise<{
+    allowed: boolean;
+    redactedText: string;
+    redactionsCount: number;
+    hasSecretViolation: boolean;
+    audit: HitlAuditEntry;
+  }> {
+    const pii = this.redactor.redact(req.payloadText);
+    const hasSecretViolation = req.secretDetector ? req.secretDetector(pii.redactedText) : false;
+
+    if (hasSecretViolation) {
+      const blockedAudit: HitlAuditEntry = {
+        requestId: `sec-block-${Date.now()}`,
+        action: req.action,
+        actorId: req.actorId,
+        riskLevel: "high",
+        approved: false,
+        reason: "로컬 보안 가드에서 시크릿/취약점이 탐지되어 즉시 차단되었습니다.",
+        timestampMs: Date.now(),
+      };
+      return {
+        allowed: false,
+        redactedText: pii.redactedText,
+        redactionsCount: pii.redactionsCount,
+        hasSecretViolation: true,
+        audit: blockedAudit,
+      };
+    }
+
+    const audit = await this.hitl.authorize(req);
+    return {
+      allowed: audit.approved,
+      redactedText: pii.redactedText,
+      redactionsCount: pii.redactionsCount,
+      hasSecretViolation: false,
+      audit,
+    };
+  }
+}

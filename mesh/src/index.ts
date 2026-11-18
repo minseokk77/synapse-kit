@@ -6,6 +6,7 @@ import { PeerMeshRouter } from "./peerMesh";
 import { CloudflareTunnelManager } from "./tunnel";
 import { MESH_DEFAULTS, type MeshConfig } from "./config";
 import type { MeshStats, VaultSyncDelta, VaultSyncManifest } from "./types";
+import type { ServerlessWalSync, WalSegmentRecord } from "./serverlessSync";
 
 export class SynapseMesh {
   public readonly nodeId: string;
@@ -76,6 +77,45 @@ export class SynapseMesh {
       lastSyncTimestampMs: this.lastSyncAtMs,
       tunnelUrl: this.tunnel.getTunnelUrl(),
     };
+  }
+
+  /**
+   * 하이브리드 동기화: 활성 P2P 피어가 있으면 P2P 델타 계산(Fast-Path),
+   * 오프라인/방화벽 환경이면 ServerlessWalSync 세그먼트 풀(Fallback-Path)로 자동 전환
+   */
+  public async syncHybrid(options: {
+    remoteManifest?: VaultSyncManifest;
+    serverlessSync?: ServerlessWalSync;
+    knownSegmentIds?: ReadonlySet<string>;
+  }): Promise<{
+    mode: "p2p-delta" | "serverless-fallback" | "idle";
+    delta?: VaultSyncDelta;
+    pulledSegmentsCount?: number;
+    pulledSegments?: readonly WalSegmentRecord[];
+  }> {
+    const activePeers = this.router
+      .getAllPeers()
+      .filter((p) => p.status === "HEALTHY" || p.status === "DEGRADED");
+
+    if (activePeers.length > 0 && options.remoteManifest) {
+      const delta = this.diffManifest(options.remoteManifest);
+      this.lastSyncAtMs = Date.now();
+      return { mode: "p2p-delta", delta };
+    }
+
+    if (options.serverlessSync) {
+      const res = await options.serverlessSync.pullMissingSegments(
+        options.knownSegmentIds ?? new Set<string>()
+      );
+      this.lastSyncAtMs = Date.now();
+      return {
+        mode: "serverless-fallback",
+        pulledSegmentsCount: res.pulled.length,
+        pulledSegments: res.pulled,
+      };
+    }
+
+    return { mode: "idle" };
   }
 
   /**

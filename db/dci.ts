@@ -18,21 +18,36 @@ export const SYNAPSE_DCI_CONFIG = {
   MAX_WORKSPACE_DOCS: 256,
   MAX_BRANCHES: 64,
   MAX_SNIPPET_LINES: 40,
+  MAX_GREP_PATTERN_LEN: 256,
   CHARS_PER_TOKEN: 4,
   DEFAULT_WORKSPACE_NAME: "main",
   INJECTION_PATTERNS: [
     /<script\b[^>]*>[\s\S]*?<\/script>/gi,
+    /<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi,
+    /javascript\s*:/gi,
+    /\bon(?:load|error|click|mouseover)\s*=/gi,
     /ignore\s+(?:all\s+)?previous\s+instructions?/gi,
     /disregard\s+(?:all\s+)?system\s+prompts?/gi,
     /\beval\s*\(/gi,
   ],
 } as const;
 
+export interface DciVectorHit {
+  readonly id: string; // "collection/id" 또는 "id"
+  readonly similarity: number;
+}
+
+export type DciVectorSearchFn = (
+  query: string,
+  topK: number
+) => Promise<readonly DciVectorHit[]> | readonly DciVectorHit[];
+
 export interface DciPullOptions {
   readonly topK?: number;
   readonly hops?: number;
   readonly collection?: string;
   readonly enableFirewall?: boolean;
+  readonly vectorSearch?: DciVectorSearchFn;
 }
 
 export interface DciAnchorLine {
@@ -210,6 +225,122 @@ export class SynapseDciWorkspace {
 
     return {
       ...result,
+      durationMs: Number((performance.now() - start).toFixed(4)),
+    };
+  }
+
+  /**
+   * 1-B. 3-Way Hybrid Pull: BM25 + Vector(RRF 융합) + Connectome Multi-Hop 확장
+   */
+  public async pullHybrid(query: string, options: DciPullOptions = {}): Promise<DciPullResult> {
+    const start = performance.now();
+    if (!options.vectorSearch) {
+      return this.pull(query, options);
+    }
+
+    const cleanQuery = query.trim();
+    if (!cleanQuery) {
+      throw new Error("[SynapseDciWorkspace] pullHybrid 쿼리는 비어 있을 수 없습니다.");
+    }
+
+    const topK = Math.max(1, options.topK ?? SYNAPSE_DCI_CONFIG.DEFAULT_TOP_K);
+    const hops = Math.min(SYNAPSE_DCI_CONFIG.MAX_HOPS, Math.max(0, options.hops ?? SYNAPSE_DCI_CONFIG.DEFAULT_HOPS));
+    const enableFirewall = options.enableFirewall ?? true;
+    const rrfK = 60;
+
+    // BM25 + Vector RRF 융합 시드 계산 (외부 벡터 검색 장애 시 BM25+Connectome으로 무중단 폴백)
+    const bm25Hits = this.connectome.search(cleanQuery, options.collection).slice(0, topK * 2);
+    let vecHits: readonly DciVectorHit[] = [];
+    try {
+      vecHits = (await options.vectorSearch(cleanQuery, topK * 2)).slice(0, topK * 2);
+    } catch {
+      return this.pull(cleanQuery, options);
+    }
+
+    const scoreByNodeId = new Map<string, { doc: SynapseDocument; rrf: number }>();
+    for (let i = 0; i < bm25Hits.length; i++) {
+      const h = bm25Hits[i];
+      const nodeId = SynapseConnectome.makeNodeId(h.document.collection, h.document.id);
+      const cur = scoreByNodeId.get(nodeId) ?? { doc: h.document, rrf: 0 };
+      cur.rrf += 1 / (rrfK + i + 1);
+      scoreByNodeId.set(nodeId, cur);
+    }
+    for (let i = 0; i < vecHits.length; i++) {
+      const vh = vecHits[i];
+      const slash = vh.id.indexOf("/");
+      const col = slash > 0 ? vh.id.slice(0, slash) : options.collection || "docs";
+      const docId = slash > 0 ? vh.id.slice(slash + 1) : vh.id;
+      const doc = this.connectome.getDocument(col, docId);
+      if (!doc || (options.collection && doc.collection !== options.collection)) continue;
+      const nodeId = SynapseConnectome.makeNodeId(doc.collection, doc.id);
+      const cur = scoreByNodeId.get(nodeId) ?? { doc, rrf: 0 };
+      cur.rrf += 1 / (rrfK + i + 1);
+      scoreByNodeId.set(nodeId, cur);
+    }
+
+    const fusedSeeds = Array.from(scoreByNodeId.values())
+      .sort((a, b) => b.rrf - a.rrf)
+      .slice(0, topK);
+
+    const newlyPulled: DciWorkspaceEntry[] = [];
+    const frontier: { doc: SynapseDocument; depth: number; baseScore: number }[] = [];
+    const visited = new Set<string>();
+    let retrieverHits = 0;
+    let connectomeHopHits = 0;
+    let redactionsSum = 0;
+
+    for (const seed of fusedSeeds) {
+      const nodeId = SynapseConnectome.makeNodeId(seed.doc.collection, seed.doc.id);
+      visited.add(nodeId);
+      frontier.push({ doc: seed.doc, depth: 0, baseScore: seed.rrf });
+      const entry = this.materializeEntry(seed.doc, "retriever", 0, seed.rrf, cleanQuery, enableFirewall);
+      if (this.tryInsertEntry(entry)) {
+        newlyPulled.push(entry);
+        retrieverHits++;
+        redactionsSum += entry.firewallRedactions;
+      }
+    }
+
+    let currentFrontier = frontier;
+    for (let depth = 1; depth <= hops && this.entries.size < SYNAPSE_DCI_CONFIG.MAX_WORKSPACE_DOCS; depth++) {
+      const nextFrontier: { doc: SynapseDocument; depth: number; baseScore: number }[] = [];
+      for (const item of currentFrontier) {
+        const neighbors = [
+          ...this.connectome.getOutgoingDocuments(item.doc.collection, item.doc.id),
+          ...this.connectome.getIncomingDocuments(item.doc.collection, item.doc.id),
+        ];
+        for (const nb of neighbors) {
+          if (options.collection && nb.collection !== options.collection) continue;
+          const nbId = SynapseConnectome.makeNodeId(nb.collection, nb.id);
+          if (visited.has(nbId)) continue;
+          visited.add(nbId);
+          const decayed = Number((item.baseScore * (0.65 / depth)).toFixed(4));
+          const entry = this.materializeEntry(nb, "connectome-hop", depth, decayed, cleanQuery, enableFirewall);
+          if (this.tryInsertEntry(entry)) {
+            newlyPulled.push(entry);
+            connectomeHopHits++;
+            redactionsSum += entry.firewallRedactions;
+            nextFrontier.push({ doc: nb, depth, baseScore: decayed });
+          }
+          if (this.entries.size >= SYNAPSE_DCI_CONFIG.MAX_WORKSPACE_DOCS) break;
+        }
+        if (this.entries.size >= SYNAPSE_DCI_CONFIG.MAX_WORKSPACE_DOCS) break;
+      }
+      currentFrontier = nextFrontier;
+      if (currentFrontier.length === 0) break;
+    }
+
+    this.totalPulls++;
+    this.totalFirewallRedactions += redactionsSum;
+    return {
+      query: cleanQuery,
+      pulledCount: newlyPulled.length,
+      retrieverHits,
+      connectomeHopHits,
+      firewallRedactions: redactionsSum,
+      workspaceTotalDocs: this.entries.size,
+      subgraphEdges: this.computeSubgraphEdges(),
+      entries: newlyPulled,
       durationMs: Number((performance.now() - start).toFixed(4)),
     };
   }
@@ -408,6 +539,14 @@ export class SynapseDciWorkspace {
       try {
         switch (op.op) {
           case "grep": {
+            if (op.pattern.length > SYNAPSE_DCI_CONFIG.MAX_GREP_PATTERN_LEN) {
+              throw new Error(
+                `정규식 패턴 길이(${op.pattern.length})가 상한(${SYNAPSE_DCI_CONFIG.MAX_GREP_PATTERN_LEN})을 초과했습니다.`
+              );
+            }
+            if (/(\+|\*|\{[^}]*\})\s*\)?\s*(\+|\*|\?)/.test(op.pattern)) {
+              throw new Error("ReDoS 위험이 있는 중첩 수량자 정규식 패턴이 차단되었습니다.");
+            }
             const flags = op.caseSensitive ? "g" : "gi";
             const regex = new RegExp(op.pattern, flags);
             const maxMatches = op.maxMatches ?? 50;

@@ -4,6 +4,7 @@
 import { SecretShield } from "./secretShield";
 import { VulnerabilityGuard } from "./vulnerabilityGuard";
 import { VaultSanitizer } from "./vaultSanitizer";
+import { auditLanguagePitfalls } from "./languagePitfalls";
 import type { GuardConfig } from "./config";
 import type { GuardAuditReport, SecurityViolation } from "./types";
 
@@ -318,6 +319,13 @@ export class SynapseGuard {
     }
     return { hasSecret: false };
   }
+
+  /**
+   * TypeScript / Rust 언어 자체 구조적 취약점(프로토타입 오염·as any·ReDoS / unsafe·as 정수캐스팅·unwrap) 감사
+   */
+  public auditLanguagePitfalls(code: string, fileName = "source.ts"): GuardAuditReport {
+    return auditLanguagePitfalls(code, fileName);
+  }
 }
 
 export * from "./config";
@@ -327,3 +335,4 @@ export * from "./vulnerabilityGuard";
 export * from "./vaultSanitizer";
 export * from "./actionAuditor";
 export * from "./policy";
+export * from "./languagePitfalls";

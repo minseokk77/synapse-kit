@@ -176,7 +176,8 @@ export class RingBufferBus {
     if (topic.includes("*")) {
       let entry = this.wildcardSubscribers.get(topic);
       if (!entry) {
-        const regexStr = "^" + topic.replace(/\./g, "\\.").replace(/\*/g, ".*") + "$";
+        const escaped = topic.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+        const regexStr = `^${escaped}$`;
         entry = {
           regex: new RegExp(regexStr),
           subscribers: new Set<BusSubscriber>(),
