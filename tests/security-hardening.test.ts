@@ -204,8 +204,9 @@ describe('엔진 및 러너 슈퍼바이저 보안 하드닝 검증', () => {
       id: 'bad-null-cmd',
       command: ['bun', 'run\0evil'],
     });
-    const started = await supervisor.startProcess('bad-null-cmd');
+    const started = supervisor.startProcess('bad-null-cmd');
     expect(started).toBe(false);
-    expect(supervisor.getProcessState('bad-null-cmd')?.status).toBe('CRASHED');
+    const procState = supervisor.getStats().processStates.find((p) => p.id === 'bad-null-cmd');
+    expect(procState?.status).toBe('CRASHED');
   });
 });
