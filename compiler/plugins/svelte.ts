@@ -1,7 +1,7 @@
 import { spawn } from 'bun';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import { resolvePathInsideRoot } from './security';
 
 export interface SveltePluginOptions {
   readonly tsconfig?: string;
@@ -28,10 +28,15 @@ export function svelteChecker(options: SveltePluginOptions = {}): CheckerPlugin 
     ],
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
-      const appPath = resolve(ctx.rootDir, options.appDir || './');
-      const tsconfigPath = resolve(appPath, options.tsconfig || './tsconfig.json');
 
       try {
+        const appPath = resolvePathInsideRoot(ctx.rootDir, options.appDir || './', 'Svelte 앱 디렉터리');
+        const tsconfigPath = resolvePathInsideRoot(appPath, options.tsconfig || './tsconfig.json', 'Svelte tsconfig');
+        const threshold = options.threshold || 'warning';
+        if (threshold !== 'warning' && threshold !== 'error') {
+          throw new Error(`[Plugin Security] 유효하지 않은 svelte-check threshold 값입니다: ${threshold}`);
+        }
+
         // 1. SvelteKit sync
         const syncProc = spawn(['bun', 'x', 'svelte-kit', 'sync'], {
           cwd: appPath,
@@ -42,7 +47,7 @@ export function svelteChecker(options: SveltePluginOptions = {}): CheckerPlugin 
 
         // 2. svelte-check
         const checkProc = spawn(
-          ['bun', 'x', 'svelte-check', '--tsconfig', tsconfigPath, '--threshold', options.threshold || 'warning'],
+          ['bun', 'x', 'svelte-check', '--tsconfig', tsconfigPath, '--threshold', threshold],
           {
             cwd: appPath,
             stdout: 'pipe',

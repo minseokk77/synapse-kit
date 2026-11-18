@@ -116,3 +116,81 @@ describe('보안 취약점 하드닝 회귀 검증 (Security Hardening Suite)', 
     expect(res.error).toContain('초과');
   });
 });
+
+import { cppChecker } from '../compiler/plugins/cpp';
+import { pythonChecker } from '../compiler/plugins/python';
+import { javaChecker } from '../compiler/plugins/java';
+import { goChecker } from '../compiler/plugins/go';
+import { csharpChecker } from '../compiler/plugins/csharp';
+import { rustChecker } from '../compiler/plugins/rust';
+import { typescriptChecker } from '../compiler/plugins/typescript';
+import { svelteChecker } from '../compiler/plugins/svelte';
+import { nativeChecker } from '../compiler/plugins/native';
+import { nsisChecker } from '../compiler/plugins/nsis';
+import { schemaChecker } from '../compiler/plugins/schema';
+
+describe('컴파일러 11대 언어 플러그인 보안 하드닝 검증', () => {
+  it('6. [언어 플러그인 공통] Path Traversal, 임의 바이너리 및 위험 플래그 인젝션을 모두 차단해야 한다', async () => {
+    const tmpDir = mkdtempSync(join(tmpdir(), 'synapse-sec-plugins-'));
+    try {
+      const ctx = {
+        rootDir: tmpDir,
+        modifiedFiles: [],
+        env: {},
+        isForce: false,
+      } as any;
+
+      const cppRes = await cppChecker({ compiler: 'sh', targetFiles: ['main.cpp'] }).check(ctx);
+      expect(cppRes.status).toBe('error');
+      expect(cppRes.details).toContain('Plugin Security');
+
+      const pyRes = await pythonChecker({
+        extraArgs: ['-c', 'import os; os.system("id")'],
+        targetFiles: ['app.py'],
+      }).check(ctx);
+      expect(pyRes.status).toBe('error');
+      expect(pyRes.details).toContain('Plugin Security');
+
+      const javaRes = await javaChecker({
+        javacArgs: ['-J-javaagent:evil.jar'],
+        targetFiles: ['Main.java'],
+      }).check(ctx);
+      expect(javaRes.status).toBe('error');
+      expect(javaRes.details).toContain('Plugin Security');
+
+      const goRes = await goChecker({ extraArgs: ['-vettool=/tmp/evil'] }).check(ctx);
+      expect(goRes.status).toBe('error');
+      expect(goRes.details).toContain('Plugin Security');
+
+      const csRes = await csharpChecker({ projectPath: '../../outside.sln' }).check(ctx);
+      expect(csRes.status).toBe('error');
+      expect(csRes.details).toContain('Plugin Security');
+
+      const rsRes = await rustChecker({ workspaceDir: '../../outside' }).check(ctx);
+      expect(rsRes.status).toBe('error');
+      expect(rsRes.details).toContain('Plugin Security');
+
+      const tsRes = await typescriptChecker({ tsconfig: '../../tsconfig.json' }).check(ctx);
+      expect(tsRes.status).toBe('error');
+      expect(tsRes.details).toContain('Plugin Security');
+
+      const svelteRes = await svelteChecker({ appDir: '../../outside-app' }).check(ctx);
+      expect(svelteRes.status).toBe('error');
+      expect(svelteRes.details).toContain('Plugin Security');
+
+      const nativeRes = await nativeChecker({ targets: [{ path: '../../evil.exe' }] }).check(ctx);
+      expect(nativeRes.status).toBe('error');
+      expect(nativeRes.details).toContain('Plugin Security');
+
+      const nsisRes = await nsisChecker({ templatePath: '../../evil.nsi' }).check(ctx);
+      expect(nsisRes.status).toBe('error');
+      expect(nsisRes.details).toContain('Plugin Security');
+
+      const schemaRes = await schemaChecker({ targets: [{ path: '../../secret.json' }] }).check(ctx);
+      expect(schemaRes.status).toBe('error');
+      expect(schemaRes.details).toContain('Plugin Security');
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+});

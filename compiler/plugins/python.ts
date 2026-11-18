@@ -1,7 +1,13 @@
 import { spawn } from 'bun';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import {
+  assertAllowedBinary,
+  PLUGIN_MAX_FILE_BYTES,
+  resolvePathInsideRoot,
+  sanitizeCompilerArgs,
+  sanitizeTargetFiles,
+} from './security';
 
 export interface PythonPluginOptions {
   /** Python 인터프리터 경로 (기본값: 'python') */
@@ -41,59 +47,78 @@ export function pythonChecker(options: PythonPluginOptions = {}): CheckerPlugin 
     ],
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
-      const targetPath = resolve(ctx.rootDir, sourceDir);
-
-      let targetFiles = options.targetFiles ? [...options.targetFiles] : [];
-
-      if (targetFiles.length === 0) {
-        try {
-          const glob = new Bun.Glob('**/*.py');
-          const scanned = Array.from(glob.scanSync({ cwd: targetPath, absolute: true }));
-          targetFiles = scanned
-            .filter((f) => !f.includes('__pycache__') && !f.includes('.venv') && !f.includes('site-packages'))
-            .slice(0, 50);
-        } catch {
-          targetFiles = [];
-        }
-      }
-
-      if (targetFiles.length === 0) {
-        return {
-          name: 'python',
-          title: t('pluginPythonTitle'),
-          status: 'skipped',
-          durationMs: performance.now() - start,
-          details: t('pluginPythonNoFiles'),
-        };
-      }
-
-      let args: string[];
-      if (mode === 'fast') {
-        // -S: site.py 임포트 생략으로 인터프리터 구동 시간 대폭 단축 (~20-30ms)
-        // -B: .pyc 바이트코드 디스크 쓰기 방지 (I/O 병목 제거)
-        // compile(): C 레벨 내장 함수로 py_compile 모듈 오버헤드 없이 인메모리 구문 검증
-        const fastScript = "import sys\nfor f in sys.argv[1:]:\n compile(open(f, 'rb').read(), f, 'exec')";
-        args = [
-          pythonBin,
-          '-S',
-          '-B',
-          ...(options.extraArgs || []),
-          '-c',
-          fastScript,
-          ...targetFiles,
-        ];
-      } else {
-        args = [
-          pythonBin,
-          '-B',
-          '-m',
-          'py_compile',
-          ...(options.extraArgs || []),
-          ...targetFiles,
-        ];
-      }
-
       try {
+        const safePythonBin = assertAllowedBinary(
+          pythonBin,
+          ['python', 'python3', 'py'],
+          'Python 인터프리터'
+        );
+        const targetPath = resolvePathInsideRoot(ctx.rootDir, sourceDir, 'Python 소스 디렉터리');
+
+        let targetFiles = options.targetFiles
+          ? sanitizeTargetFiles(ctx.rootDir, options.targetFiles, 'Python')
+          : [];
+
+        if (targetFiles.length === 0) {
+          try {
+            const glob = new Bun.Glob('**/*.py');
+            const scanned = Array.from(glob.scanSync({ cwd: targetPath, absolute: true }));
+            targetFiles = scanned
+              .filter((f) => !f.includes('__pycache__') && !f.includes('.venv') && !f.includes('site-packages'))
+              .slice(0, 50);
+          } catch {
+            targetFiles = [];
+          }
+        }
+
+        if (targetFiles.length === 0) {
+          return {
+            name: 'python',
+            title: t('pluginPythonTitle'),
+            status: 'skipped',
+            durationMs: performance.now() - start,
+            details: t('pluginPythonNoFiles'),
+          };
+        }
+
+        const safeExtraArgs = sanitizeCompilerArgs(
+          options.extraArgs,
+          ['-c', '-m', '--command'],
+          'Python'
+        );
+
+        let args: string[];
+        if (mode === 'fast') {
+          // -S: site.py 임포트 생략, -B: .pyc 쓰기 방지, 크기 제한 + with 컨텍스트 매니저로 안전하게 파일 읽기
+          const fastScript = [
+            'import os, sys',
+            `MAX_BYTES = ${PLUGIN_MAX_FILE_BYTES}`,
+            'for f in sys.argv[1:]:',
+            ' if os.path.getsize(f) > MAX_BYTES:',
+            "  raise ValueError(f'File too large: {f}')",
+            " with open(f, 'rb') as fp:",
+            "  compile(fp.read(), f, 'exec')",
+          ].join('\n');
+          args = [
+            safePythonBin,
+            '-S',
+            '-B',
+            ...safeExtraArgs,
+            '-c',
+            fastScript,
+            ...targetFiles,
+          ];
+        } else {
+          args = [
+            safePythonBin,
+            '-B',
+            ...safeExtraArgs,
+            '-m',
+            'py_compile',
+            ...targetFiles,
+          ];
+        }
+
         const proc = spawn(args, {
           cwd: ctx.rootDir,
           stdout: 'pipe',

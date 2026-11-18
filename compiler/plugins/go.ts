@@ -1,7 +1,7 @@
 import { spawn } from 'bun';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import { resolvePathInsideRoot, sanitizeCompilerArgs } from './security';
 
 export interface GoPluginOptions {
   /** Go 모듈 루트 디렉터리 (기본값: '.') */
@@ -35,13 +35,22 @@ export function goChecker(options: GoPluginOptions = {}): CheckerPlugin {
     ],
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
-      const cwd = resolve(ctx.rootDir, moduleDir);
-
-      const args = checkCmd === 'vet'
-        ? ['go', 'vet', ...(options.extraArgs || []), targetPackage]
-        : ['go', 'build', '-n', ...(options.extraArgs || []), targetPackage];
-
       try {
+        const cwd = resolvePathInsideRoot(ctx.rootDir, moduleDir, 'Go 모듈 디렉터리');
+        if (targetPackage.startsWith('-') || /[\0\r\n]/.test(targetPackage)) {
+          throw new Error(`[Plugin Security] 유효하지 않은 Go 패키지 대상입니다: ${targetPackage}`);
+        }
+        const safeExtraArgs = sanitizeCompilerArgs(
+          options.extraArgs,
+          ['-vettool', '-toolexec', '-exec'],
+          'Go'
+        );
+
+        const args =
+          checkCmd === 'vet'
+            ? ['go', 'vet', ...safeExtraArgs, '--', targetPackage]
+            : ['go', 'build', '-n', ...safeExtraArgs, '--', targetPackage];
+
         const proc = spawn(args, {
           cwd,
           stdout: 'pipe',

@@ -3,6 +3,11 @@ import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import {
+  assertAllowedBinary,
+  resolvePathInsideRoot,
+  sanitizeCompilerArgs,
+} from './security';
 
 export interface TypescriptPluginOptions {
   /**
@@ -50,14 +55,39 @@ export function typescriptChecker(options: TypescriptPluginOptions = {}): Checke
     ],
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
-      const tsconfigPath = resolve(ctx.rootDir, tsconfig);
+      let tsconfigPath: string;
+      let safeExtraArgs: string[];
+      let safeTsrsOption: string | undefined;
 
-      // tsrs 네이티브 바이너리 자동 탐색
+      try {
+        tsconfigPath = resolvePathInsideRoot(ctx.rootDir, tsconfig, 'tsconfig.json');
+        safeExtraArgs = sanitizeCompilerArgs(
+          options.extraArgs,
+          ['--plugin', '--plugins', '--tsBuildInfoFile'],
+          'TypeScript'
+        );
+        safeTsrsOption = options.tsrsPath
+          ? assertAllowedBinary(options.tsrsPath, ['tsrs'], 'TypeScript 네이티브 바이너리')
+          : undefined;
+      } catch (error) {
+        return {
+          name: 'typescript',
+          title: 'TypeScript 검증기',
+          status: 'error',
+          durationMs: performance.now() - start,
+          details: error instanceof Error ? error.message : String(error),
+        };
+      }
+
+      // tsrs 네이티브 바이너리 자동 탐색 (환경 변수 또는 작업 루트 기준)
+      const envTsrsPath = process.env.SYNAPSE_TSRS_PATH
+        ? assertAllowedBinary(process.env.SYNAPSE_TSRS_PATH, ['tsrs'], 'TypeScript 네이티브 바이너리')
+        : undefined;
       const nativeCandidates = [
-        options.tsrsPath,
+        safeTsrsOption,
+        envTsrsPath,
         resolve(ctx.rootDir, 'node_modules/@tsrs/win32-x64/tsrs.exe'),
         resolve(ctx.rootDir, '../node_modules/@tsrs/win32-x64/tsrs.exe'),
-        'D:/synapse/examples/massive-200k/node_modules/@tsrs/win32-x64/tsrs.exe',
         'tsrs',
       ].filter((p): p is string => !!p);
 
@@ -68,13 +98,13 @@ export function typescriptChecker(options: TypescriptPluginOptions = {}): Checke
       // -----------------------------------------------------------------------
       if (tool === 'hybrid' && resolvedNativePath) {
         try {
-          const nativeProc = spawn([resolvedNativePath, '--noEmit', ...(options.extraArgs || [])], {
+          const nativeProc = spawn([resolvedNativePath, '--noEmit', ...safeExtraArgs], {
             cwd: ctx.rootDir,
             stdout: 'pipe',
             stderr: 'pipe',
           });
 
-          const tscProc = spawn(['bun', 'x', 'tsc', '--project', tsconfigPath, '--incremental', '--noEmit', ...(options.extraArgs || [])], {
+          const tscProc = spawn(['bun', 'x', 'tsc', '--project', tsconfigPath, '--incremental', '--noEmit', ...safeExtraArgs], {
             cwd: ctx.rootDir,
             stdout: 'pipe',
             stderr: 'pipe',
@@ -151,8 +181,8 @@ export function typescriptChecker(options: TypescriptPluginOptions = {}): Checke
       // -----------------------------------------------------------------------
       const isNative = tool === 'tsrs' && resolvedNativePath;
       const args = isNative
-        ? [resolvedNativePath, '--noEmit', ...(options.extraArgs || [])]
-        : ['bun', 'x', 'tsc', '--project', tsconfigPath, '--incremental', '--noEmit', ...(options.extraArgs || [])];
+        ? [resolvedNativePath, '--noEmit', ...safeExtraArgs]
+        : ['bun', 'x', 'tsc', '--project', tsconfigPath, '--incremental', '--noEmit', ...safeExtraArgs];
 
       try {
         const proc = spawn(args, {

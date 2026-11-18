@@ -1,7 +1,7 @@
 import { spawn } from 'bun';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import { resolvePathInsideRoot, sanitizeCompilerArgs } from './security';
 
 export interface CsharpPluginOptions {
   /** 검증할 .NET 프로젝트/솔루션 경로 (기본값: '.') */
@@ -33,21 +33,26 @@ export function csharpChecker(options: CsharpPluginOptions = {}): CheckerPlugin 
     ],
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
-      const target = resolve(ctx.rootDir, projectPath);
-
-      const args = [
-        'dotnet',
-        'build',
-        target,
-        '-c',
-        configuration,
-        '-v',
-        'q',
-        '--nologo',
-        ...(options.extraArgs || []),
-      ];
-
       try {
+        const target = resolvePathInsideRoot(ctx.rootDir, projectPath, 'C# 프로젝트');
+        const safeExtraArgs = sanitizeCompilerArgs(
+          options.extraArgs,
+          ['-p:CustomBeforeMicrosoftCommonTargets', '-p:CustomAfterMicrosoftCommonTargets', '/p:Custom'],
+          'C#'
+        );
+
+        const args = [
+          'dotnet',
+          'build',
+          target,
+          '-c',
+          configuration,
+          '-v',
+          'q',
+          '--nologo',
+          ...safeExtraArgs,
+        ];
+
         const proc = spawn(args, {
           cwd: ctx.rootDir,
           stdout: 'pipe',

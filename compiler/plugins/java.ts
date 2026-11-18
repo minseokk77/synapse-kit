@@ -1,8 +1,12 @@
 import { spawn } from 'bun';
 import { existsSync, mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import {
+  resolvePathInsideRoot,
+  sanitizeCompilerArgs,
+  sanitizeTargetFiles,
+} from './security';
 
 export interface JavaPluginOptions {
   /** Java 소스 코드 루트 디렉터리 (기본값: './services/gateway' 또는 '.') */
@@ -38,42 +42,49 @@ export function javaChecker(options: JavaPluginOptions = {}): CheckerPlugin {
     ],
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
-      const targetDir = resolve(ctx.rootDir, sourceDir);
-      const outDir = resolve(ctx.rootDir, outputDir);
-
-      if (!existsSync(outDir)) {
-        try {
-          mkdirSync(outDir, { recursive: true });
-        } catch {
-          // ignore
-        }
-      }
-
-      let javaFiles: string[] = options.targetFiles ? [...options.targetFiles] : [];
-
-      if (javaFiles.length === 0) {
-        try {
-          const glob = new Bun.Glob('**/*.java');
-          const scanned = Array.from(glob.scanSync({ cwd: targetDir, absolute: true }));
-          javaFiles = scanned.slice(0, 10); // 과도한 디스크 I/O 방지를 위해 안전한 배치 크기 제한
-        } catch {
-          javaFiles = [];
-        }
-      }
-
-      if (javaFiles.length === 0) {
-        return {
-          name: 'java',
-          title: t('pluginJavaTitle'),
-          status: 'skipped',
-          durationMs: performance.now() - start,
-          details: t('pluginJavaNoFiles'),
-        };
-      }
-
-      const args = ['javac', '-d', outDir, ...extraArgs, ...javaFiles];
-
       try {
+        const targetDir = resolvePathInsideRoot(ctx.rootDir, sourceDir, 'Java 소스 디렉터리');
+        const outDir = resolvePathInsideRoot(ctx.rootDir, outputDir, 'Java 출력 디렉터리');
+
+        if (!existsSync(outDir)) {
+          try {
+            mkdirSync(outDir, { recursive: true });
+          } catch {
+            // ignore
+          }
+        }
+
+        let javaFiles: string[] = options.targetFiles
+          ? sanitizeTargetFiles(ctx.rootDir, options.targetFiles, 'Java')
+          : [];
+
+        if (javaFiles.length === 0) {
+          try {
+            const glob = new Bun.Glob('**/*.java');
+            const scanned = Array.from(glob.scanSync({ cwd: targetDir, absolute: true }));
+            javaFiles = scanned.slice(0, 10); // 과도한 디스크 I/O 방지를 위해 안전한 배치 크기 제한
+          } catch {
+            javaFiles = [];
+          }
+        }
+
+        if (javaFiles.length === 0) {
+          return {
+            name: 'java',
+            title: t('pluginJavaTitle'),
+            status: 'skipped',
+            durationMs: performance.now() - start,
+            details: t('pluginJavaNoFiles'),
+          };
+        }
+
+        const safeExtraArgs = sanitizeCompilerArgs(
+          extraArgs,
+          ['-J', '-processor', '-processorpath', '--processor-path'],
+          'Java'
+        );
+        const args = ['javac', '-d', outDir, ...safeExtraArgs, ...javaFiles];
+
         const proc = spawn(args, {
           cwd: ctx.rootDir,
           stdout: 'pipe',

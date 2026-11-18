@@ -1,7 +1,12 @@
 import { spawn } from 'bun';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import {
+  assertAllowedBinary,
+  resolvePathInsideRoot,
+  sanitizeCompilerArgs,
+  sanitizeTargetFiles,
+} from './security';
 
 export interface CppPluginOptions {
   /** 컴파일러 실행 파일 (기본값: 'g++') */
@@ -41,41 +46,59 @@ export function cppChecker(options: CppPluginOptions = {}): CheckerPlugin {
     ],
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
-      const targetPath = resolve(ctx.rootDir, sourceDir);
-
-      let targetFiles = options.targetFiles ? [...options.targetFiles] : [];
-
-      if (targetFiles.length === 0) {
-        try {
-          const glob = new Bun.Glob('**/*.{cpp,cc,cxx}');
-          const scanned = Array.from(glob.scanSync({ cwd: targetPath, absolute: true }));
-          targetFiles = scanned.slice(0, 50); // 안전한 배치 크기 제한
-        } catch {
-          targetFiles = [];
-        }
-      }
-
-      if (targetFiles.length === 0) {
-        return {
-          name: 'cpp',
-          title: t('pluginCppTitle'),
-          status: 'skipped',
-          durationMs: performance.now() - start,
-          details: t('pluginCppNoFiles'),
-        };
-      }
-
-      const includes = (options.includeDirs || []).map((d) => `-I${resolve(ctx.rootDir, d)}`);
-      const args = [
-        compiler,
-        `-std=${std}`,
-        '-fsyntax-only',
-        ...includes,
-        ...(options.extraArgs || []),
-        ...targetFiles,
-      ];
-
       try {
+        const safeCompiler = assertAllowedBinary(
+          compiler,
+          ['g++', 'gcc', 'clang', 'clang++', 'c++'],
+          'C++ 컴파일러'
+        );
+        if (!/^[a-zA-Z0-9+_-]+$/.test(std)) {
+          throw new Error(`[Plugin Security] 유효하지 않은 C++ 표준 지정입니다: ${std}`);
+        }
+        const targetPath = resolvePathInsideRoot(ctx.rootDir, sourceDir, 'C++ 소스 디렉터리');
+
+        let targetFiles = options.targetFiles
+          ? sanitizeTargetFiles(ctx.rootDir, options.targetFiles, 'C++')
+          : [];
+
+        if (targetFiles.length === 0) {
+          try {
+            const glob = new Bun.Glob('**/*.{cpp,cc,cxx}');
+            const scanned = Array.from(glob.scanSync({ cwd: targetPath, absolute: true }));
+            targetFiles = scanned.slice(0, 50); // 안전한 배치 크기 제한
+          } catch {
+            targetFiles = [];
+          }
+        }
+
+        if (targetFiles.length === 0) {
+          return {
+            name: 'cpp',
+            title: t('pluginCppTitle'),
+            status: 'skipped',
+            durationMs: performance.now() - start,
+            details: t('pluginCppNoFiles'),
+          };
+        }
+
+        const includes = (options.includeDirs || []).map(
+          (d) => `-I${resolvePathInsideRoot(ctx.rootDir, d, 'C++ 인클루드 경로')}`
+        );
+        const safeExtraArgs = sanitizeCompilerArgs(
+          options.extraArgs,
+          ['-fplugin', '-Xclang', '-B', '--specs'],
+          'C++'
+        );
+        const args = [
+          safeCompiler,
+          `-std=${std}`,
+          '-fsyntax-only',
+          ...includes,
+          ...safeExtraArgs,
+          '--',
+          ...targetFiles,
+        ];
+
         const proc = spawn(args, {
           cwd: ctx.rootDir,
           stdout: 'pipe',

@@ -1,6 +1,6 @@
 {
   "name": "synapse-compiler",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "Blazing-fast polyglot compiler & incremental verification engine for 10 languages and systems",
   "type": "module",
   "main": "dist/index.js",

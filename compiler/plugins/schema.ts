@@ -1,7 +1,6 @@
-import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import { PLUGIN_MAX_FILE_BYTES, readFileWithSizeLimit, resolvePathInsideRoot } from './security';
 
 export interface SchemaTarget {
   readonly path: string;
@@ -30,9 +29,9 @@ export function schemaChecker(options: SchemaPluginOptions): CheckerPlugin {
       let verifiedCount = 0;
 
       for (const target of options.targets) {
-        const fullPath = resolve(ctx.rootDir, target.path);
         try {
-          const raw = (await readFile(fullPath, 'utf8')).replace(/^\uFEFF/, '');
+          const fullPath = resolvePathInsideRoot(ctx.rootDir, target.path, '스키마 파일');
+          const raw = (await readFileWithSizeLimit(fullPath, PLUGIN_MAX_FILE_BYTES, '스키마 파일')).replace(/^\uFEFF/, '');
           const parsed = JSON.parse(raw);
           if (target.validator) {
             const validationError = target.validator(parsed);

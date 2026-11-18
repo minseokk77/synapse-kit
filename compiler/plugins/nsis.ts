@@ -1,8 +1,7 @@
-import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import { PLUGIN_MAX_FILE_BYTES, readFileWithSizeLimit, resolvePathInsideRoot } from './security';
 
 export interface NsisPluginOptions {
   readonly templatePath: string;
@@ -21,13 +20,13 @@ export function nsisChecker(options: NsisPluginOptions): CheckerPlugin {
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
       const errors: string[] = [];
-      const fullPath = resolve(ctx.rootDir, options.templatePath);
+      try {
+        const fullPath = resolvePathInsideRoot(ctx.rootDir, options.templatePath, 'NSIS 템플릿');
 
-      if (!existsSync(fullPath)) {
-        errors.push(t('pluginNsisMissing', options.templatePath));
-      } else {
-        try {
-          const content = await readFile(fullPath, 'utf8');
+        if (!existsSync(fullPath)) {
+          errors.push(t('pluginNsisMissing', options.templatePath));
+        } else {
+          const content = await readFileWithSizeLimit(fullPath, PLUGIN_MAX_FILE_BYTES, 'NSIS 템플릿');
           if (content.length < 50) {
             errors.push(t('pluginNsisCorrupt'));
           }
@@ -38,9 +37,9 @@ export function nsisChecker(options: NsisPluginOptions): CheckerPlugin {
               errors.push(t('pluginNsisDirectiveMissing', dir));
             }
           }
-        } catch (error) {
-          errors.push(`${options.templatePath}: ${error instanceof Error ? error.message : String(error)}`);
         }
+      } catch (error) {
+        errors.push(`${options.templatePath}: ${error instanceof Error ? error.message : String(error)}`);
       }
 
       const durationMs = performance.now() - start;

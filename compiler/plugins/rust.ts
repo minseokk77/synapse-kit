@@ -1,7 +1,7 @@
 import { spawn } from 'bun';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import { resolvePathInsideRoot } from './security';
 
 export interface RustPluginOptions {
   readonly workspaceDir?: string;
@@ -26,9 +26,14 @@ export function rustChecker(options: RustPluginOptions = {}): CheckerPlugin {
     ],
     check: async (ctx): Promise<CheckResult> => {
       const start = performance.now();
-      const workspacePath = resolve(ctx.rootDir, options.workspaceDir || './');
 
       try {
+        const workspacePath = resolvePathInsideRoot(
+          ctx.rootDir,
+          options.workspaceDir || './',
+          'Rust 워크스페이스'
+        );
+
         // 1. cargo check
         const checkProc = spawn(['cargo', 'check', '--workspace'], {
           cwd: workspacePath,

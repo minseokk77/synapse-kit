@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs';
 import { open } from 'node:fs/promises';
-import { resolve } from 'node:path';
 import type { CheckerPlugin, CheckResult } from '../types';
 import { t } from '../i18n';
+import { resolvePathInsideRoot } from './security';
 
 export interface NativeBinaryTarget {
   readonly path: string;
@@ -36,7 +36,13 @@ export function nativeChecker(options: NativePluginOptions): CheckerPlugin {
       let checkedCount = 0;
 
       for (const target of options.targets) {
-        const fullPath = resolve(ctx.rootDir, target.path);
+        let fullPath: string;
+        try {
+          fullPath = resolvePathInsideRoot(ctx.rootDir, target.path, '네이티브 바이너리');
+        } catch (error) {
+          errors.push(error instanceof Error ? error.message : String(error));
+          continue;
+        }
         if (!existsSync(fullPath)) {
           errors.push(t('pluginNativeMissing', target.path));
           continue;
@@ -48,7 +54,12 @@ export function nativeChecker(options: NativePluginOptions): CheckerPlugin {
           try {
             handle = await open(fullPath, 'r');
             const buffer = Buffer.alloc(1024);
-            await handle.read(buffer, 0, 1024, 0);
+            const { bytesRead } = await handle.read(buffer, 0, 1024, 0);
+
+            if (bytesRead < 64) {
+              errors.push(t('pluginNativeNotPe', target.path));
+              continue;
+            }
 
             const dosSig = buffer.readUInt16LE(0);
             if (dosSig !== DOS_SIGNATURE_MZ) {
@@ -57,7 +68,7 @@ export function nativeChecker(options: NativePluginOptions): CheckerPlugin {
             }
 
             const peOffset = buffer.readUInt32LE(PE_SIGNATURE_OFFSET_LOCATION);
-            if (peOffset < buffer.length - 24) {
+            if (peOffset >= 0x40 && peOffset <= bytesRead - 24) {
               const peSig = buffer.readUInt32LE(peOffset);
               const machine = buffer.readUInt16LE(peOffset + 4);
 
@@ -66,6 +77,9 @@ export function nativeChecker(options: NativePluginOptions): CheckerPlugin {
               } else if (target.expectedArchitecture === 'x64' && machine !== PE_MACHINE_X64) {
                 errors.push(t('pluginNativeInvalidArch', target.path, machine.toString(16)));
               }
+            } else {
+              errors.push(t('pluginNativeInvalidPe', target.path));
+              continue;
             }
           } catch (error) {
             errors.push(`${target.path}: ${error instanceof Error ? error.message : String(error)}`);
