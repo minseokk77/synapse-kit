@@ -216,6 +216,15 @@ export async function executeBuild(
     }
 
     const trackStart = performance.now();
+    if (!track.command || track.command.length === 0 || track.command.some((c) => !c || c.includes('\0'))) {
+      return {
+        name: track.name,
+        durationMs: 0,
+        exitCode: 1,
+        skipped: false,
+        reason: '유효하지 않은 빌드 트랙 명령입니다.',
+      };
+    }
     const proc = spawn([...track.command], {
       cwd: track.cwd || rootDir,
       stdout: 'inherit',
@@ -426,11 +435,8 @@ export async function executeSign(
     'sign',
     '--private-key-path',
     keyPath,
+    installerPath,
   ];
-  if (passwordVal) {
-    signArgs.push('--password', passwordVal);
-  }
-  signArgs.push(installerPath);
 
   const proc = spawn(signArgs, {
     cwd: rootDir,

@@ -73,14 +73,36 @@ export class ProcessSupervisor {
       this.restartTimers.delete(id);
     }
 
+    const BLOCKED_ENV_KEYS = new Set([
+      "LD_PRELOAD",
+      "LD_LIBRARY_PATH",
+      "DYLD_INSERT_LIBRARIES",
+      "DYLD_LIBRARY_PATH",
+      "NODE_OPTIONS",
+      "BUN_OPTIONS",
+    ]);
+
     state.status = "STARTING";
     const spec = state.spec;
     const cmd = [...spec.command];
+    if (cmd.length === 0 || cmd.some((arg) => typeof arg !== "string" || arg.includes("\0"))) {
+      state.status = "CRASHED";
+      state.lastCrashError = "유효하지 않은 프로세스 실행 명령입니다.";
+      return false;
+    }
     if (cmd[0] === "bun") {
       cmd[0] = process.execPath;
     }
     const cwd = spec.cwd || process.cwd();
-    const env = { ...process.env, ...spec.env };
+    const sanitizedSpecEnv: Record<string, string> = {};
+    if (spec.env) {
+      for (const [key, val] of Object.entries(spec.env)) {
+        if (!BLOCKED_ENV_KEYS.has(key.toUpperCase()) && !key.includes("\0") && !val.includes("\0")) {
+          sanitizedSpecEnv[key] = val;
+        }
+      }
+    }
+    const env = { ...process.env, ...sanitizedSpecEnv };
 
     try {
       const proc = spawn({

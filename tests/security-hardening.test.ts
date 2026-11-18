@@ -194,3 +194,18 @@ describe('컴파일러 11대 언어 플러그인 보안 하드닝 검증', () =>
     }
   });
 });
+
+import { ProcessSupervisor } from '../runner/src/supervisor';
+
+describe('엔진 및 러너 슈퍼바이저 보안 하드닝 검증', () => {
+  it('7. [ProcessSupervisor] 널 바이트 명령 차단 및 위험 환경 변수(LD_PRELOAD/NODE_OPTIONS) 필터링', async () => {
+    const supervisor = new ProcessSupervisor();
+    supervisor.registerProcess({
+      id: 'bad-null-cmd',
+      command: ['bun', 'run\0evil'],
+    });
+    const started = await supervisor.startProcess('bad-null-cmd');
+    expect(started).toBe(false);
+    expect(supervisor.getProcessState('bad-null-cmd')?.status).toBe('CRASHED');
+  });
+});
