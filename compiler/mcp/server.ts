@@ -19,7 +19,7 @@ export class SynapseMcpServer {
       terminal: false,
     });
 
-    this.rl.on("line", async (line) => {
+    (this.rl as any).on("line", async (line: string) => {
       const trimmed = line.trim();
       if (!trimmed) return;
 

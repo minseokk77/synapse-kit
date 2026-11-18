@@ -81,7 +81,7 @@ export class IpcBusBridge {
           resolve();
         });
 
-        this.server.on("error", (err) => {
+        (this.server as any).on("error", (err: Error) => {
           reject(new Error(`[IpcBusBridge] IPC 서버 기동 실패 (${this.pipeOrSocketPath}): ${err.message}`));
         });
       } catch (err: any) {
