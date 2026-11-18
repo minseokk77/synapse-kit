@@ -1,6 +1,6 @@
 {
   "name": "synapse-bus",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "description": "Ultra-Low Latency Neural Event Bus & Type-Safe RPC Fabric for Synapse Monorepo",
   "type": "module",
   "main": "dist/index.js",
